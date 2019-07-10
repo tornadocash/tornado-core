@@ -18,7 +18,6 @@
     "chai-as-promised": "^7.1.1",
     "circomlib": "git+https://github.com/kobigurk/circomlib.git#323966c0584bafebf9652681c44d9ea348fe9bb5",
     "ganache-cli": "^6.4.5",
-    "openzeppelin-solidity": "^2.3.0",
     "truffle": "^5.0.20",
     "truffle-artifactor": "^4.0.22",
     "web3-utils": "^1.0.0-beta.55"
