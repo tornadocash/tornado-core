@@ -25,15 +25,15 @@ contract MerkleTreeWithHistory {
     filled_subtrees.push(zeros[0]);
 
     for (uint8 i = 1; i < levels; i++) {
-      zeros.push(HashLeftRight(zeros[i-1], zeros[i-1]));
+      zeros.push(hashLeftRight(zeros[i-1], zeros[i-1]));
       filled_subtrees.push(zeros[i]);
     }
 
     roots = new uint256[](ROOT_HISTORY_SIZE);
-    roots[0] = HashLeftRight(zeros[levels - 1], zeros[levels - 1]);
+    roots[0] = hashLeftRight(zeros[levels - 1], zeros[levels - 1]);
   }
 
-  function HashLeftRight(uint256 left, uint256 right) public pure returns (uint256 mimc_hash) {
+  function hashLeftRight(uint256 left, uint256 right) public pure returns (uint256 mimc_hash) {
     uint256 k = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
     uint256 R = 0;
     uint256 C = 0;
@@ -67,7 +67,7 @@ contract MerkleTreeWithHistory {
         right = current_level_hash;
       }
 
-      current_level_hash = HashLeftRight(left, right);
+      current_level_hash = hashLeftRight(left, right);
 
       current_index /= 2;
     }

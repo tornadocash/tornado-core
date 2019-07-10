@@ -1,6 +1,7 @@
 include "../node_modules/circomlib/circuits/bitify.circom";
 include "../node_modules/circomlib/circuits/mimcsponge.circom";
 
+// Computes MiMC(left + right)
 template HashLeftRight(rounds) {
     signal input left;
     signal input right;
@@ -15,6 +16,8 @@ template HashLeftRight(rounds) {
     hash <== hasher.outs[0];
 }
 
+// if pathIndex == 0 returns (left = inputElement, right = pathElement)
+// if pathIndex == 1 returns (left = pathElement, right = inputElement)
 template Selector() {
     signal input inputElement;
     signal input pathElement;
@@ -39,12 +42,13 @@ template Selector() {
     right <== rightSelector1 + rightSelector2;
 }
 
+// Verifies that merkle proof is correct for given merkle root and a leaf
+// pathIndex input is an array of 0/1 selectors telling whether given pathElement is on the left or right side of merkle path
 template MerkleTree(levels, rounds) {
     signal input leaf;
+    signal input root;
     signal private input pathElements[levels];
     signal private input pathIndex[levels];
-
-    signal output root;
 
     component selectors[levels];
     component hashers[levels];
@@ -66,5 +70,5 @@ template MerkleTree(levels, rounds) {
         selectors[i].inputElement <== hashers[i-1].hash;
     }
 
-    root <== hashers[levels - 1].hash;
+    root === hashers[levels - 1].hash;
 }
