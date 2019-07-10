@@ -30,7 +30,7 @@ contract Mixer is MerkleTreeWithHistory {
   */
   function deposit(uint256 commitment) public payable {
     require(msg.value == transferValue, "Please send `transferValue` ETH along with transaction");
-    insert(commitment);
+    _insert(commitment);
     emit Deposit(msg.sender, commitment);
   }
 
