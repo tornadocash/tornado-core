@@ -91,6 +91,51 @@ contract('MerkleTreeWithHistory', async accounts => {
       // console.log(root)
       assert.equal(root, calculated_root)
     })
+    it('creation odd elements count', async () => {
+      const elements = [12, 13, 14, 15, 16, 17, 18, 19, 20]
+      for(const [i, el] of Object.entries(elements)) {
+        await tree.update(i, el)
+      }
+
+      const storage = new JsStorage()
+      hasher = new MimcHacher()
+      const batchTree = new MerkleTree(
+        prefix,
+        storage,
+        hasher,
+        levels,
+        zeroValue,
+        elements
+      );
+      for(const [i, el] of Object.entries(elements)) {
+        const pathViaConstructor = await batchTree.path(i)
+        const pathViaUpdate = await tree.path(i)
+        pathViaConstructor.should.be.deep.equal(pathViaUpdate)
+      }
+    })
+
+    it('creation even elements count', async () => {
+      const elements = [12, 13, 14, 15, 16, 17]
+      for(const [i, el] of Object.entries(elements)) {
+        await tree.update(i, el)
+      }
+
+      const storage = new JsStorage()
+      hasher = new MimcHacher()
+      const batchTree = new MerkleTree(
+        prefix,
+        storage,
+        hasher,
+        levels,
+        zeroValue,
+        elements
+      );
+      for(const [i, el] of Object.entries(elements)) {
+        const pathViaConstructor = await batchTree.path(i)
+        const pathViaUpdate = await tree.path(i)
+        pathViaConstructor.should.be.deep.equal(pathViaUpdate)
+      }
+    })
   })
 
   describe('#insert', async () => {
