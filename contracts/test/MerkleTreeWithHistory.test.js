@@ -9,6 +9,10 @@ const { takeSnapshot, revertSnapshot, increaseTime } = require('../scripts/ganac
 const MerkleTreeWithHistory = artifacts.require('./MerkleTreeWithHistoryMock.sol')
 const MiMC = artifacts.require('./MiMC.sol')
 
+const JsStorage = require('../../lib/Storage')
+const MerkleTree = require('../../lib/MerkleTree')
+const MimcHacher = require('../../lib/MiMC')
+
 function BNArrayToStringArray(array) {
   const arrayToPrint = []
   array.forEach(item => {
@@ -25,10 +29,22 @@ contract('MerkleTreeWithHistory', async accounts => {
   const levels = 5
   const zeroValue = 1337
   let snapshotId
+  let prefix = 'test'
+  let tree
+  let hasher
 
   before(async () => {
+    const storage = new JsStorage()
+    hasher = new MimcHacher()
+    tree = new MerkleTree(
+      prefix,
+      storage,
+      hasher,
+      levels,
+      zeroValue,
+    )
     miMC = MiMC.deployed()
-    await MerkleTreeWithHistory.link(MiMC, miMC.address);
+    await MerkleTreeWithHistory.link(MiMC, miMC.address)
     merkleTreeWithHistory = await MerkleTreeWithHistory.new(levels, zeroValue)
     snapshotId = await takeSnapshot()
   })
@@ -36,9 +52,9 @@ contract('MerkleTreeWithHistory', async accounts => {
   describe('#constuctor', async () => {
     it('should initialize', async () => {
       const filled_subtrees = await merkleTreeWithHistory.filled_subtrees()
-      console.log('filled_subtrees', BNArrayToStringArray(filled_subtrees))
+      // console.log('filled_subtrees', BNArrayToStringArray(filled_subtrees))
       const root = await merkleTreeWithHistory.getLastRoot()
-      console.log('root', root.toString())
+      // console.log('root', root.toString())
       filled_subtrees[0].should.be.eq.BN(zeroValue)
       const zeros = await merkleTreeWithHistory.zeros()
       // console.log('zeros', BNArrayToStringArray(zeros))
@@ -48,24 +64,66 @@ contract('MerkleTreeWithHistory', async accounts => {
     })
   })
 
+  describe('merkleTreeLib', async () => {
+    it('index_to_key', async () => {
+      assert.equal(
+        MerkleTree.index_to_key('test', 5, 20),
+        "test_tree_5_20",
+      )
+    })
+
+    it('tests insert', async () => {
+      const storage = new JsStorage()
+      hasher = new MimcHacher()
+      tree = new MerkleTree(
+        prefix,
+        storage,
+        hasher,
+        2,
+        zeroValue,
+      )
+      await tree.update(0, '5')
+      let {root, path_elements, path_index} = await tree.path(0)
+      const calculated_root = hasher.hash(null,
+        hasher.hash(null, '5', path_elements[0]),
+        path_elements[1]
+      )
+      // console.log(root)
+      assert.equal(root, calculated_root)
+    })
+  })
+
   describe('#insert', async () => {
     it('should insert', async () => {
       let filled_subtrees
-      let root
+      let rootFromContract
 
       for (i = 1; i < 11; i++) {
         await merkleTreeWithHistory.insert(i)
+        await tree.update(i - 1, i)
         filled_subtrees = await merkleTreeWithHistory.filled_subtrees()
-        console.log('filled_subtrees', BNArrayToStringArray(filled_subtrees))
-        root = await merkleTreeWithHistory.getLastRoot()
-        console.log('root', root.toString())
+        let {root, path_elements, path_index} = await tree.path(i - 1)
+        // console.log('path_elements  ', path_elements)
+        // console.log('filled_subtrees', BNArrayToStringArray(filled_subtrees))
+        // console.log('rootFromLib', root)
+        rootFromContract = await merkleTreeWithHistory.getLastRoot()
+        root.should.be.equal(rootFromContract.toString())
+        // console.log('rootFromCon', root.toString())
       }
-
     })
   })
 
   afterEach(async () => {
     await revertSnapshot(snapshotId.result)
     snapshotId = await takeSnapshot()
+    const storage = new JsStorage()
+    hasher = new MimcHacher()
+    tree = new MerkleTree(
+      prefix,
+      storage,
+      hasher,
+      levels,
+      zeroValue,
+    )
   })
 })
