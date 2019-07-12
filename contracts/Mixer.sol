@@ -19,7 +19,12 @@ contract Mixer is MerkleTreeWithHistory {
     @param _verifier the address of SNARK verifier for this contract
     @param _transferValue the value for all deposits in this contract in wei
   */
-  constructor(address _verifier, uint256 _transferValue) MerkleTreeWithHistory(16, 0) public {
+  constructor(
+    address _verifier,
+    uint256 _transferValue,
+    uint8 _merkleTreeHeight,
+    uint256 _emptyElement
+  ) MerkleTreeWithHistory(_merkleTreeHeight, _emptyElement) public {
     verifier = IVerifier(_verifier);
     transferValue = _transferValue;
   }
