@@ -1,4 +1,5 @@
 const fs = require('fs');
+const assert = require('assert');
 const circom = require("circom");
 const snarkjs = require("snarkjs");
 const circomlib = require('circomlib');
@@ -34,7 +35,7 @@ function generateDeposit() {
   const {root, path_elements, path_index} = await tree.path(1);
 
   // Circuit input
-  const input = stringifyBigInts({
+  const input = {
     // public
     root: root,
     nullifier: dep2.nullifier,
@@ -45,11 +46,21 @@ function generateDeposit() {
     secret: dep2.secret,
     pathElements: path_elements,
     pathIndex: path_index,
-  });
+  };
 
   console.log("Input:\n", input);
   console.time("Time");
   const proof = await utils.snarkProof(input);
   console.log("Proof:\n", proof);
   console.timeEnd("Time");
+
+  const verify = await utils.snarkVerify(proof);
+  assert(verify);
+
+  // try to cheat with recipient
+  proof.publicSignals[2] = '0x000000000000000000000000000000000000000000000000000000000000beef';
+  const verifyScam = await utils.snarkVerify(proof);
+  assert(!verifyScam);
+
+  console.log("Done.");
 })();
