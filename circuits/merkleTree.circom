@@ -1,4 +1,3 @@
-include "../node_modules/circomlib/circuits/bitify.circom";
 include "../node_modules/circomlib/circuits/mimcsponge.circom";
 
 // Computes MiMC(left + right)
