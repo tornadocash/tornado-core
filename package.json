@@ -6,10 +6,12 @@
   "scripts": {
     "build:circuit:compile": "circom circuits/withdraw.circom -o build/circuits/withdraw.json && snarkjs info -c build/circuits/withdraw.json",
     "build:circuit:setup": "snarkjs setup --protocol groth -c build/circuits/withdraw.json --pk build/circuits/withdraw_proving_key.json --vk build/circuits/withdraw_verification_key.json",
+    "build:circuit:bin": "node node_modules/websnark/tools/buildpkey.js -i build/circuits/withdraw_proving_key.json -o build/circuits/withdraw_proving_key.bin",
     "build:circuit:contract": "snarkjs generateverifier -v build/circuits/Verifier.sol --vk build/circuits/withdraw_verification_key.json",
-    "build:circuit": "mkdir -p build/circuits && npm run build:circuit:compile && npm run build:circuit:setup && npm run build:circuit:contract",
-    "build:contract": "truffle compile",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build:circuit": "mkdir -p build/circuits && npm run build:circuit:compile && npm run build:circuit:setup && npm run build:circuit:bin && npm run build:circuit:contract",
+    "build:contract": "npx truffle compile",
+    "test": "npx truffle test",
+    "migrate": "npx truffle migrate --network kovan --reset"
   },
   "keywords": [],
   "author": "",
@@ -19,12 +21,12 @@
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "circom": "0.0.30",
-    "circomlib": "git+https://github.com/kobigurk/circomlib.git#323966c0584bafebf9652681c44d9ea348fe9bb5",
+    "circomlib": "^0.0.10",
     "dotenv": "^8.0.0",
     "ganache-cli": "^6.4.5",
-    "snarkjs": "^0.1.14",
-    "truffle": "^5.0.20",
-    "truffle-artifactor": "^4.0.22",
+    "snarkjs": "git+https://github.com/iden3/snarkjs.git#5fe2bd4642ec567c75ad5ac3f73687999c412e73",
+    "truffle": "^5.0.27",
+    "truffle-artifactor": "^4.0.23",
     "truffle-hdwallet-provider": "^1.0.14",
     "web3-utils": "^1.0.0-beta.55",
     "websnark": "0.0.4"

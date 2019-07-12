@@ -49,7 +49,7 @@ contract('MerkleTreeWithHistory', async accounts => {
     snapshotId = await takeSnapshot()
   })
 
-  describe('#constuctor', async () => {
+  describe('#constructor', async () => {
     it('should initialize', async () => {
       const filled_subtrees = await merkleTreeWithHistory.filled_subtrees()
       // console.log('filled_subtrees', BNArrayToStringArray(filled_subtrees))

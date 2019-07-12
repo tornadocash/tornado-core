@@ -26,7 +26,7 @@ contract('Mixer', async accounts => {
     snapshotId = await takeSnapshot()
   })
 
-  describe('#constuctor', async () => {
+  describe('#constructor', async () => {
     it('should initialize', async () => {
       const { AMOUNT } = process.env
       const transferValue = await mixer.transferValue()
