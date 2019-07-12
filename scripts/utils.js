@@ -8,9 +8,9 @@ const pedersen = circomlib.pedersenHash;
 const babyjub = circomlib.babyJub;
 const mimcsponge = circomlib.mimcsponge;
 const bigInt = snarkjs.bigInt;
-const buildGroth16 = require('../node_modules/websnark/src/groth16.js');
-const stringifyBigInts = require("../node_modules/websnark/tools/stringifybigint.js").stringifyBigInts;
-const unstringifyBigInts = require("../node_modules/websnark/tools/stringifybigint.js").unstringifyBigInts;
+const buildGroth16 = require('websnark/src/groth16');
+const stringifyBigInts = require("websnark/tools/stringifybigint").stringifyBigInts;
+const unstringifyBigInts = require("websnark/tools/stringifybigint").unstringifyBigInts;
 
 const rbigint = (nbytes) => snarkjs.bigInt.leBuff2int(crypto.randomBytes(nbytes));
 
@@ -72,7 +72,7 @@ async function snarkProof(input) {
   const witnessArray = circuit.calculateWitness(input);
   const witness = convertWitness(witnessArray);
   const publicSignals = witnessArray.slice(1, circuit.nPubInputs + circuit.nOutputs + 1);
-  const key = toArrayBuffer(fs.readFileSync("../build/circuits/withdraw_proving_key.bin"));
+  const key = toArrayBuffer(fs.readFileSync("build/circuits/withdraw_proving_key.bin"));
   const groth16 = await buildGroth16();
   let proof = await groth16.proof(witness, key);
   proof = unstringifyBigInts(proof);

@@ -7,5 +7,8 @@
 ## Deploy
 1. `npx truffle migrate --network kovan --reset`
 
+## Requirements
+1. `node v11.15.0`
+
 
 
