@@ -26,7 +26,7 @@ contract('MerkleTreeWithHistory', async accounts => {
   let miMC
   const sender = accounts[0]
   const emptyAddress = '0x0000000000000000000000000000000000000000'
-  const levels = 5
+  const levels = 16
   const zeroValue = 1337
   let snapshotId
   let prefix = 'test'
@@ -137,9 +137,9 @@ contract('MerkleTreeWithHistory', async accounts => {
       }
     })
 
-    it.skip('creation using 1000 elements', async () => {
+    it.skip('creation using 30000 elements', async () => {
       const elements = []
-      for(let i = 2000; i < 2001; i++) {
+      for(let i = 1000; i < 31001; i++) {
         elements.push(i)
       }
       const storage = new JsStorage()
@@ -157,7 +157,7 @@ contract('MerkleTreeWithHistory', async accounts => {
       // 2,7 GHz Intel Core i7
       // 1000 : 1949.084ms
       // 10000: 19456.220ms
-      // 30000: 57293.640ms
+      // 30000: 63406.679ms
     })
   })
 
