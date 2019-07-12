@@ -43,7 +43,7 @@ contract('MerkleTreeWithHistory', async accounts => {
       levels,
       zeroValue,
     )
-    miMC = MiMC.deployed()
+    miMC = await MiMC.deployed()
     await MerkleTreeWithHistory.link(MiMC, miMC.address)
     merkleTreeWithHistory = await MerkleTreeWithHistory.new(levels, zeroValue)
     snapshotId = await takeSnapshot()
@@ -178,6 +178,13 @@ contract('MerkleTreeWithHistory', async accounts => {
         root.should.be.equal(rootFromContract.toString())
         // console.log('rootFromCon', root.toString())
       }
+    })
+  })
+
+  describe('#MIMC', async () => {
+    it.skip('gas price', async () => {
+      const gas = await merkleTreeWithHistory.hashLeftRight.estimateGas(1,2)
+      console.log('gas', gas)
     })
   })
 

@@ -87,7 +87,12 @@ function convertWitness(witness) {
 async function snarkProof(input) {
   input = unstringifyBigInts2(input);
   const circuit = new snarkjs.Circuit(unstringifyBigInts2(require("../build/circuits/withdraw.json")));
-  const proving_key = fs.readFileSync("../build/circuits/withdraw_proving_key.bin");
+  const pwd = process.cwd()
+  let pathToProvingKey = 'build/circuits/withdraw_proving_key.bin'
+  if (pwd.split('/').pop() === 'scripts') {
+    pathToProvingKey = '../build/circuits/withdraw_proving_key.bin'
+  }
+  const proving_key = fs.readFileSync(pathToProvingKey);
 
   const witness = circuit.calculateWitness(input);
   const witnessBin = convertWitness(stringifyBigInts2(witness));

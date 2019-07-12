@@ -75,9 +75,11 @@ contract('Mixer', async accounts => {
   })
 
   describe('#withdraw', async () => {
-    it.skip('should work', async () => {
+    it('should work', async () => {
       const deposit = generateDeposit()
       await tree.insert(deposit.commitment)
+      let gas = await mixer.deposit.estimateGas(toBN(deposit.commitment.toString()), { value: AMOUNT, from: sender })
+      console.log('deposit gas', gas)
       await mixer.deposit(toBN(deposit.commitment.toString()), { value: AMOUNT, from: sender })
 
       const {root, path_elements, path_index} = await tree.path(0);
@@ -97,9 +99,15 @@ contract('Mixer', async accounts => {
       })
 
       const { pi_a, pi_b, pi_c, publicSignals } = await utils.snarkProof(input)
-      console.log('proof', pi_a, pi_b, pi_c, publicSignals)
+      // console.log('proof', pi_a, pi_b, pi_c, publicSignals)
+
+      gas = await mixer.withdraw.estimateGas(pi_a, pi_b, pi_c, publicSignals, { from: sender })
+      console.log('withdraw gas', gas)
       const { logs } = await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: sender })
-      console.log('logs', logs)
+      logs[0].event.should.be.equal('Withdraw')
+      // logs[0].args.nullifier.should.be.eq.BN(toBN(commitment))
+      // logs[0].args.fee.should.be.eq.BN(toBN(0))
+      // console.log('logs', logs)
     })
   })
 
