@@ -9,9 +9,9 @@ const { takeSnapshot, revertSnapshot, increaseTime } = require('../scripts/ganac
 const MerkleTreeWithHistory = artifacts.require('./MerkleTreeWithHistoryMock.sol')
 const MiMC = artifacts.require('./MiMC.sol')
 
-const JsStorage = require('../../lib/Storage')
-const MerkleTree = require('../../lib/MerkleTree')
-const MimcHacher = require('../../lib/MiMC')
+const JsStorage = require('../lib/Storage')
+const MerkleTree = require('../lib/MerkleTree')
+const MimcHacher = require('../lib/MiMC')
 
 function BNArrayToStringArray(array) {
   const arrayToPrint = []
@@ -82,7 +82,7 @@ contract('MerkleTreeWithHistory', async accounts => {
         2,
         zeroValue,
       )
-      await tree.update(0, '5')
+      await tree.insert('5')
       let {root, path_elements, path_index} = await tree.path(0)
       const calculated_root = hasher.hash(null,
         hasher.hash(null, '5', path_elements[0]),
@@ -94,7 +94,7 @@ contract('MerkleTreeWithHistory', async accounts => {
     it('creation odd elements count', async () => {
       const elements = [12, 13, 14, 15, 16, 17, 18, 19, 20]
       for(const [i, el] of Object.entries(elements)) {
-        await tree.update(i, el)
+        await tree.insert(el)
       }
 
       const storage = new JsStorage()
@@ -117,7 +117,7 @@ contract('MerkleTreeWithHistory', async accounts => {
     it('creation even elements count', async () => {
       const elements = [12, 13, 14, 15, 16, 17]
       for(const [i, el] of Object.entries(elements)) {
-        await tree.update(i, el)
+        await tree.insert(el)
       }
 
       const storage = new JsStorage()
@@ -136,6 +136,29 @@ contract('MerkleTreeWithHistory', async accounts => {
         pathViaConstructor.should.be.deep.equal(pathViaUpdate)
       }
     })
+
+    it.skip('creation using 1000 elements', async () => {
+      const elements = []
+      for(let i = 2000; i < 2001; i++) {
+        elements.push(i)
+      }
+      const storage = new JsStorage()
+      hasher = new MimcHacher()
+      console.time('MerkleTree');
+      tree = new MerkleTree(
+        prefix,
+        storage,
+        hasher,
+        levels,
+        zeroValue,
+        elements
+      );
+      console.timeEnd('MerkleTree');
+      // 2,7 GHz Intel Core i7
+      // 1000 : 1949.084ms
+      // 10000: 19456.220ms
+      // 30000: 57293.640ms
+    })
   })
 
   describe('#insert', async () => {
@@ -145,7 +168,7 @@ contract('MerkleTreeWithHistory', async accounts => {
 
       for (i = 1; i < 11; i++) {
         await merkleTreeWithHistory.insert(i)
-        await tree.update(i - 1, i)
+        await tree.insert(i)
         filled_subtrees = await merkleTreeWithHistory.filled_subtrees()
         let {root, path_elements, path_index} = await tree.path(i - 1)
         // console.log('path_elements  ', path_elements)
