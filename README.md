@@ -3,14 +3,14 @@
 2. `npm install -g npx`
 
 ## Usage
-- `npm i`
-- `cp .env.example .env`
-- `npm run build:circuit`
-- `npm run build:contract`
-- `npx run truffle-cli`
-- `npm run migrate:dev`
-- `./cli.js deposit`
-- `./cli.js withdraw <note from previous step> <destination eth address>`
+1. `npm i`
+1. `cp .env.example .env`
+1. `npm run build:circuit`
+1. `npm run build:contract`
+1. `npx run ganache-cli`
+1. `npm run migrate:dev`
+1. `./cli.js deposit`
+1. `./cli.js withdraw <note from previous step> <destination eth address>`
 
 ## Testing truffle
 1. `npm i`
