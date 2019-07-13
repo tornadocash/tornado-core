@@ -27,6 +27,7 @@
     "snarkjs": "git+https://github.com/iden3/snarkjs.git#5fe2bd4642ec567c75ad5ac3f73687999c412e73",
     "truffle": "^5.0.27",
     "truffle-artifactor": "^4.0.23",
+    "truffle-contract": "^4.0.24",
     "truffle-hdwallet-provider": "^1.0.14",
     "web3-utils": "^1.0.0-beta.55",
     "websnark": "0.0.4"

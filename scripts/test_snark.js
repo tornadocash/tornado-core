@@ -1,15 +1,8 @@
-const fs = require('fs');
 const assert = require('assert');
-const circom = require("circom");
 const snarkjs = require("snarkjs");
-const circomlib = require('circomlib');
 const bigInt = snarkjs.bigInt;
-const stringifyBigInts = require("websnark/tools/stringifybigint").stringifyBigInts;
-const unstringifyBigInts = require("websnark/tools/stringifybigint").unstringifyBigInts;
 const utils = require("./utils");
 const merkleTree = require('../lib/MerkleTree');
-const jsStorage = require("../lib/Storage");
-const mimcHasher = require("../lib/MiMC");
 
 function generateDeposit() {
   let deposit = {
@@ -22,6 +15,7 @@ function generateDeposit() {
 }
 
 (async () => {
+  // === Create 3 deposits ===
   const dep1 = generateDeposit();
   const dep2 = generateDeposit();
   const dep3 = generateDeposit();
@@ -32,6 +26,7 @@ function generateDeposit() {
   await tree.insert(dep2.commitment);
   await tree.insert(dep3.commitment);
 
+  // === Withdrawing deposit 2 ===
   const {root, path_elements, path_index} = await tree.path(1);
 
   // Circuit input
