@@ -13,9 +13,7 @@ const utils = require("../scripts/utils")
 const stringifyBigInts = require("websnark/tools/stringifybigint").stringifyBigInts
 const snarkjs = require("snarkjs");
 const bigInt = snarkjs.bigInt;
-const JsStorage = require('../lib/Storage')
 const MerkleTree = require('../lib/MerkleTree')
-const MimcHacher = require('../lib/MiMC')
 
 function generateDeposit() {
   let deposit = {
@@ -29,7 +27,6 @@ function generateDeposit() {
 
 contract('Mixer', async accounts => {
   let mixer
-  let miMC
   const sender = accounts[0]
   const emptyAddress = '0x0000000000000000000000000000000000000000'
   const levels = 16
@@ -37,17 +34,13 @@ contract('Mixer', async accounts => {
   let snapshotId
   let prefix = 'test'
   let tree
-  let hasher
 
   before(async () => {
-    const storage = new JsStorage()
-    hasher = new MimcHacher()
     tree = new MerkleTree(
-      prefix,
-      storage,
-      hasher,
       levels,
       zeroValue,
+      null,
+      prefix,
     )
     mixer = await Mixer.deployed()
     snapshotId = await takeSnapshot()
@@ -78,8 +71,8 @@ contract('Mixer', async accounts => {
     it('should work', async () => {
       const deposit = generateDeposit()
       await tree.insert(deposit.commitment)
-      let gas = await mixer.deposit.estimateGas(toBN(deposit.commitment.toString()), { value: AMOUNT, from: sender })
-      console.log('deposit gas', gas)
+      // let gas = await mixer.deposit.estimateGas(toBN(deposit.commitment.toString()), { value: AMOUNT, from: sender })
+      // console.log('deposit gas', gas)
       await mixer.deposit(toBN(deposit.commitment.toString()), { value: AMOUNT, from: sender })
 
       const {root, path_elements, path_index} = await tree.path(0);
@@ -101,8 +94,8 @@ contract('Mixer', async accounts => {
       const { pi_a, pi_b, pi_c, publicSignals } = await utils.snarkProof(input)
       // console.log('proof', pi_a, pi_b, pi_c, publicSignals)
 
-      gas = await mixer.withdraw.estimateGas(pi_a, pi_b, pi_c, publicSignals, { from: sender })
-      console.log('withdraw gas', gas)
+      // gas = await mixer.withdraw.estimateGas(pi_a, pi_b, pi_c, publicSignals, { from: sender })
+      // console.log('withdraw gas', gas)
       const { logs } = await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: sender })
       logs[0].event.should.be.equal('Withdraw')
       // logs[0].args.nullifier.should.be.eq.BN(toBN(commitment))

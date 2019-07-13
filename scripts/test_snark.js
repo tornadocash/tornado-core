@@ -26,7 +26,7 @@ function generateDeposit() {
   const dep2 = generateDeposit();
   const dep3 = generateDeposit();
 
-  const tree = new merkleTree("", new jsStorage(), new mimcHasher(), 16, 0);
+  const tree = new merkleTree(16);
 
   await tree.insert(dep1.commitment);
   await tree.insert(dep2.commitment);

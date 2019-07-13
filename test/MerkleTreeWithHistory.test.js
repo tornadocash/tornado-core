@@ -9,9 +9,8 @@ const { takeSnapshot, revertSnapshot, increaseTime } = require('../scripts/ganac
 const MerkleTreeWithHistory = artifacts.require('./MerkleTreeWithHistoryMock.sol')
 const MiMC = artifacts.require('./MiMC.sol')
 
-const JsStorage = require('../lib/Storage')
 const MerkleTree = require('../lib/MerkleTree')
-const MimcHacher = require('../lib/MiMC')
+const MimcHasher = require('../lib/MiMC')
 
 function BNArrayToStringArray(array) {
   const arrayToPrint = []
@@ -34,14 +33,11 @@ contract('MerkleTreeWithHistory', async accounts => {
   let hasher
 
   before(async () => {
-    const storage = new JsStorage()
-    hasher = new MimcHacher()
     tree = new MerkleTree(
-      prefix,
-      storage,
-      hasher,
       levels,
       zeroValue,
+      null,
+      prefix,
     )
     miMC = await MiMC.deployed()
     await MerkleTreeWithHistory.link(MiMC, miMC.address)
@@ -73,14 +69,12 @@ contract('MerkleTreeWithHistory', async accounts => {
     })
 
     it('tests insert', async () => {
-      const storage = new JsStorage()
-      hasher = new MimcHacher()
+      hasher = new MimcHasher()
       tree = new MerkleTree(
-        prefix,
-        storage,
-        hasher,
         2,
         zeroValue,
+        null,
+        prefix,
       )
       await tree.insert('5')
       let {root, path_elements, path_index} = await tree.path(0)
@@ -97,15 +91,11 @@ contract('MerkleTreeWithHistory', async accounts => {
         await tree.insert(el)
       }
 
-      const storage = new JsStorage()
-      hasher = new MimcHacher()
       const batchTree = new MerkleTree(
-        prefix,
-        storage,
-        hasher,
         levels,
         zeroValue,
-        elements
+        elements,
+        prefix,
       );
       for(const [i, el] of Object.entries(elements)) {
         const pathViaConstructor = await batchTree.path(i)
@@ -120,15 +110,11 @@ contract('MerkleTreeWithHistory', async accounts => {
         await tree.insert(el)
       }
 
-      const storage = new JsStorage()
-      hasher = new MimcHacher()
       const batchTree = new MerkleTree(
-        prefix,
-        storage,
-        hasher,
         levels,
         zeroValue,
-        elements
+        elements,
+        prefix,
       );
       for(const [i, el] of Object.entries(elements)) {
         const pathViaConstructor = await batchTree.path(i)
@@ -142,16 +128,12 @@ contract('MerkleTreeWithHistory', async accounts => {
       for(let i = 1000; i < 31001; i++) {
         elements.push(i)
       }
-      const storage = new JsStorage()
-      hasher = new MimcHacher()
       console.time('MerkleTree');
       tree = new MerkleTree(
-        prefix,
-        storage,
-        hasher,
         levels,
         zeroValue,
-        elements
+        elements,
+        prefix,
       );
       console.timeEnd('MerkleTree');
       // 2,7 GHz Intel Core i7
@@ -184,21 +166,21 @@ contract('MerkleTreeWithHistory', async accounts => {
   describe('#MIMC', async () => {
     it.skip('gas price', async () => {
       const gas = await merkleTreeWithHistory.hashLeftRight.estimateGas(1,2)
-      console.log('gas', gas)
+      // console.log('gas', gas)
     })
   })
 
   afterEach(async () => {
     await revertSnapshot(snapshotId.result)
     snapshotId = await takeSnapshot()
-    const storage = new JsStorage()
-    hasher = new MimcHacher()
+    hasher = new MimcHasher()
     tree = new MerkleTree(
-      prefix,
-      storage,
-      hasher,
       levels,
       zeroValue,
+      null,
+      prefix,
+      null,
+      hasher,
     )
   })
 })
