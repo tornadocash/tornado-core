@@ -1,8 +1,22 @@
+## Requirements
+1. `node v11.15.0`
+2. `npm install -g npx`
+
+## Usage
+- `npm i`
+- `cp .env.example .env`
+- `npm run build:circuit`
+- `npm run build:contract`
+- `npx run truffle-cli`
+- `npm run migrate:dev`
+- `./cli.js deposit`
+- `./cli.js withdraw <note from previous step> <destination eth address>`
+
 ## Testing truffle
 1. `npm i`
 2. `npm run build:circuit`
-2. `npx truffle compile`
-3. `npx truffle test` - it may fail for the first time, just run one more time.
+2. `npm run build:contract`
+3. `npm run test` - it may fail for the first time, just run one more time.
 
 ## Testing js
 1. `npm i`
@@ -12,10 +26,6 @@
 
 ## Deploy
 1. `npx truffle migrate --network kovan --reset`
-
-## Requirements
-1. `node v11.15.0`
-2. `npm install -g npx`
 
 # Specs:
 - Deposit gas cost: deposit 903472
