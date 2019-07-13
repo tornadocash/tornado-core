@@ -4,17 +4,11 @@ const snarkjs = require("snarkjs");
 const bigInt = snarkjs.bigInt;
 const utils = require("./scripts/utils");
 const merkleTree = require('./lib/MerkleTree');
-const Web3 = require('web3')
+const Web3 = require('web3');
+require('dotenv').config();
+const { MERKLE_TREE_HEIGHT, AMOUNT, EMPTY_ELEMENT } = process.env;
 
 let web3, mixer;
-async function init() {
-  web3 = new Web3('http://localhost:8545', null, {transactionConfirmationBlocks: 1});
-  let netId = await web3.eth.net.getId()
-  const json = require('./build/contracts/Mixer.json');
-  mixer = new web3.eth.Contract(json.abi, json.networks[netId].address);
-  const tx = await web3.eth.getTransaction(json.networks[netId].transactionHash);
-  mixer.deployedBlock = tx.blockNumber;
-}
 
 function createDeposit(nullifier, secret) {
   let deposit = {nullifier, secret};
@@ -28,7 +22,7 @@ async function deposit() {
   const deposit = createDeposit(utils.rbigint(31), utils.rbigint(31));
 
   console.log("Submitting deposit transaction");
-  await mixer.methods.deposit("0x" + deposit.commitment.toString(16)).send({ value: web3.utils.toWei("1", "ether"), from: (await web3.eth.getAccounts())[0], gas:1e6 });
+  await mixer.methods.deposit("0x" + deposit.commitment.toString(16)).send({ value: AMOUNT, from: (await web3.eth.getAccounts())[0], gas:1e6 });
 
   const note = "0x" + deposit.preimage.toString('hex');
   console.log("Your note:", note);
@@ -43,7 +37,7 @@ async function withdraw(note, receiver) {
   console.log("Getting current state from mixer contract");
   const events = await mixer.getPastEvents('LeafAdded', {fromBlock: mixer.deployedBlock, toBlock: 'latest'});
   const leaves = events.sort(e => e.returnValues.leaf_index).map(e => e.returnValues.leaf);
-  const tree = new merkleTree(16, 0, leaves);
+  const tree = new merkleTree(MERKLE_TREE_HEIGHT, EMPTY_ELEMENT, leaves);
   const validRoot = await mixer.methods.isKnownRoot(await tree.root()).call();
   assert(validRoot === true);
 
@@ -71,6 +65,17 @@ async function withdraw(note, receiver) {
   await mixer.methods.withdraw(pi_a, pi_b, pi_c, publicSignals).send({ from: (await web3.eth.getAccounts())[0], gas: 1e6 });
   console.log("Done");
 }
+
+async function init() {
+  web3 = new Web3('http://localhost:8545', null, {transactionConfirmationBlocks: 1});
+  let netId = await web3.eth.net.getId();
+  const json = require('./build/contracts/Mixer.json');
+  const tx = await web3.eth.getTransaction(json.networks[netId].transactionHash);
+  mixer = new web3.eth.Contract(json.abi, json.networks[netId].address);
+  mixer.deployedBlock = tx.blockNumber;
+}
+
+// ========== CLI related stuff below ==============
 
 function printHelp(code = 0) {
   console.log(`Usage:
