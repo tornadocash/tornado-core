@@ -11,7 +11,8 @@
     "build:circuit": "mkdir -p build/circuits && npm run build:circuit:compile && npm run build:circuit:setup && npm run build:circuit:bin && npm run build:circuit:contract",
     "build:contract": "npx truffle compile",
     "test": "npx truffle test",
-    "migrate": "npx truffle migrate --network kovan --reset"
+    "migrate": "npx truffle migrate --network kovan --reset",
+    "migrate:dev": "npx truffle migrate --network development --reset"
   },
   "keywords": [],
   "author": "",
@@ -29,6 +30,7 @@
     "truffle-artifactor": "^4.0.23",
     "truffle-contract": "^4.0.24",
     "truffle-hdwallet-provider": "^1.0.14",
+    "web3": "^1.0.0-beta.55",
     "web3-utils": "^1.0.0-beta.55",
     "websnark": "0.0.4"
   }

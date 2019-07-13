@@ -1,40 +1,55 @@
 #!/usr/bin/env node
+const assert = require('assert');
 const snarkjs = require("snarkjs");
 const bigInt = snarkjs.bigInt;
 const utils = require("./scripts/utils");
 const merkleTree = require('./lib/MerkleTree');
-const contract = require("truffle-contract");
-const Mixer = contract(require('./build/contracts/Mixer.json'));
+const Web3 = require('web3')
 
-const sender = "";//accounts[0];
-const amount = "1 ether";
+let web3, mixer;
+async function init() {
+  web3 = new Web3('http://localhost:8545', null, {transactionConfirmationBlocks: 1});
+  let netId = await web3.eth.net.getId()
+  const json = require('./build/contracts/Mixer.json');
+  mixer = new web3.eth.Contract(json.abi, json.networks[netId].address);
+  const tx = await web3.eth.getTransaction(json.networks[netId].transactionHash);
+  mixer.deployedBlock = tx.blockNumber;
+}
+
+function createDeposit(nullifier, secret) {
+  let deposit = {nullifier, secret};
+  deposit.preimage = Buffer.concat([deposit.nullifier.leInt2Buff(32), deposit.secret.leInt2Buff(32)]);
+  deposit.commitment = utils.pedersenHash(deposit.preimage);
+  return deposit;
+}
 
 async function deposit() {
-  let deposit = {
-    nullifier: utils.rbigint(31),
-    secret: utils.rbigint(31),
-  };
-  const preimage = Buffer.concat([deposit.nullifier.leInt2Buff(32), deposit.secret.leInt2Buff(32)]);
-  deposit.commitment = utils.pedersenHash(preimage);
+  await init();
+  const deposit = createDeposit(utils.rbigint(31), utils.rbigint(31));
 
   console.log("Submitting deposit transaction");
-  const mixer = await Mixer.deployed();
-  await mixer.deposit(deposit.commitment, { value: amount, from: sender });
+  await mixer.methods.deposit("0x" + deposit.commitment.toString(16)).send({ value: web3.utils.toWei("1", "ether"), from: (await web3.eth.getAccounts())[0], gas:1e6 });
 
-  return preimage.toString('hex');
+  const note = "0x" + deposit.preimage.toString('hex');
+  console.log("Your note:", note);
+  return note;
 }
 
 async function withdraw(note, receiver) {
+  await init();
   let buf = Buffer.from(note.slice(2), "hex");
-  let deposit = {
-    nullifier: bigInt.leBuff2int(buf.slice(0, 32)),
-    secret: bigInt.leBuff2int(buf.slice(32, 64)),
-  };
+  let deposit = createDeposit(bigInt.leBuff2int(buf.slice(0, 32)), bigInt.leBuff2int(buf.slice(32, 64)));
 
   console.log("Getting current state from mixer contract");
-  const mixer = await Mixer.deployed();
+  const events = await mixer.getPastEvents('LeafAdded', {fromBlock: mixer.deployedBlock, toBlock: 'latest'});
+  const leaves = events.sort(e => e.returnValues.leaf_index).map(e => e.returnValues.leaf);
+  const tree = new merkleTree(16, 0, leaves);
+  const validRoot = await mixer.methods.isKnownRoot(await tree.root()).call();
+  assert(validRoot === true);
 
-  const {root, path_elements, path_index} = await tree.path(1);
+  const leafIndex = leaves.indexOf(deposit.commitment.toString());
+  assert(leafIndex > 0);
+  const {root, path_elements, path_index} = await tree.path(leafIndex);
   // Circuit input
   const input = {
     // public
@@ -53,17 +68,17 @@ async function withdraw(note, receiver) {
   const { pi_a, pi_b, pi_c, publicSignals } = await utils.snarkProof(input);
 
   console.log("Submitting withdraw transaction");
-  await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: sender })
+  await mixer.methods.withdraw(pi_a, pi_b, pi_c, publicSignals).send({ from: (await web3.eth.getAccounts())[0], gas: 1e6 });
+  console.log("Done");
 }
 
-function printHelp() {
-  console.log(`
-Usage:
+function printHelp(code = 0) {
+  console.log(`Usage:
   Submit a deposit from default eth account and return the resulting note 
   $ ./cli.js deposit
   
   Withdraw a note to 'receiver' account
-  $ ./cli.js withdraw <note <receiver
+  $ ./cli.js withdraw <note> <receiver>
   
 Example:
   $ ./cli.js deposit
@@ -72,38 +87,29 @@ Example:
   
   $ ./cli.js withdraw 0x1941fa999e2b4bfeec3ce53c2440c3bc991b1b84c9bb650ea19f8331baf621001e696487e2a2ee54541fa12f49498d71e24d00b1731a8ccd4f5f5126f3d9f400 0xee6249BA80596A4890D1BD84dbf5E4322eA4E7f0
 `);
-  process.exit(0);
+  process.exit(code);
 }
 
-(async () => {
-  const dep = await deposit();
-  console.log(`Your note: 0x${dep}`);
+const args = process.argv.slice(2);
+if (args.length === 0) {
+  printHelp();
+} else {
+  switch (args[0]) {
+    case 'deposit':
+      if (args.length === 1)
+        deposit().then(() => process.exit(0)).catch(err => {console.log(err); process.exit(1)});
+      else
+        printHelp(1);
+      break;
 
-  const acc = "0xee6249BA80596A4890D1BD84dbf5E4322eA4E7f0";//accounts[1];
-  await withdraw(dep, acc);
-})();
+    case 'withdraw':
+      if (args.length === 3 && /^0x[0-9a-fA-F]{128}$/.test(args[1]) && /^0x[0-9a-fA-F]{40}$/.test(args[2]))
+        withdraw(args[1], args[2]).then(() => process.exit(0)).catch(err => {console.log(err); process.exit(1)});
+      else
+        printHelp(1);
+      break;
 
-
-// const args = process.argv.slice(2);
-// if (args.length === 0) {
-//   printHelp();
-// }
-//
-// switch (args[0]) {
-//   case 'deposit':
-//     if (args.length === 1)
-//       deposit().then(() => process.exit(0));
-//     else
-//       printHelp();
-//     break;
-//
-//   case 'withdraw':
-//     if (args.length === 3 && /^[0-9a-fA-F]{128}$/.test(args[1]) && /^[0-9a-fA-F]{64}$/.test(args[2]))
-//       withdraw(args[1], args[2]).then(() => process.exit(0));
-//     else
-//       printHelp();
-//     break;
-//
-//   default:
-//     printHelp();
-// }
+    default:
+      printHelp(1);
+  }
+}
