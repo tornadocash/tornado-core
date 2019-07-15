@@ -12,7 +12,8 @@
     "build:contract": "npx truffle compile",
     "test": "npx truffle test",
     "migrate": "npx truffle migrate --network kovan --reset",
-    "migrate:dev": "npx truffle migrate --network development --reset"
+    "migrate:dev": "npx truffle migrate --network development --reset",
+    "browserify": "browserify cli.js -o index.js --exclude worker_threads"
   },
   "keywords": [],
   "author": "",
