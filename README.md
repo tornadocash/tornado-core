@@ -5,8 +5,8 @@
 ## Usage
 1. `npm i`
 1. `cp .env.example .env`
-1. `npm run build:circuit`
-1. `npm run build:contract`
+1. `npm run build:circuit` - may take 10 minutes or more
+1. `npm run build:contract` 
 1. `npx run ganache-cli`
 1. `npm run migrate:dev`
 1. `./cli.js deposit`
