@@ -10,6 +10,7 @@ module.exports = function(deployer) {
     const verifier = await Verifier.deployed()
     const miMC = await MiMC.deployed()
     await Mixer.link(MiMC, miMC.address)
-    await deployer.deploy(Mixer, verifier.address, AMOUNT, MERKLE_TREE_HEIGHT, EMPTY_ELEMENT)
+    const mixer = await deployer.deploy(Mixer, verifier.address, AMOUNT, MERKLE_TREE_HEIGHT, EMPTY_ELEMENT)
+    console.log("Mixer's address ", mixer.address)
   })
 };
