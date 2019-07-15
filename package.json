@@ -13,13 +13,14 @@
     "test": "npx truffle test",
     "migrate": "npx truffle migrate --network kovan --reset",
     "migrate:dev": "npx truffle migrate --network development --reset",
-    "browserify": "browserify cli.js -o index.js --exclude worker_threads"
+    "browserify": "npx browserify cli.js -o index.js --exclude worker_threads"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "bn-chai": "^1.0.1",
+    "browserify": "^16.3.0",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "circom": "0.0.30",
