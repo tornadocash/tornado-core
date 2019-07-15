@@ -3,7 +3,7 @@ const should = require('chai')
   .use(require('chai-as-promised'))
 .should()
 
-const { toWei, toBN, fromWei } = require('web3-utils')
+const { toWei, toBN, fromWei, toHex } = require('web3-utils')
 const { takeSnapshot, revertSnapshot, increaseTime } = require('../scripts/ganacheHelper');
 
 const Mixer = artifacts.require('./Mixer.sol')
@@ -69,21 +69,29 @@ contract('Mixer', async accounts => {
 
   describe('#withdraw', async () => {
     it('should work', async () => {
+      const receiver = utils.rbigint(20)
+      let fee = bigInt(1e17)
       const deposit = generateDeposit()
+      const relayer = sender
+      const user = accounts[4]
       await tree.insert(deposit.commitment)
-      // let gas = await mixer.deposit.estimateGas(toBN(deposit.commitment.toString()), { value: AMOUNT, from: sender })
-      // console.log('deposit gas', gas)
-      await mixer.deposit(toBN(deposit.commitment.toString()), { value: AMOUNT, from: sender })
+
+      const balanceUserBefore = await web3.eth.getBalance(user)
+
+      await mixer.deposit(toBN(deposit.commitment.toString()), { value: AMOUNT, from: user, gasPrice: '0' })
+
+      const balanceUserAfter = await web3.eth.getBalance(user)
+      balanceUserAfter.should.be.eq.BN(toBN(balanceUserBefore).sub(toBN(AMOUNT)))
 
       const {root, path_elements, path_index} = await tree.path(0);
 
       // Circuit input
       const input = stringifyBigInts({
         // public
-        root: root,
+        root,
         nullifier: deposit.nullifier,
-        receiver: utils.rbigint(20),
-        fee: bigInt(1e17),
+        receiver,
+        fee,
 
         // private
         secret: deposit.secret,
@@ -92,15 +100,24 @@ contract('Mixer', async accounts => {
       })
 
       const { pi_a, pi_b, pi_c, publicSignals } = await utils.snarkProof(input)
-      // console.log('proof', pi_a, pi_b, pi_c, publicSignals)
 
-      // gas = await mixer.withdraw.estimateGas(pi_a, pi_b, pi_c, publicSignals, { from: sender })
-      // console.log('withdraw gas', gas)
-      const { logs } = await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: sender })
+      const balanceMixerBefore = await web3.eth.getBalance(mixer.address)
+      const balanceRelayerBefore = await web3.eth.getBalance(relayer)
+      const balanceRecieverBefore = await web3.eth.getBalance(toHex(receiver.toString()))
+
+      const { logs } = await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer, gasPrice: '0' })
+
+      const balanceMixerAfter = await web3.eth.getBalance(mixer.address)
+      const balanceRelayerAfter = await web3.eth.getBalance(relayer)
+      const balanceRecieverAfter = await web3.eth.getBalance(toHex(receiver.toString()))
+      fee = toBN(fee.toString())
+      balanceMixerAfter.should.be.eq.BN(toBN(balanceMixerBefore).sub(toBN(AMOUNT)))
+      balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore).add(fee))
+      balanceRecieverAfter.should.be.eq.BN(toBN(balanceRecieverBefore).add(toBN(AMOUNT)).sub(fee))
+
       logs[0].event.should.be.equal('Withdraw')
-      // logs[0].args.nullifier.should.be.eq.BN(toBN(commitment))
-      // logs[0].args.fee.should.be.eq.BN(toBN(0))
-      // console.log('logs', logs)
+      logs[0].args.nullifier.should.be.eq.BN(toBN(deposit.nullifier.toString()))
+      logs[0].args.fee.should.be.eq.BN(fee)
     })
   })
 
