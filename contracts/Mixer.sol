@@ -69,4 +69,8 @@ contract Mixer is MerkleTreeWithHistory {
     }
     emit Withdraw(receiver, nullifier, fee);
   }
+
+  function isSpent(uint256 nullifier) public view returns(bool) {
+    return nullifiers[nullifier];
+  }
 }
