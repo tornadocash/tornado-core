@@ -16,4 +16,4 @@ async function snarkVerify(proof) {
   return groth.isValid(verification_key, proof, proof.publicSignals);
 }
 
-module.exports = {rbigint, pedersenHash, snarkProof, snarkVerify};
+module.exports = {rbigint, pedersenHash, snarkVerify};
