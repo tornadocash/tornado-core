@@ -89,12 +89,26 @@ contract MerkleTreeWithHistory {
         return true;
       }
     }
+
+    // process the rest of roots
     for(i = ROOT_HISTORY_SIZE - 1; i > current_root; i--) {
       if (root == _roots[i]) {
         return true;
       }
     }
     return false;
+
+    // or we can do that in other way
+    //   uint256 i = _current_root;
+    //   do {
+    //       if (root == _roots[i]) {
+    //           return true;
+    //       }
+    //       if (i == 0) {
+    //           i = ROOT_HISTORY_SIZE;
+    //       }
+    //       i--;
+    //   } while (i != _current_root);
   }
 
   function getLastRoot() public view returns(uint256) {
