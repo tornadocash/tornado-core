@@ -41,8 +41,8 @@ async function withdraw(note, receiver) {
   const validRoot = await mixer.methods.isKnownRoot(await tree.root()).call();
   assert(validRoot === true);
 
-  const leafIndex = leaves.indexOf(deposit.commitment.toString());
-  assert(leafIndex > 0);
+  const leafIndex = leaves.map(el => el.toString()).indexOf(deposit.commitment.toString());
+  assert(leafIndex >= 0);
   const {root, path_elements, path_index} = await tree.path(leafIndex);
   // Circuit input
   const input = {
@@ -79,17 +79,17 @@ async function init() {
 
 function printHelp(code = 0) {
   console.log(`Usage:
-  Submit a deposit from default eth account and return the resulting note 
+  Submit a deposit from default eth account and return the resulting note
   $ ./cli.js deposit
-  
+
   Withdraw a note to 'receiver' account
   $ ./cli.js withdraw <note> <receiver>
-  
+
 Example:
   $ ./cli.js deposit
   ...
   Your note: 0x1941fa999e2b4bfeec3ce53c2440c3bc991b1b84c9bb650ea19f8331baf621001e696487e2a2ee54541fa12f49498d71e24d00b1731a8ccd4f5f5126f3d9f400
-  
+
   $ ./cli.js withdraw 0x1941fa999e2b4bfeec3ce53c2440c3bc991b1b84c9bb650ea19f8331baf621001e696487e2a2ee54541fa12f49498d71e24d00b1731a8ccd4f5f5126f3d9f400 0xee6249BA80596A4890D1BD84dbf5E4322eA4E7f0
 `);
   process.exit(code);
