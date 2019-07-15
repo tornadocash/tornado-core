@@ -1,14 +1,19 @@
 #!/usr/bin/env node
+// browserify cli.js -o index.js  --exclude worker_threads
+const fs = require('fs');
 const assert = require('assert');
 const snarkjs = require("snarkjs");
 const bigInt = snarkjs.bigInt;
 const utils = require("./scripts/utils");
 const merkleTree = require('./lib/MerkleTree');
 const Web3 = require('web3');
-require('dotenv').config();
-const { MERKLE_TREE_HEIGHT, AMOUNT, EMPTY_ELEMENT } = process.env;
+const buildGroth16 = require('websnark/src/groth16');
+const websnarkUtils = require('websnark/src/utils');
 
-let web3, mixer;
+let web3, mixer, circuit, proving_key, groth16;
+let MERKLE_TREE_HEIGHT, AMOUNT, EMPTY_ELEMENT;
+
+const inBrowser = (typeof window !== "undefined");
 
 function createDeposit(nullifier, secret) {
   let deposit = {nullifier, secret};
@@ -18,7 +23,6 @@ function createDeposit(nullifier, secret) {
 }
 
 async function deposit() {
-  await init();
   const deposit = createDeposit(utils.rbigint(31), utils.rbigint(31));
 
   console.log("Submitting deposit transaction");
@@ -30,7 +34,6 @@ async function deposit() {
 }
 
 async function withdraw(note, receiver) {
-  await init();
   let buf = Buffer.from(note.slice(2), "hex");
   let deposit = createDeposit(bigInt.leBuff2int(buf.slice(0, 32)), bigInt.leBuff2int(buf.slice(32, 64)));
 
@@ -39,7 +42,10 @@ async function withdraw(note, receiver) {
   const leaves = events.sort(e => e.returnValues.leaf_index).map(e => e.returnValues.leaf);
   const tree = new merkleTree(MERKLE_TREE_HEIGHT, EMPTY_ELEMENT, leaves);
   const validRoot = await mixer.methods.isKnownRoot(await tree.root()).call();
+  // todo make sure that function input is 32 bytes long
+  const isSpent = await mixer.methods.isSpent("0x" + deposit.nullifier.toString(16)).call();
   assert(validRoot === true);
+  assert(isSpent === false);
 
   const leafIndex = leaves.map(el => el.toString()).indexOf(deposit.commitment.toString());
   assert(leafIndex >= 0);
@@ -59,7 +65,8 @@ async function withdraw(note, receiver) {
   };
 
   console.log("Generating SNARK proof");
-  const { pi_a, pi_b, pi_c, publicSignals } = await utils.snarkProof(input);
+  const proof = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key);
+  const { pi_a, pi_b, pi_c, publicSignals } = websnarkUtils.toSolidityInput(proof);
 
   console.log("Submitting withdraw transaction");
   await mixer.methods.withdraw(pi_a, pi_b, pi_c, publicSignals).send({ from: (await web3.eth.getAccounts())[0], gas: 1e6 });
@@ -67,54 +74,83 @@ async function withdraw(note, receiver) {
 }
 
 async function init() {
-  web3 = new Web3('http://localhost:8545', null, {transactionConfirmationBlocks: 1});
+  let contractJson;
+  if (inBrowser) {
+    web3 = new Web3(window.web3.currentProvider);
+    contractJson = await (await fetch('build/contracts/Mixer.json')).json();
+    circuit = await (await fetch('build/circuits/withdraw.json')).json();
+    proving_key = await (await fetch('build/circuits/withdraw_proving_key.bin')).arrayBuffer();
+    MERKLE_TREE_HEIGHT = 16;
+    AMOUNT = 1e18;
+    EMPTY_ELEMENT = 0;
+  } else {
+    web3 = new Web3('http://localhost:8545', null, {transactionConfirmationBlocks: 1});
+    contractJson = require('./build/contracts/Mixer.json');
+    circuit = require("./build/circuits/withdraw.json");
+    proving_key = fs.readFileSync("build/circuits/withdraw_proving_key.bin").buffer;
+    require('dotenv').config();
+    MERKLE_TREE_HEIGHT = process.env.MERKLE_TREE_HEIGHT;
+    AMOUNT = process.env.AMOUNT;
+    EMPTY_ELEMENT = process.env.EMPTY_ELEMENT;
+  }
+  groth16 = await buildGroth16();
   let netId = await web3.eth.net.getId();
-  const json = require('./build/contracts/Mixer.json');
-  const tx = await web3.eth.getTransaction(json.networks[netId].transactionHash);
-  mixer = new web3.eth.Contract(json.abi, json.networks[netId].address);
+  const tx = await web3.eth.getTransaction(contractJson.networks[netId].transactionHash);
+  mixer = new web3.eth.Contract(contractJson.abi, contractJson.networks[netId].address);
   mixer.deployedBlock = tx.blockNumber;
+  console.log("Loaded");
 }
 
 // ========== CLI related stuff below ==============
 
 function printHelp(code = 0) {
   console.log(`Usage:
-  Submit a deposit from default eth account and return the resulting note
+  Submit a deposit from default eth account and return the resulting note 
   $ ./cli.js deposit
-
+  
   Withdraw a note to 'receiver' account
   $ ./cli.js withdraw <note> <receiver>
-
+  
 Example:
   $ ./cli.js deposit
   ...
   Your note: 0x1941fa999e2b4bfeec3ce53c2440c3bc991b1b84c9bb650ea19f8331baf621001e696487e2a2ee54541fa12f49498d71e24d00b1731a8ccd4f5f5126f3d9f400
-
+  
   $ ./cli.js withdraw 0x1941fa999e2b4bfeec3ce53c2440c3bc991b1b84c9bb650ea19f8331baf621001e696487e2a2ee54541fa12f49498d71e24d00b1731a8ccd4f5f5126f3d9f400 0xee6249BA80596A4890D1BD84dbf5E4322eA4E7f0
 `);
   process.exit(code);
 }
 
-const args = process.argv.slice(2);
-if (args.length === 0) {
-  printHelp();
-} else {
-  switch (args[0]) {
-    case 'deposit':
-      if (args.length === 1)
-        deposit().then(() => process.exit(0)).catch(err => {console.log(err); process.exit(1)});
-      else
-        printHelp(1);
-      break;
+// const args = process.argv.slice(2);
+// if (args.length === 0) {
+//   printHelp();
+// } else {
+//   switch (args[0]) {
+//     case 'deposit':
+//       if (args.length === 1)
+//         await init(); // then...
+//         deposit().then(() => process.exit(0)).catch(err => {console.log(err); process.exit(1)});
+//       else
+//         printHelp(1);
+//       break;
+//
+//     case 'withdraw':
+//       if (args.length === 3 && /^0x[0-9a-fA-F]{128}$/.test(args[1]) && /^0x[0-9a-fA-F]{40}$/.test(args[2]))
+//         await init(); // then...
+//         withdraw(args[1], args[2]).then(() => process.exit(0)).catch(err => {console.log(err); process.exit(1)});
+//       else
+//         printHelp(1);
+//       break;
+//
+//     default:
+//       printHelp(1);
+//   }
+// }
 
-    case 'withdraw':
-      if (args.length === 3 && /^0x[0-9a-fA-F]{128}$/.test(args[1]) && /^0x[0-9a-fA-F]{40}$/.test(args[2]))
-        withdraw(args[1], args[2]).then(() => process.exit(0)).catch(err => {console.log(err); process.exit(1)});
-      else
-        printHelp(1);
-      break;
-
-    default:
-      printHelp(1);
-  }
-}
+window.deposit = deposit;
+window.withdraw = async () => {
+  const note = prompt("Enter the note to withdraw");
+  const receiver = (await web3.eth.getAccounts())[0];
+  await withdraw(note, receiver);
+};
+init();
