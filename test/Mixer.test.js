@@ -3,15 +3,15 @@ const should = require('chai')
   .use(require('chai-as-promised'))
 .should()
 
-const { toWei, toBN, fromWei, toHex } = require('web3-utils')
+const { toWei, toBN, fromWei, toHex, randomHex } = require('web3-utils')
 const { takeSnapshot, revertSnapshot, increaseTime } = require('../scripts/ganacheHelper');
 
 const Mixer = artifacts.require('./Mixer.sol')
 const { AMOUNT } = process.env
 
-const utils = require("../scripts/utils")
-const stringifyBigInts = require("websnark/tools/stringifybigint").stringifyBigInts
-const snarkjs = require("snarkjs");
+const utils = require('../scripts/utils')
+const stringifyBigInts = require('websnark/tools/stringifybigint').stringifyBigInts
+const snarkjs = require('snarkjs');
 const bigInt = snarkjs.bigInt;
 const MerkleTree = require('../lib/MerkleTree')
 
@@ -25,6 +25,14 @@ function generateDeposit() {
   return deposit;
 }
 
+function BNArrayToStringArray(array) {
+  const arrayToPrint = []
+  array.forEach(item => {
+    arrayToPrint.push(item.toString())
+  })
+  return arrayToPrint
+}
+
 contract('Mixer', async accounts => {
   let mixer
   const sender = accounts[0]
@@ -34,6 +42,9 @@ contract('Mixer', async accounts => {
   let snapshotId
   let prefix = 'test'
   let tree
+  const fee = bigInt(1e17)
+  const receiver = utils.rbigint(20)
+  const relayer = accounts[1]
 
   before(async () => {
     tree = new MerkleTree(
@@ -65,14 +76,18 @@ contract('Mixer', async accounts => {
       logs[1].args.from.should.be.equal(sender)
       logs[1].args.commitment.should.be.eq.BN(toBN(commitment))
     })
+
+    it('should throw if there is a such commitment', async () => {
+      const commitment = 42
+      await mixer.deposit(commitment, { value: AMOUNT, from: sender }).should.be.fulfilled
+      const error = await mixer.deposit(commitment, { value: AMOUNT, from: sender }).should.be.rejected
+      error.reason.should.be.equal('The commitment has been submitted')
+    })
   })
 
   describe('#withdraw', async () => {
     it('should work', async () => {
-      const receiver = utils.rbigint(20)
-      let fee = bigInt(1e17)
       const deposit = generateDeposit()
-      const relayer = sender
       const user = accounts[4]
       await tree.insert(deposit.commitment)
 
@@ -110,19 +125,95 @@ contract('Mixer', async accounts => {
       const balanceMixerAfter = await web3.eth.getBalance(mixer.address)
       const balanceRelayerAfter = await web3.eth.getBalance(relayer)
       const balanceRecieverAfter = await web3.eth.getBalance(toHex(receiver.toString()))
-      fee = toBN(fee.toString())
+      const feeBN = toBN(fee.toString())
       balanceMixerAfter.should.be.eq.BN(toBN(balanceMixerBefore).sub(toBN(AMOUNT)))
-      balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore).add(fee))
-      balanceRecieverAfter.should.be.eq.BN(toBN(balanceRecieverBefore).add(toBN(AMOUNT)).sub(fee))
+      balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore).add(feeBN))
+      balanceRecieverAfter.should.be.eq.BN(toBN(balanceRecieverBefore).add(toBN(AMOUNT)).sub(feeBN))
 
       logs[0].event.should.be.equal('Withdraw')
       logs[0].args.nullifier.should.be.eq.BN(toBN(deposit.nullifier.toString()))
-      logs[0].args.fee.should.be.eq.BN(fee)
+      logs[0].args.fee.should.be.eq.BN(feeBN)
+    })
+
+    it('should prevent double spend', async () => {
+      const deposit = generateDeposit()
+      await tree.insert(deposit.commitment)
+      await mixer.deposit(toBN(deposit.commitment.toString()), { value: AMOUNT, from: sender })
+
+      const {root, path_elements, path_index} = await tree.path(0);
+
+      const input = stringifyBigInts({
+        root,
+        nullifier: deposit.nullifier,
+        receiver,
+        fee,
+        secret: deposit.secret,
+        pathElements: path_elements,
+        pathIndex: path_index,
+      })
+
+      const { pi_a, pi_b, pi_c, publicSignals } = await utils.snarkProof(input)
+      await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer }).should.be.fulfilled
+      const error = await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer }).should.be.rejected
+      error.reason.should.be.equal('The note has been already spent')
+    })
+
+    it('fee should be less or equal transfer value', async () => {
+      const deposit = generateDeposit()
+      await tree.insert(deposit.commitment)
+      await mixer.deposit(toBN(deposit.commitment.toString()), { value: AMOUNT, from: sender })
+
+      const {root, path_elements, path_index} = await tree.path(0);
+      oneEtherFee = bigInt(1e18) // 1 ether
+      const input = stringifyBigInts({
+        root,
+        nullifier: deposit.nullifier,
+        receiver,
+        fee: oneEtherFee,
+        secret: deposit.secret,
+        pathElements: path_elements,
+        pathIndex: path_index,
+      })
+
+      const { pi_a, pi_b, pi_c, publicSignals } = await utils.snarkProof(input)
+      const error = await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer }).should.be.rejected
+      error.reason.should.be.equal('Fee exceeds transfer value')
+    })
+
+    it('should throw for corrupted merkle tree root', async () => {
+      const deposit = generateDeposit()
+      await tree.insert(deposit.commitment)
+      await mixer.deposit(toBN(deposit.commitment.toString()), { value: AMOUNT, from: sender })
+
+      const {root, path_elements, path_index} = await tree.path(0)
+
+      const input = stringifyBigInts({
+        root,
+        nullifier: deposit.nullifier,
+        receiver,
+        fee,
+        secret: deposit.secret,
+        pathElements: path_elements,
+        pathIndex: path_index,
+      })
+
+      const dummyRoot = randomHex(32)
+      const { pi_a, pi_b, pi_c, publicSignals } = await utils.snarkProof(input)
+      publicSignals[0] = dummyRoot
+
+      const error = await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer }).should.be.rejected
+      error.reason.should.be.equal('Cannot find your merkle root')
     })
   })
 
   afterEach(async () => {
     await revertSnapshot(snapshotId.result)
     snapshotId = await takeSnapshot()
+    tree = new MerkleTree(
+      levels,
+      zeroValue,
+      null,
+      prefix,
+    )
   })
 })

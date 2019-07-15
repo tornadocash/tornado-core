@@ -84,7 +84,7 @@ contract MerkleTreeWithHistory {
     }
     // search most recent first
     uint256 i;
-    for(i = current_root; i >= 0; i--) {
+    for(i = current_root; i < 2**256 - 1; i--) {
       if (root == _roots[i]) {
         return true;
       }

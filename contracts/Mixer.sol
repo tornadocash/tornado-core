@@ -9,6 +9,8 @@ contract IVerifier {
 contract Mixer is MerkleTreeWithHistory {
   uint256 public transferValue;
   mapping(uint256 => bool) public nullifiers;
+  // we store all commitments just to prevent accidental deposits with the same commitment
+  mapping(uint256 => bool) public commitments;
   IVerifier verifier;
 
   event Deposit(address from, uint256 commitment);
@@ -35,7 +37,9 @@ contract Mixer is MerkleTreeWithHistory {
   */
   function deposit(uint256 commitment) public payable {
     require(msg.value == transferValue, "Please send `transferValue` ETH along with transaction");
+    require(!commitments[commitment], "The commitment has been submitted");
     _insert(commitment);
+    commitments[commitment] = true;
     emit Deposit(msg.sender, commitment);
   }
 
