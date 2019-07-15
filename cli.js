@@ -31,6 +31,11 @@ async function deposit() {
   return note;
 }
 
+async function getBalance(receiver) {
+  const balance = await web3.eth.getBalance(receiver)
+  console.log('balance is ', web3.utils.fromWei(balance))
+}
+
 async function withdraw(note, receiver) {
   let buf = Buffer.from(note.slice(2), "hex");
   let deposit = createDeposit(bigInt.leBuff2int(buf.slice(0, 32)), bigInt.leBuff2int(buf.slice(32, 64)));
@@ -103,17 +108,17 @@ async function init() {
 
 function printHelp(code = 0) {
   console.log(`Usage:
-  Submit a deposit from default eth account and return the resulting note 
+  Submit a deposit from default eth account and return the resulting note
   $ ./cli.js deposit
-  
+
   Withdraw a note to 'receiver' account
   $ ./cli.js withdraw <note> <receiver>
-  
+
 Example:
   $ ./cli.js deposit
   ...
   Your note: 0x1941fa999e2b4bfeec3ce53c2440c3bc991b1b84c9bb650ea19f8331baf621001e696487e2a2ee54541fa12f49498d71e24d00b1731a8ccd4f5f5126f3d9f400
-  
+
   $ ./cli.js withdraw 0x1941fa999e2b4bfeec3ce53c2440c3bc991b1b84c9bb650ea19f8331baf621001e696487e2a2ee54541fa12f49498d71e24d00b1731a8ccd4f5f5126f3d9f400 0xee6249BA80596A4890D1BD84dbf5E4322eA4E7f0
 `);
   process.exit(code);
@@ -140,7 +145,11 @@ if (inBrowser) {
       else
         printHelp(1);
         break;
-
+      case 'balance':
+        if (args.length === 2 && /^0x[0-9a-fA-F]{40}$/.test(args[1])) {
+          init().then(async () => getBalance(args[1])).then(() => process.exit(0)).catch(err => {console.log(err); process.exit(1)});
+        }
+        break
       case 'withdraw':
         if (args.length === 3 && /^0x[0-9a-fA-F]{128}$/.test(args[1]) && /^0x[0-9a-fA-F]{40}$/.test(args[2])) {
           init().then(async () => withdraw(args[1], args[2])).then(() => process.exit(0)).catch(err => {console.log(err); process.exit(1)});
