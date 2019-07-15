@@ -30,8 +30,8 @@
     "truffle-artifactor": "^4.0.23",
     "truffle-contract": "^4.0.24",
     "truffle-hdwallet-provider": "^1.0.14",
-    "web3": "1.0.0-beta.37",
-    "web3-utils": "1.0.0-beta.37",
-    "websnark": "0.0.4"
+    "web3": "^1.0.0-beta.55",
+    "web3-utils": "^1.0.0-beta.55",
+    "websnark": "git+https://github.com/poma/websnark.git#59078413786500a78fdc3cc2c74f834fc759049d"
   }
 }
