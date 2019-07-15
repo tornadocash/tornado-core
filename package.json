@@ -32,6 +32,6 @@
     "truffle-hdwallet-provider": "^1.0.14",
     "web3": "^1.0.0-beta.55",
     "web3-utils": "^1.0.0-beta.55",
-    "websnark": "git+https://github.com/poma/websnark.git#59078413786500a78fdc3cc2c74f834fc759049d"
+    "websnark": "git+https://github.com/poma/websnark.git#271c74a76f4d9277c049283c45929fb3a5bb46fc"
   }
 }
