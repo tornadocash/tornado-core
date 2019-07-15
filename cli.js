@@ -12,7 +12,6 @@ const websnarkUtils = require('websnark/src/utils');
 
 let web3, mixer, circuit, proving_key, groth16;
 let MERKLE_TREE_HEIGHT, AMOUNT, EMPTY_ELEMENT;
-
 const inBrowser = (typeof window !== "undefined");
 
 function createDeposit(nullifier, secret) {
@@ -121,36 +120,46 @@ Example:
   process.exit(code);
 }
 
-// const args = process.argv.slice(2);
-// if (args.length === 0) {
-//   printHelp();
-// } else {
-//   switch (args[0]) {
-//     case 'deposit':
-//       if (args.length === 1)
-//         await init(); // then...
-//         deposit().then(() => process.exit(0)).catch(err => {console.log(err); process.exit(1)});
-//       else
-//         printHelp(1);
-//       break;
-//
-//     case 'withdraw':
-//       if (args.length === 3 && /^0x[0-9a-fA-F]{128}$/.test(args[1]) && /^0x[0-9a-fA-F]{40}$/.test(args[2]))
-//         await init(); // then...
-//         withdraw(args[1], args[2]).then(() => process.exit(0)).catch(err => {console.log(err); process.exit(1)});
-//       else
-//         printHelp(1);
-//       break;
-//
-//     default:
-//       printHelp(1);
-//   }
-// }
+if (inBrowser) {
+  window.deposit = deposit;
+  window.withdraw = async () => {
+    const note = prompt("Enter the note to withdraw");
+    const receiver = (await web3.eth.getAccounts())[0];
+    await withdraw(note, receiver);
+  };
+  init();
+} else {
+  const args = process.argv.slice(2);
+  if (args.length === 0) {
+    printHelp();
+  } else {
+    switch (args[0]) {
+      case 'deposit':
+        if (args.length === 1) {
+          await init(); // then...
+          deposit().then(() => process.exit(0)).catch(err => {
+            console.log(err);
+            process.exit(1)
+          });
+        }
+      else
+        printHelp(1);
+        break;
 
-window.deposit = deposit;
-window.withdraw = async () => {
-  const note = prompt("Enter the note to withdraw");
-  const receiver = (await web3.eth.getAccounts())[0];
-  await withdraw(note, receiver);
-};
-init();
+      case 'withdraw':
+        if (args.length === 3 && /^0x[0-9a-fA-F]{128}$/.test(args[1]) && /^0x[0-9a-fA-F]{40}$/.test(args[2])) {
+          await init(); // then...
+          withdraw(args[1], args[2]).then(() => process.exit(0)).catch(err => {
+            console.log(err);
+            process.exit(1)
+          });
+        }
+      else
+        printHelp(1);
+        break;
+
+      default:
+        printHelp(1);
+    }
+  }
+}
