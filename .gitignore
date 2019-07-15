@@ -1,5 +1,6 @@
 build
 .vscode
+/index.js
 
 # Created by .ignore support plugin (hsz.mobi)
 ### Node template
