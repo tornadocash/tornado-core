@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-// browserify cli.js -o index.js  --exclude worker_threads
 const fs = require('fs');
 const assert = require('assert');
 const snarkjs = require("snarkjs");
@@ -75,7 +74,7 @@ async function withdraw(note, receiver) {
 async function init() {
   let contractJson;
   if (inBrowser) {
-    web3 = new Web3(window.web3.currentProvider);
+    web3 = new Web3(window.web3.currentProvider, null, {transactionConfirmationBlocks: 1});
     contractJson = await (await fetch('build/contracts/Mixer.json')).json();
     circuit = await (await fetch('build/circuits/withdraw.json')).json();
     proving_key = await (await fetch('build/circuits/withdraw_proving_key.bin')).arrayBuffer();
@@ -136,11 +135,7 @@ if (inBrowser) {
     switch (args[0]) {
       case 'deposit':
         if (args.length === 1) {
-          await init(); // then...
-          deposit().then(() => process.exit(0)).catch(err => {
-            console.log(err);
-            process.exit(1)
-          });
+          init().then(async () => deposit()).then(() => process.exit(0)).catch(err => {console.log(err); process.exit(1)});
         }
       else
         printHelp(1);
@@ -148,11 +143,7 @@ if (inBrowser) {
 
       case 'withdraw':
         if (args.length === 3 && /^0x[0-9a-fA-F]{128}$/.test(args[1]) && /^0x[0-9a-fA-F]{40}$/.test(args[2])) {
-          await init(); // then...
-          withdraw(args[1], args[2]).then(() => process.exit(0)).catch(err => {
-            console.log(err);
-            process.exit(1)
-          });
+          init().then(async () => withdraw(args[1], args[2])).then(() => process.exit(0)).catch(err => {console.log(err); process.exit(1)});
         }
       else
         printHelp(1);
