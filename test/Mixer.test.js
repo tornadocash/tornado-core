@@ -172,7 +172,8 @@ contract('Mixer', async accounts => {
         pathIndex: path_index,
       })
 
-      const { pi_a, pi_b, pi_c, publicSignals } = await utils.snarkProof(input)
+      const proof = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
+      const { pi_a, pi_b, pi_c, publicSignals } = websnarkUtils.toSolidityInput(proof)
 
       const balanceMixerBefore = await web3.eth.getBalance(mixer.address)
       const balanceRelayerBefore = await web3.eth.getBalance(relayer)
@@ -210,7 +211,8 @@ contract('Mixer', async accounts => {
         pathIndex: path_index,
       })
 
-      const { pi_a, pi_b, pi_c, publicSignals } = await utils.snarkProof(input)
+      const proof = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
+      const { pi_a, pi_b, pi_c, publicSignals } = websnarkUtils.toSolidityInput(proof)
       await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer }).should.be.fulfilled
       const error = await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('The note has been already spent')
@@ -233,7 +235,8 @@ contract('Mixer', async accounts => {
         pathIndex: path_index,
       })
 
-      const { pi_a, pi_b, pi_c, publicSignals } = await utils.snarkProof(input)
+      const proof = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
+      const { pi_a, pi_b, pi_c, publicSignals } = websnarkUtils.toSolidityInput(proof)
       const error = await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('Fee exceeds transfer value')
     })
@@ -256,7 +259,8 @@ contract('Mixer', async accounts => {
       })
 
       const dummyRoot = randomHex(32)
-      const { pi_a, pi_b, pi_c, publicSignals } = await utils.snarkProof(input)
+      const proof = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
+      const { pi_a, pi_b, pi_c, publicSignals } = websnarkUtils.toSolidityInput(proof)
       publicSignals[0] = dummyRoot
 
       const error = await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer }).should.be.rejected
@@ -270,7 +274,7 @@ contract('Mixer', async accounts => {
 
       let {root, path_elements, path_index} = await tree.path(0)
 
-      const userInput = stringifyBigInts({
+      const input = stringifyBigInts({
         root,
         nullifier: deposit.nullifier,
         receiver,
@@ -280,7 +284,8 @@ contract('Mixer', async accounts => {
         pathIndex: path_index,
       })
 
-      let { pi_a, pi_b, pi_c, publicSignals } = await utils.snarkProof(userInput)
+      const proof = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
+      let { pi_a, pi_b, pi_c, publicSignals } = websnarkUtils.toSolidityInput(proof)
       const originalPublicSignals = publicSignals.slice()
       const originalPi_a = pi_a.slice()
 
