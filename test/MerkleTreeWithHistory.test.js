@@ -12,6 +12,8 @@ const MiMC = artifacts.require('./MiMC.sol')
 const MerkleTree = require('../lib/MerkleTree')
 const MimcHasher = require('../lib/MiMC')
 
+const { AMOUNT, MERKLE_TREE_HEIGHT, EMPTY_ELEMENT } = process.env
+
 function BNArrayToStringArray(array) {
   const arrayToPrint = []
   array.forEach(item => {
@@ -25,8 +27,9 @@ contract('MerkleTreeWithHistory', async accounts => {
   let miMC
   const sender = accounts[0]
   const emptyAddress = '0x0000000000000000000000000000000000000000'
-  const levels = 16
-  const zeroValue = 1337
+  const levels = MERKLE_TREE_HEIGHT || 16
+  const zeroValue = EMPTY_ELEMENT || 1337
+  const value = AMOUNT || '1000000000000000000'
   let snapshotId
   let prefix = 'test'
   let tree
@@ -145,7 +148,6 @@ contract('MerkleTreeWithHistory', async accounts => {
 
   describe('#insert', async () => {
     it('should insert', async () => {
-      let filled_subtrees
       let rootFromContract
 
       for (i = 1; i < 11; i++) {
@@ -160,6 +162,21 @@ contract('MerkleTreeWithHistory', async accounts => {
         root.should.be.equal(rootFromContract.toString())
         // console.log('rootFromCon', root.toString())
       }
+    })
+
+    it.skip('should reject if tree is full', async () => {
+      // consider change the merkle tree height to run the test
+      // it should be changed in .env and ./circuits/withdraw.circom files (default is 16)
+
+      for (i = 0; i < 2**(MERKLE_TREE_HEIGHT - 1); i++) {
+        await merkleTreeWithHistory.insert(i+42).should.be.fulfilled
+      }
+
+      let error = await merkleTreeWithHistory.insert(1337).should.be.rejected
+      error.reason.should.be.equal('Merkle tree is full')
+
+      error = await merkleTreeWithHistory.insert(1).should.be.rejected
+      error.reason.should.be.equal('Merkle tree is full')
     })
   })
 

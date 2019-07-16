@@ -5,7 +5,7 @@ library MiMC {
 }
 
 contract MerkleTreeWithHistory {
-  uint8 levels;
+  uint256 public levels;
 
   uint8 constant ROOT_HISTORY_SIZE = 100;
   uint256[] private _roots;
@@ -18,7 +18,7 @@ contract MerkleTreeWithHistory {
 
   event LeafAdded(uint256 leaf, uint32 leaf_index);
 
-  constructor(uint8 tree_levels, uint256 zero_value) public {
+  constructor(uint256 tree_levels, uint256 zero_value) public {
     levels = tree_levels;
 
     _zeros.push(zero_value);
@@ -50,13 +50,13 @@ contract MerkleTreeWithHistory {
   function _insert(uint256 leaf) internal {
     uint32 leaf_index = next_index;
     uint32 current_index = next_index;
+    require(current_index != 2**(levels - 1), "Merkle tree is full");
     next_index += 1;
-
     uint256 current_level_hash = leaf;
     uint256 left;
     uint256 right;
 
-    for (uint8 i = 0; i < levels; i++) {
+    for (uint256 i = 0; i < levels; i++) {
       if (current_index % 2 == 0) {
         left = current_level_hash;
         right = _zeros[i];
@@ -78,7 +78,7 @@ contract MerkleTreeWithHistory {
     emit LeafAdded(leaf, leaf_index);
   }
 
-  function isKnownRoot(uint root) public view returns(bool) {
+  function isKnownRoot(uint256 root) public view returns(bool) {
     if (root == 0) {
       return false;
     }
