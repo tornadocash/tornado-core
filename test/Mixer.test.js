@@ -1,33 +1,35 @@
-const should = require('chai')
+/* global artifacts, web3, contract */
+require('chai')
   .use(require('bn-chai')(web3.utils.BN))
   .use(require('chai-as-promised'))
-.should()
+  .should()
 const fs = require('fs')
 
-const { toWei, toBN, fromWei, toHex, randomHex } = require('web3-utils')
-const { takeSnapshot, revertSnapshot, increaseTime } = require('../scripts/ganacheHelper');
+const { toBN, toHex, randomHex } = require('web3-utils')
+const { takeSnapshot, revertSnapshot } = require('../scripts/ganacheHelper')
 
 const Mixer = artifacts.require('./Mixer.sol')
 const { AMOUNT, MERKLE_TREE_HEIGHT, EMPTY_ELEMENT } = process.env
 
 const utils = require('../scripts/utils')
 const websnarkUtils = require('websnark/src/utils')
-const buildGroth16 = require('websnark/src/groth16');
+const buildGroth16 = require('websnark/src/groth16')
 const stringifyBigInts = require('websnark/tools/stringifybigint').stringifyBigInts
-const snarkjs = require('snarkjs');
-const bigInt = snarkjs.bigInt;
+const snarkjs = require('snarkjs')
+const bigInt = snarkjs.bigInt
 const MerkleTree = require('../lib/MerkleTree')
 
 function generateDeposit() {
   let deposit = {
     secret: utils.rbigint(31),
     nullifier: utils.rbigint(31),
-  };
-  const preimage = Buffer.concat([deposit.nullifier.leInt2Buff(32), deposit.secret.leInt2Buff(32)]);
-  deposit.commitment = utils.pedersenHash(preimage);
-  return deposit;
+  }
+  const preimage = Buffer.concat([deposit.nullifier.leInt2Buff(32), deposit.secret.leInt2Buff(32)])
+  deposit.commitment = utils.pedersenHash(preimage)
+  return deposit
 }
 
+// eslint-disable-next-line no-unused-vars
 function BNArrayToStringArray(array) {
   const arrayToPrint = []
   array.forEach(item => {
@@ -44,10 +46,9 @@ function getRandomReceiver() {
   return receiver
 }
 
-contract('Mixer', async accounts => {
+contract('Mixer', accounts => {
   let mixer
   const sender = accounts[0]
-  const emptyAddress = '0x0000000000000000000000000000000000000000'
   const levels = MERKLE_TREE_HEIGHT || 16
   const zeroValue = EMPTY_ELEMENT || 1337
   const value = AMOUNT || '1000000000000000000'
@@ -71,18 +72,18 @@ contract('Mixer', async accounts => {
     mixer = await Mixer.deployed()
     snapshotId = await takeSnapshot()
     groth16 = await buildGroth16()
-    circuit = require("../build/circuits/withdraw.json")
-    proving_key = fs.readFileSync("build/circuits/withdraw_proving_key.bin").buffer
+    circuit = require('../build/circuits/withdraw.json')
+    proving_key = fs.readFileSync('build/circuits/withdraw_proving_key.bin').buffer
   })
 
-  describe('#constructor', async () => {
+  describe('#constructor', () => {
     it('should initialize', async () => {
       const transferValue = await mixer.transferValue()
       transferValue.should.be.eq.BN(toBN(value))
     })
   })
 
-  describe('#deposit', async () => {
+  describe('#deposit', () => {
     it('should emit event', async () => {
       const commitment = 42
       const { logs } = await mixer.deposit(commitment, { value, from: sender })
@@ -103,11 +104,11 @@ contract('Mixer', async accounts => {
     })
   })
 
-  describe('snark proof verification on js side', async () => {
+  describe('snark proof verification on js side', () => {
     it('should detect tampering', async () => {
       const deposit = generateDeposit()
       await tree.insert(deposit.commitment)
-      const { root, path_elements, path_index } = await tree.path(0);
+      const { root, path_elements, path_index } = await tree.path(0)
 
       const input = stringifyBigInts({
         root,
@@ -144,7 +145,7 @@ contract('Mixer', async accounts => {
     })
   })
 
-  describe('#withdraw', async () => {
+  describe('#withdraw', () => {
     it('should work', async () => {
       const deposit = generateDeposit()
       const user = accounts[4]
@@ -157,7 +158,7 @@ contract('Mixer', async accounts => {
       const balanceUserAfter = await web3.eth.getBalance(user)
       balanceUserAfter.should.be.eq.BN(toBN(balanceUserBefore).sub(toBN(value)))
 
-      const {root, path_elements, path_index} = await tree.path(0);
+      const { root, path_elements, path_index } = await tree.path(0)
 
       // Circuit input
       const input = stringifyBigInts({
@@ -200,7 +201,7 @@ contract('Mixer', async accounts => {
       await tree.insert(deposit.commitment)
       await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: sender })
 
-      const {root, path_elements, path_index} = await tree.path(0);
+      const { root, path_elements, path_index } = await tree.path(0)
 
       const input = stringifyBigInts({
         root,
@@ -224,8 +225,8 @@ contract('Mixer', async accounts => {
       await tree.insert(deposit.commitment)
       await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: sender })
 
-      const {root, path_elements, path_index} = await tree.path(0);
-      oneEtherFee = bigInt(1e18) // 1 ether
+      const { root, path_elements, path_index } = await tree.path(0)
+      const oneEtherFee = bigInt(1e18) // 1 ether
       const input = stringifyBigInts({
         root,
         nullifier: deposit.nullifier,
@@ -247,7 +248,7 @@ contract('Mixer', async accounts => {
       await tree.insert(deposit.commitment)
       await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: sender })
 
-      const {root, path_elements, path_index} = await tree.path(0)
+      const { root, path_elements, path_index } = await tree.path(0)
 
       const input = stringifyBigInts({
         root,
@@ -273,7 +274,7 @@ contract('Mixer', async accounts => {
       await tree.insert(deposit.commitment)
       await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: sender })
 
-      let {root, path_elements, path_index} = await tree.path(0)
+      let { root, path_elements, path_index } = await tree.path(0)
 
       const input = stringifyBigInts({
         root,
@@ -294,21 +295,21 @@ contract('Mixer', async accounts => {
       publicSignals[2] = '0x0000000000000000000000007a1f9131357404ef86d7c38dbffed2da70321337'
 
       let error = await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer }).should.be.rejected
-      error.reason.should.be.equal('Invalid withdraw proof');
+      error.reason.should.be.equal('Invalid withdraw proof')
 
       // fee
       publicSignals = originalPublicSignals.slice()
       publicSignals[3] = '0x000000000000000000000000000000000000000000000000015345785d8a0000'
 
       error = await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer }).should.be.rejected
-      error.reason.should.be.equal('Invalid withdraw proof');
+      error.reason.should.be.equal('Invalid withdraw proof')
 
       // nullifier
       publicSignals = originalPublicSignals.slice()
       publicSignals[1] = '0x00abdfc78211f8807b9c6504a6e537e71b8788b2f529a95f1399ce124a8642ad'
 
       error = await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer }).should.be.rejected
-      error.reason.should.be.equal('Invalid withdraw proof');
+      error.reason.should.be.equal('Invalid withdraw proof')
 
       // proof itself
       pi_a[0] = '0x261d81d8203437f29b38a88c4263476d858e6d9645cf21740461684412b31337'
@@ -321,6 +322,7 @@ contract('Mixer', async accounts => {
 
   afterEach(async () => {
     await revertSnapshot(snapshotId.result)
+    // eslint-disable-next-line require-atomic-updates
     snapshotId = await takeSnapshot()
     tree = new MerkleTree(
       levels,
