@@ -26,6 +26,7 @@ template CommitmentHasher() {
 template Withdraw(levels, rounds) {
     signal input root;
     signal input nullifier;
+    // TODO: Check if we need some kind of explicit constraints or something for those 2 inputs
     signal input receiver; // not taking part in any computations
     signal input fee; // not taking part in any computations
     signal private input secret;
@@ -43,10 +44,6 @@ template Withdraw(levels, rounds) {
         tree.pathElements[i] <== pathElements[i];
         tree.pathIndex[i] <== pathIndex[i];
     }
-
-    // TODO: Check if we need some kind of explicit constraints or something
-    fee === fee;
-    receiver === receiver;
 }
 
 component main = Withdraw(16, 220);
