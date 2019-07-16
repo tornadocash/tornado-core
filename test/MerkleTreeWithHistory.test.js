@@ -27,8 +27,8 @@ contract('MerkleTreeWithHistory', async accounts => {
   let miMC
   const sender = accounts[0]
   const emptyAddress = '0x0000000000000000000000000000000000000000'
-  const levels = MERKLE_TREE_HEIGHT || 16
-  const zeroValue = EMPTY_ELEMENT || 1337
+  let levels = MERKLE_TREE_HEIGHT || 16
+  let zeroValue = EMPTY_ELEMENT || 1337
   const value = AMOUNT || '1000000000000000000'
   let snapshotId
   let prefix = 'test'
@@ -164,11 +164,12 @@ contract('MerkleTreeWithHistory', async accounts => {
       }
     })
 
-    it.skip('should reject if tree is full', async () => {
-      // consider change the merkle tree height to run the test
-      // it should be changed in .env and ./circuits/withdraw.circom files (default is 16)
+    it('should reject if tree is full', async () => {
+      levels = 6
+      zeroValue = 1337
+      merkleTreeWithHistory = await MerkleTreeWithHistory.new(levels, zeroValue)
 
-      for (i = 0; i < 2**(MERKLE_TREE_HEIGHT - 1); i++) {
+      for (i = 0; i < 2**(levels - 1); i++) {
         await merkleTreeWithHistory.insert(i+42).should.be.fulfilled
       }
 
