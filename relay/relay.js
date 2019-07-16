@@ -1,4 +1,5 @@
 let bigInt = require('snarkjs/src/bigint')
+const utils = require('../scripts/utils')
 
 const express = require('express')
 const app = express()

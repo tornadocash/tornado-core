@@ -1,3 +1,4 @@
+/* global artifacts */
 require('dotenv').config()
 const Verifier = artifacts.require('Verifier')
 

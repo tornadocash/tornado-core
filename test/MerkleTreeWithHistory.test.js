@@ -1,4 +1,4 @@
-/*global artifacts, web3, contract, assert*/
+/* global artifacts, web3, contract, assert */
 require('chai')
   .use(require('bn-chai')(web3.utils.BN))
   .use(require('chai-as-promised'))

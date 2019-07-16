@@ -1,3 +1,4 @@
+/* global artifacts */
 const path = require('path')
 
 const mimcGenContract = require('circomlib/src/mimcsponge_gencontract.js')

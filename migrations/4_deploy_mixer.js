@@ -1,3 +1,4 @@
+/* global artifacts */
 require('dotenv').config({ path: '../.env' })
 const Mixer = artifacts.require('Mixer')
 const Verifier = artifacts.require('Verifier')

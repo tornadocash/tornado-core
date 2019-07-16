@@ -79,7 +79,7 @@ async function withdraw(note, receiver) {
 async function init() {
   let contractJson
   if (inBrowser) {
-    web3 = new Web3(window.web3.currentProvider, null, {transactionConfirmationBlocks: 1})
+    web3 = new Web3(window.web3.currentProvider, null, { transactionConfirmationBlocks: 1 })
     contractJson = await (await fetch('build/contracts/Mixer.json')).json()
     circuit = await (await fetch('build/circuits/withdraw.json')).json()
     proving_key = await (await fetch('build/circuits/withdraw_proving_key.bin')).arrayBuffer()
@@ -87,7 +87,7 @@ async function init() {
     AMOUNT = 1e18
     EMPTY_ELEMENT = 0
   } else {
-    web3 = new Web3('http://localhost:8545', null, {transactionConfirmationBlocks: 1})
+    web3 = new Web3('http://localhost:8545', null, { transactionConfirmationBlocks: 1 })
     contractJson = require('./build/contracts/Mixer.json')
     circuit = require('./build/circuits/withdraw.json')
     proving_key = fs.readFileSync('build/circuits/withdraw_proving_key.bin').buffer
@@ -140,19 +140,19 @@ if (inBrowser) {
     switch (args[0]) {
     case 'deposit':
       if (args.length === 1) {
-        init().then(async () => deposit()).then(() => process.exit(0)).catch(err => {console.log(err); process.exit(1)})
+        init().then(() => deposit()).then(() => process.exit(0)).catch(err => {console.log(err); process.exit(1)})
       }
       else
         printHelp(1)
       break
     case 'balance':
       if (args.length === 2 && /^0x[0-9a-fA-F]{40}$/.test(args[1])) {
-        init().then(async () => getBalance(args[1])).then(() => process.exit(0)).catch(err => {console.log(err); process.exit(1)})
+        init().then(() => getBalance(args[1])).then(() => process.exit(0)).catch(err => {console.log(err); process.exit(1)})
       }
       break
     case 'withdraw':
       if (args.length === 3 && /^0x[0-9a-fA-F]{128}$/.test(args[1]) && /^0x[0-9a-fA-F]{40}$/.test(args[2])) {
-        init().then(async () => withdraw(args[1], args[2])).then(() => process.exit(0)).catch(err => {console.log(err); process.exit(1)})
+        init().then(() => withdraw(args[1], args[2])).then(() => process.exit(0)).catch(err => {console.log(err); process.exit(1)})
       }
       else
         printHelp(1)

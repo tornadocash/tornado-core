@@ -13,7 +13,8 @@
     "test": "npx truffle test",
     "migrate": "npx truffle migrate --network kovan --reset",
     "migrate:dev": "npx truffle migrate --network development --reset",
-    "browserify": "npx browserify cli.js -o index.js --exclude worker_threads"
+    "browserify": "npx browserify cli.js -o index.js --exclude worker_threads",
+    "eslint": "npx eslint ."
   },
   "keywords": [],
   "author": "",
