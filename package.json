@@ -26,6 +26,7 @@
     "circom": "0.0.30",
     "circomlib": "^0.0.10",
     "dotenv": "^8.0.0",
+    "express": "^4.17.1",
     "ganache-cli": "^6.4.5",
     "snarkjs": "git+https://github.com/iden3/snarkjs.git#5fe2bd4642ec567c75ad5ac3f73687999c412e73",
     "truffle": "^5.0.27",
