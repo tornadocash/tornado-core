@@ -5,7 +5,7 @@ const app = express()
 app.use(express.json())
 
 const Web3 = require('web3')
-const web3 = new Web3('http://localhost:8545', null, {transactionConfirmationBlocks: 1})
+const web3 = new Web3('http://localhost:8545', null, { transactionConfirmationBlocks: 1 })
 const contractJson = require('../build/contracts/Mixer.json')
 let netId = 42
 const mixer = new web3.eth.Contract(contractJson.abi, contractJson.networks[netId].address)
