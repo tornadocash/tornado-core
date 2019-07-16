@@ -8,7 +8,7 @@ const { toWei, toBN, fromWei, toHex, randomHex } = require('web3-utils')
 const { takeSnapshot, revertSnapshot, increaseTime } = require('../scripts/ganacheHelper');
 
 const Mixer = artifacts.require('./Mixer.sol')
-const { AMOUNT } = process.env
+const { AMOUNT, MERKLE_TREE_HEIGHT, EMPTY_ELEMENT } = process.env
 
 const utils = require('../scripts/utils')
 const websnarkUtils = require('websnark/src/utils')
@@ -48,8 +48,9 @@ contract('Mixer', async accounts => {
   let mixer
   const sender = accounts[0]
   const emptyAddress = '0x0000000000000000000000000000000000000000'
-  const levels = 16
-  const zeroValue = 1337
+  const levels = MERKLE_TREE_HEIGHT || 16
+  const zeroValue = EMPTY_ELEMENT || 1337
+  const value = AMOUNT || '1000000000000000000'
   let snapshotId
   let prefix = 'test'
   let tree
@@ -77,14 +78,14 @@ contract('Mixer', async accounts => {
   describe('#constructor', async () => {
     it('should initialize', async () => {
       const transferValue = await mixer.transferValue()
-      transferValue.should.be.eq.BN(toBN(AMOUNT))
+      transferValue.should.be.eq.BN(toBN(value))
     })
   })
 
   describe('#deposit', async () => {
     it('should emit event', async () => {
       const commitment = 42
-      const { logs } = await mixer.deposit(commitment, { value: AMOUNT, from: sender })
+      const { logs } = await mixer.deposit(commitment, { value, from: sender })
       logs[0].event.should.be.equal('LeafAdded')
       logs[0].args.leaf.should.be.eq.BN(toBN(commitment))
       logs[0].args.leaf_index.should.be.eq.BN(toBN(0))
@@ -96,8 +97,8 @@ contract('Mixer', async accounts => {
 
     it('should throw if there is a such commitment', async () => {
       const commitment = 42
-      await mixer.deposit(commitment, { value: AMOUNT, from: sender }).should.be.fulfilled
-      const error = await mixer.deposit(commitment, { value: AMOUNT, from: sender }).should.be.rejected
+      await mixer.deposit(commitment, { value, from: sender }).should.be.fulfilled
+      const error = await mixer.deposit(commitment, { value, from: sender }).should.be.rejected
       error.reason.should.be.equal('The commitment has been submitted')
     })
   })
@@ -151,10 +152,10 @@ contract('Mixer', async accounts => {
 
       const balanceUserBefore = await web3.eth.getBalance(user)
 
-      await mixer.deposit(toBN(deposit.commitment.toString()), { value: AMOUNT, from: user, gasPrice: '0' })
+      await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: user, gasPrice: '0' })
 
       const balanceUserAfter = await web3.eth.getBalance(user)
-      balanceUserAfter.should.be.eq.BN(toBN(balanceUserBefore).sub(toBN(AMOUNT)))
+      balanceUserAfter.should.be.eq.BN(toBN(balanceUserBefore).sub(toBN(value)))
 
       const {root, path_elements, path_index} = await tree.path(0);
 
@@ -185,9 +186,9 @@ contract('Mixer', async accounts => {
       const balanceRelayerAfter = await web3.eth.getBalance(relayer)
       const balanceRecieverAfter = await web3.eth.getBalance(toHex(receiver.toString()))
       const feeBN = toBN(fee.toString())
-      balanceMixerAfter.should.be.eq.BN(toBN(balanceMixerBefore).sub(toBN(AMOUNT)))
+      balanceMixerAfter.should.be.eq.BN(toBN(balanceMixerBefore).sub(toBN(value)))
       balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore).add(feeBN))
-      balanceRecieverAfter.should.be.eq.BN(toBN(balanceRecieverBefore).add(toBN(AMOUNT)).sub(feeBN))
+      balanceRecieverAfter.should.be.eq.BN(toBN(balanceRecieverBefore).add(toBN(value)).sub(feeBN))
 
       logs[0].event.should.be.equal('Withdraw')
       logs[0].args.nullifier.should.be.eq.BN(toBN(deposit.nullifier.toString()))
@@ -197,7 +198,7 @@ contract('Mixer', async accounts => {
     it('should prevent double spend', async () => {
       const deposit = generateDeposit()
       await tree.insert(deposit.commitment)
-      await mixer.deposit(toBN(deposit.commitment.toString()), { value: AMOUNT, from: sender })
+      await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: sender })
 
       const {root, path_elements, path_index} = await tree.path(0);
 
@@ -221,7 +222,7 @@ contract('Mixer', async accounts => {
     it('fee should be less or equal transfer value', async () => {
       const deposit = generateDeposit()
       await tree.insert(deposit.commitment)
-      await mixer.deposit(toBN(deposit.commitment.toString()), { value: AMOUNT, from: sender })
+      await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: sender })
 
       const {root, path_elements, path_index} = await tree.path(0);
       oneEtherFee = bigInt(1e18) // 1 ether
@@ -244,7 +245,7 @@ contract('Mixer', async accounts => {
     it('should throw for corrupted merkle tree root', async () => {
       const deposit = generateDeposit()
       await tree.insert(deposit.commitment)
-      await mixer.deposit(toBN(deposit.commitment.toString()), { value: AMOUNT, from: sender })
+      await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: sender })
 
       const {root, path_elements, path_index} = await tree.path(0)
 
@@ -270,7 +271,7 @@ contract('Mixer', async accounts => {
     it('should reject with tampered public inputs', async () => {
       const deposit = generateDeposit()
       await tree.insert(deposit.commitment)
-      await mixer.deposit(toBN(deposit.commitment.toString()), { value: AMOUNT, from: sender })
+      await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: sender })
 
       let {root, path_elements, path_index} = await tree.path(0)
 
