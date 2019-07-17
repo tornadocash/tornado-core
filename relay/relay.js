@@ -1,3 +1,4 @@
+// This is still WiP
 const bigInt = require('snarkjs/src/bigint')
 const utils = require('../scripts/utils')
 

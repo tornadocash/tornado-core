@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// Temporary demo client
 const fs = require('fs')
 const assert = require('assert')
 const snarkjs = require('snarkjs')
@@ -68,8 +69,10 @@ async function withdraw(note, receiver) {
   }
 
   console.log('Generating SNARK proof')
+  console.time('Proof time')
   const proof = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
   const { pi_a, pi_b, pi_c, publicSignals } = websnarkUtils.toSolidityInput(proof)
+  console.timeEnd('Proof time')
 
   console.log('Submitting withdraw transaction')
   await mixer.methods.withdraw(pi_a, pi_b, pi_c, publicSignals).send({ from: (await web3.eth.getAccounts())[0], gas: 1e6 })
