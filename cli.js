@@ -34,7 +34,7 @@ async function deposit() {
 
 async function getBalance(receiver) {
   const balance = await web3.eth.getBalance(receiver)
-  console.log('balance is ', web3.utils.fromWei(balance))
+  console.log('Balance is ', web3.utils.fromWei(balance))
 }
 
 async function withdraw(note, receiver) {
@@ -116,6 +116,9 @@ function printHelp(code = 0) {
 
   Withdraw a note to 'receiver' account
   $ ./cli.js withdraw <note> <receiver>
+  
+  Check address balance
+  $ ./cli.js balance <address>
 
 Example:
   $ ./cli.js deposit
@@ -151,7 +154,8 @@ if (inBrowser) {
     case 'balance':
       if (args.length === 2 && /^0x[0-9a-fA-F]{40}$/.test(args[1])) {
         init().then(() => getBalance(args[1])).then(() => process.exit(0)).catch(err => {console.log(err); process.exit(1)})
-      }
+      } else
+        printHelp(1)
       break
     case 'withdraw':
       if (args.length === 3 && /^0x[0-9a-fA-F]{128}$/.test(args[1]) && /^0x[0-9a-fA-F]{40}$/.test(args[2])) {
