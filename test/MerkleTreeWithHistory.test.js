@@ -102,6 +102,27 @@ contract('MerkleTreeWithHistory', accounts => {
       }
     })
 
+    it('should find an element', async () => {
+      const elements = [12, 13, 14, 15, 16, 17, 18, 19, 20]
+      for(const [, el] of Object.entries(elements)) {
+        await tree.insert(el)
+      }
+      let index = tree.getIndexByElement(13)
+      index.should.be.equal(1)
+
+      index = tree.getIndexByElement(19)
+      index.should.be.equal(7)
+
+      index = tree.getIndexByElement(12)
+      index.should.be.equal(0)
+
+      index = tree.getIndexByElement(20)
+      index.should.be.equal(8)
+
+      index = tree.getIndexByElement(42)
+      index.should.be.equal(false)
+    })
+
     it('creation even elements count', async () => {
       const elements = [12, 13, 14, 15, 16, 17]
       for(const [, el] of Object.entries(elements)) {
