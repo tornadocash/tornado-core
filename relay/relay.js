@@ -1,19 +1,23 @@
-let bigInt = require('snarkjs/src/bigint')
+const bigInt = require('snarkjs/src/bigint')
 const utils = require('../scripts/utils')
 
 const express = require('express')
 const app = express()
 app.use(express.json())
 
+// todo get from config
+const RPC_ENDPOINT = 'http://localhost:8545'
+const NET_ID = 42
+// const PRIVATE_KEY = ''
+
 const Web3 = require('web3')
-const web3 = new Web3('http://localhost:8545', null, { transactionConfirmationBlocks: 1 })
+const web3 = new Web3(RPC_ENDPOINT, null, { transactionConfirmationBlocks: 1 })
 const contractJson = require('../build/contracts/Mixer.json')
-let netId = 42
-const mixer = new web3.eth.Contract(contractJson.abi, contractJson.networks[netId].address)
+const mixer = new web3.eth.Contract(contractJson.abi, contractJson.networks[NET_ID].address)
 
 function getMinimumFee() {
   // todo calc acceptable fee
-  return 1e16
+  return bigInt(1e16)
 }
 
 app.post('/deposit', async (req, resp) => {
@@ -31,9 +35,17 @@ app.post('/deposit', async (req, resp) => {
   }
 
   try {
-    let receipt = await mixer.withdraw(proof.pi_a, proof.pi_b, proof.pi_b, proof.publicSignals)
-    console.log(receipt)
-    resp.send({ transaction: receipt.transactionHash })
+    const gas = await mixer.withdraw(proof.pi_a, proof.pi_b, proof.pi_b, proof.publicSignals).estimateGas()
+    if (gas > 1e6) {
+      // something is wrong
+    }
+    const result = mixer.withdraw(proof.pi_a, proof.pi_b, proof.pi_b, proof.publicSignals).send()
+    result.once('transactionHash', function(hash){
+      resp.send({ transaction: hash })
+    }).on('error', function(e){
+      console.log(e)
+      resp.status(400).send('Transaction was reverted')
+    })
   } catch (e) {
     console.log(e)
     resp.status(400).send('Transaction was reverted')
