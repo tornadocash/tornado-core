@@ -1,41 +1,15 @@
-## Requirements
-1. `node v11.15.0`
-2. `npm install -g npx`
+# Tornado mixer
 
-## Usage
-1. `npm i`
-1. `cp .env.example .env`
-1. `npm run build:circuit` - may take 10 minutes or more
-1. `npm run build:contract`
-1. `npx ganache-cli`
-1. `npm run migrate:dev`
-1. `./cli.js deposit`
-1. `./cli.js withdraw <note from previous step> <destination eth address>`
-1. `./cli.js balance <destination eth address>`
+![mixer image](./mixer.png)
 
-## Testing truffle
-1. `npm i`
-2. `npm run build:circuit`
-2. `npm run build:contract`
-3. `npm run test` - it may fail for the first time, just run one more time.
-
-## Testing js
-1. `npm i`
-2. `npm run build:circuit`
-3. `cd scripts`
-4. `node test_snark.js`
-
-## Deploy
-1. `npx truffle migrate --network kovan --reset`
-
-# Specs:
-- Deposit gas cost: deposit 903472
-- Withdraw gas cost: 727821
+## Specs
+- Deposit gas cost: deposit 888054
+- Withdraw gas cost: 692133
 - Circuit constraints: 22617
-- Circuit proving time: 8965ms
-- Serverless, executed entirely in the browser
+- Circuit proving time: 6116ms
+- Serverless
 
-# Security risks:
+## Security risks
 * Cryptographic tools used by mixer (zkSNARKS, Pedersen commitment, MiMC hash) are not yet extensively audited by cryptographic experts and may be vulnerable
 	* Note: we use MiMC hash only for merkle tree, so even if a preimage attack on MiMC is discovered, it will not allow to deanonymize users or drain mixer funds
 * Relayer is frontrunnable. When relayer submits a transaction someone can see it in tx pool and frontrun it with higher gas price to get the fee and drain relayer funds.
@@ -48,4 +22,28 @@ spent since it has the same nullifier and it will prevent you from withdrawing y
   * This can be solved by storing block number for merkle root history, and only allowing to withdraw using merkle roots that are older than N ~10-20 blocks.
     It will slightly reduce anonymity set (by not counting users that deposited in last N blocks), but provide a safe period for mining your withdrawal transactions.
 
+## Requirements
+1. `node v11.15.0`
+2. `npm install -g npx`
 
+## Usage
+1. `npm i`
+1. `cp .env.example .env`
+1. `npm run build:circuit` - may take 10 minutes or more
+1. `npm run build:contract`
+1. `npm run browserify`
+1. `npm run test` - optionally run tests. It may fail for the first time, just run one more time.
+1. `npx ganache-cli`
+1. `npm run migrate:dev`
+1. `./cli.js deposit`
+1. `./cli.js withdraw <note from previous step> <destination eth address>`
+1. `./cli.js balance <destination eth address>`
+1. `vi .env` - add your Kovan private key to deploy contracts
+1. `npm run migrate`
+1. `npx http-server` - serve current dir, you can use any other http server
+1. Open `localhost:8080`
+
+## Credits
+
+Special thanks to @barryWhiteHat and @kobigurk for valuable input, 
+and to @jbaylina for awesome [Circom](https://github.com/iden3/circom) & [Websnark](https://github.com/iden3/websnark) framework
