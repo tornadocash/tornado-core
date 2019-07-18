@@ -11,21 +11,26 @@ const { takeSnapshot, revertSnapshot } = require('../scripts/ganacheHelper')
 const Mixer = artifacts.require('./Mixer.sol')
 const { AMOUNT, MERKLE_TREE_HEIGHT, EMPTY_ELEMENT } = process.env
 
-const utils = require('../scripts/utils')
 const websnarkUtils = require('websnark/src/utils')
 const buildGroth16 = require('websnark/src/groth16')
 const stringifyBigInts = require('websnark/tools/stringifybigint').stringifyBigInts
+const unstringifyBigInts = require('websnark/tools/stringifybigint').unstringifyBigInts
 const snarkjs = require('snarkjs')
 const bigInt = snarkjs.bigInt
+const crypto = require('crypto')
+const circomlib = require('circomlib')
 const MerkleTree = require('../lib/MerkleTree')
+
+const rbigint = (nbytes) => snarkjs.bigInt.leBuff2int(crypto.randomBytes(nbytes))
+const pedersenHash = (data) => circomlib.babyJub.unpackPoint(circomlib.pedersenHash.hash(data))[0]
 
 function generateDeposit() {
   let deposit = {
-    secret: utils.rbigint(31),
-    nullifier: utils.rbigint(31),
+    secret: rbigint(31),
+    nullifier: rbigint(31),
   }
   const preimage = Buffer.concat([deposit.nullifier.leInt2Buff(32), deposit.secret.leInt2Buff(32)])
-  deposit.commitment = utils.pedersenHash(preimage)
+  deposit.commitment = pedersenHash(preimage)
   return deposit
 }
 
@@ -39,11 +44,17 @@ function BNArrayToStringArray(array) {
 }
 
 function getRandomReceiver() {
-  let receiver = utils.rbigint(20)
+  let receiver = rbigint(20)
   while (toHex(receiver.toString()).length !== 42) {
-    receiver = utils.rbigint(20)
+    receiver = rbigint(20)
   }
   return receiver
+}
+
+function snarkVerify(proof) {
+  proof = unstringifyBigInts(websnarkUtils.fromSolidityInput(proof))
+  const verification_key = unstringifyBigInts(require('../build/circuits/withdraw_verification_key.json'))
+  return snarkjs['groth'].isValid(verification_key, proof, proof.publicSignals)
 }
 
 contract('Mixer', accounts => {
@@ -122,24 +133,24 @@ contract('Mixer', accounts => {
 
       let proof = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
       const originalProof = JSON.parse(JSON.stringify(proof))
-      let result = await utils.snarkVerify(proof)
+      let result = snarkVerify(proof)
       result.should.be.equal(true)
 
       // nullifier
       proof.publicSignals[1] = '133792158246920651341275668520530514036799294649489851421007411546007850802'
-      result = await utils.snarkVerify(proof)
+      result = snarkVerify(proof)
       result.should.be.equal(false)
       proof = originalProof
 
       // try to cheat with recipient
       proof.publicSignals[2] = '133738360804642228759657445999390850076318544422'
-      result = await utils.snarkVerify(proof)
+      result = snarkVerify(proof)
       result.should.be.equal(false)
       proof = originalProof
 
       // fee
       proof.publicSignals[3] = '1337100000000000000000'
-      result = await utils.snarkVerify(proof)
+      result = snarkVerify(proof)
       result.should.be.equal(false)
       proof = originalProof
     })

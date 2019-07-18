@@ -3,8 +3,9 @@
 const fs = require('fs')
 const assert = require('assert')
 const snarkjs = require('snarkjs')
+const crypto = require('crypto')
+const circomlib = require('circomlib')
 const bigInt = snarkjs.bigInt
-const utils = require('./scripts/utils')
 const merkleTree = require('./lib/MerkleTree')
 const Web3 = require('web3')
 const buildGroth16 = require('websnark/src/groth16')
@@ -14,15 +15,18 @@ let web3, mixer, circuit, proving_key, groth16
 let MERKLE_TREE_HEIGHT, AMOUNT, EMPTY_ELEMENT
 const inBrowser = (typeof window !== 'undefined')
 
+const rbigint = (nbytes) => snarkjs.bigInt.leBuff2int(crypto.randomBytes(nbytes))
+const pedersenHash = (data) => circomlib.babyJub.unpackPoint(circomlib.pedersenHash.hash(data))[0]
+
 function createDeposit(nullifier, secret) {
   let deposit = { nullifier, secret }
   deposit.preimage = Buffer.concat([deposit.nullifier.leInt2Buff(32), deposit.secret.leInt2Buff(32)])
-  deposit.commitment = utils.pedersenHash(deposit.preimage)
+  deposit.commitment = pedersenHash(deposit.preimage)
   return deposit
 }
 
 async function deposit() {
-  const deposit = createDeposit(utils.rbigint(31), utils.rbigint(31))
+  const deposit = createDeposit(rbigint(31), rbigint(31))
 
   console.log('Submitting deposit transaction')
   await mixer.methods.deposit('0x' + deposit.commitment.toString(16)).send({ value: AMOUNT, from: (await web3.eth.getAccounts())[0], gas:1e6 })
