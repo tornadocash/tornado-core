@@ -16,7 +16,7 @@ contract MerkleTreeWithHistory {
 
   uint32 public next_index = 0;
 
-  event LeafAdded(uint256 leaf, uint32 leaf_index);
+  event LeafAdded(uint256 indexed leaf, uint32 leaf_index);
 
   constructor(uint256 tree_levels, uint256 zero_value) public {
     levels = tree_levels;
