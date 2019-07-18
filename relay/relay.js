@@ -10,6 +10,7 @@ app.use(express.json())
 const RPC_ENDPOINT = 'http://localhost:8545'
 const NET_ID = 42
 // const PRIVATE_KEY = ''
+const MAX_GAS = 1e6
 
 const Web3 = require('web3')
 const web3 = new Web3(RPC_ENDPOINT, null, { transactionConfirmationBlocks: 1 })
@@ -37,7 +38,7 @@ app.post('/deposit', async (req, resp) => {
 
   try {
     const gas = await mixer.withdraw(proof.pi_a, proof.pi_b, proof.pi_b, proof.publicSignals).estimateGas()
-    if (gas > 1e6) {
+    if (gas > MAX_GAS) {
       // something is wrong
     }
     const result = mixer.withdraw(proof.pi_a, proof.pi_b, proof.pi_b, proof.publicSignals).send()
