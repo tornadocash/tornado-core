@@ -13,7 +13,7 @@ contract Mixer is MerkleTreeWithHistory {
   mapping(uint256 => bool) public commitments;
   IVerifier verifier;
 
-  event Deposit(address from, uint256 commitment);
+  event Deposit(address from, uint256 indexed commitment);
   event Withdraw(address to, uint256 nullifier, uint256 fee);
 
   /**
