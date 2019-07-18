@@ -4,7 +4,7 @@ require('chai')
   .use(require('chai-as-promised'))
   .should()
 
-const { takeSnapshot, revertSnapshot } = require('../scripts/ganacheHelper')
+const { takeSnapshot, revertSnapshot } = require('../lib/ganacheHelper')
 
 const MerkleTreeWithHistory = artifacts.require('./MerkleTreeWithHistoryMock.sol')
 const MiMC = artifacts.require('./MiMC.sol')
