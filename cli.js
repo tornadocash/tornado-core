@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 // Temporary demo client
+// Works both in browser and node.js
 const fs = require('fs')
 const assert = require('assert')
 const snarkjs = require('snarkjs')
