@@ -64,11 +64,12 @@ async function withdraw(note, receiver) {
   const input = {
     // public
     root: root,
-    nullifier: deposit.nullifier,
+    nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(32)),
     receiver: bigInt(receiver),
     fee: bigInt(0),
 
     // private
+    nullifier: deposit.nullifier,
     secret: deposit.secret,
     pathElements: path_elements,
     pathIndex: path_index,
