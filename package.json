@@ -14,7 +14,7 @@
     "migrate": "npx truffle migrate --network kovan --reset",
     "migrate:dev": "npx truffle migrate --network development --reset",
     "browserify": "npx browserify cli.js -o index.js --exclude worker_threads",
-    "eslint": "npx eslint ."
+    "eslint": "npx eslint --ignore-path .gitignore ."
   },
   "keywords": [],
   "author": "",
