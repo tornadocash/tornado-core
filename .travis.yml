@@ -1,0 +1,14 @@
+dist: trusty
+language: node_js
+node_js:
+  - "11"
+install:
+  - npm ci
+  - cp .env.example .env
+  - npm run build:circuit
+  - npm run build:contract
+  - npm run test
+  - npm run eslint
+script:
+  - npm run test
+  - npm run eslint
