@@ -14,7 +14,7 @@ const { AMOUNT, MERKLE_TREE_HEIGHT, EMPTY_ELEMENT } = process.env
 const websnarkUtils = require('websnark/src/utils')
 const buildGroth16 = require('websnark/src/groth16')
 const stringifyBigInts = require('websnark/tools/stringifybigint').stringifyBigInts
-const unstringifyBigInts = require('websnark/tools/stringifybigint').unstringifyBigInts
+const unstringifyBigInts2 = require('snarkjs/src/stringifybigint').unstringifyBigInts
 const snarkjs = require('snarkjs')
 const bigInt = snarkjs.bigInt
 const crypto = require('crypto')
@@ -52,8 +52,8 @@ function getRandomReceiver() {
 }
 
 function snarkVerify(proof) {
-  proof = unstringifyBigInts(websnarkUtils.fromSolidityInput(proof))
-  const verification_key = unstringifyBigInts(require('../build/circuits/withdraw_verification_key.json'))
+  proof = unstringifyBigInts2(websnarkUtils.fromSolidityInput(proof))
+  const verification_key = unstringifyBigInts2(require('../build/circuits/withdraw_verification_key.json'))
   return snarkjs['groth'].isValid(verification_key, proof, proof.publicSignals)
 }
 

@@ -7,7 +7,7 @@ install:
   - cp .env.example .env
   - travis_wait 30 npm run build:circuit
   - npm run build:contract
-  - npx ganache-cli &
+  - npx ganache-cli > /dev/null &
   - npm run migrate:dev
 script:
   - npm run test
