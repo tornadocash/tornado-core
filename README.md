@@ -1,4 +1,4 @@
-# Tornado mixer
+# Tornado mixer [![Build Status](https://travis-ci.org/peppersec/tornado-mixer.svg?branch=master)](https://travis-ci.org/peppersec/tornado-mixer)
 
 ![mixer image](./mixer.png)
 

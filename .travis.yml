@@ -5,10 +5,8 @@ node_js:
 install:
   - npm ci
   - cp .env.example .env
-  - npm run build:circuit
+  - travis_wait 30 npm run build:circuit
   - npm run build:contract
-  - npm run test
-  - npm run eslint
 script:
   - npm run test
   - npm run eslint
