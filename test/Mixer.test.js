@@ -96,15 +96,19 @@ contract('Mixer', accounts => {
 
   describe('#deposit', () => {
     it('should emit event', async () => {
-      const commitment = 42
-      const { logs } = await mixer.deposit(commitment, { value, from: sender })
-      logs[0].event.should.be.equal('LeafAdded')
-      logs[0].args.leaf.should.be.eq.BN(toBN(commitment))
-      logs[0].args.leaf_index.should.be.eq.BN(toBN(0))
+      let commitment = 42
+      let { logs } = await mixer.deposit(commitment, { value, from: sender })
 
-      logs[1].event.should.be.equal('Deposit')
-      logs[1].args.from.should.be.equal(sender)
-      logs[1].args.commitment.should.be.eq.BN(toBN(commitment))
+      logs[0].event.should.be.equal('Deposit')
+      logs[0].args.commitment.should.be.eq.BN(toBN(commitment))
+      logs[0].args.leafIndex.should.be.eq.BN(toBN(0))
+
+      commitment = 12;
+      ({ logs } = await mixer.deposit(commitment, { value, from: accounts[2] }))
+
+      logs[0].event.should.be.equal('Deposit')
+      logs[0].args.commitment.should.be.eq.BN(toBN(commitment))
+      logs[0].args.leafIndex.should.be.eq.BN(toBN(1))
     })
 
     it('should throw if there is a such commitment', async () => {

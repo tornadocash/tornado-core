@@ -47,8 +47,9 @@ async function withdraw(note, receiver) {
   let deposit = createDeposit(bigInt.leBuff2int(buf.slice(0, 32)), bigInt.leBuff2int(buf.slice(32, 64)))
 
   console.log('Getting current state from mixer contract')
-  const events = await mixer.getPastEvents('LeafAdded', { fromBlock: mixer.deployedBlock, toBlock: 'latest' })
-  const leaves = events.sort(e => e.returnValues.leaf_index).map(e => e.returnValues.leaf)
+  const events = await mixer.getPastEvents('Deposit', { fromBlock: mixer.deployedBlock, toBlock: 'latest' })
+  console.log('events', events)
+  const leaves = events.sort(e => e.returnValues.leafIndex).map(e => e.returnValues.commitment)
   const tree = new merkleTree(MERKLE_TREE_HEIGHT, EMPTY_ELEMENT, leaves)
   const validRoot = await mixer.methods.isKnownRoot(await tree.root()).call()
   // todo make sure that function input is 32 bytes long
@@ -121,7 +122,7 @@ function printHelp(code = 0) {
 
   Withdraw a note to 'receiver' account
   $ ./cli.js withdraw <note> <receiver>
-  
+
   Check address balance
   $ ./cli.js balance <address>
 
