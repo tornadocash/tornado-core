@@ -13,7 +13,7 @@ contract Mixer is MerkleTreeWithHistory {
   mapping(uint256 => bool) public commitments;
   IVerifier verifier;
 
-  event Deposit(uint256 indexed commitment, uint256 leafIndex);
+  event Deposit(uint256 indexed commitment, uint256 leafIndex, uint256 timestamp);
   event Withdraw(address to, uint256 nullifier, uint256 fee);
 
   /**
@@ -40,7 +40,7 @@ contract Mixer is MerkleTreeWithHistory {
     require(!commitments[commitment], "The commitment has been submitted");
     _insert(commitment);
     commitments[commitment] = true;
-    emit Deposit(commitment, next_index - 1);
+    emit Deposit(commitment, next_index - 1, block.timestamp);
   }
 
   /**
