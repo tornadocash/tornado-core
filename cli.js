@@ -48,8 +48,9 @@ async function withdraw(note, receiver) {
 
   console.log('Getting current state from mixer contract')
   const events = await mixer.getPastEvents('Deposit', { fromBlock: mixer.deployedBlock, toBlock: 'latest' })
-  console.log('events', events)
-  const leaves = events.sort(e => e.returnValues.leafIndex).map(e => e.returnValues.commitment)
+  const leaves = events
+    .sort((a, b) => a.returnValues.leafIndex.sub(b.returnValues.leafIndex))
+    .map(e => e.returnValues.commitment)
   const tree = new merkleTree(MERKLE_TREE_HEIGHT, EMPTY_ELEMENT, leaves)
   const validRoot = await mixer.methods.isKnownRoot(await tree.root()).call()
   // todo make sure that function input is 32 bytes long
