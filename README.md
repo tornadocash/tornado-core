@@ -32,8 +32,8 @@ spent since it has the same nullifier and it will prevent you from withdrawing y
 1. `npm run build:circuit` - may take 10 minutes or more
 1. `npm run build:contract`
 1. `npm run browserify`
-1. `npm run test` - optionally run tests. It may fail for the first time, just run one more time.
 1. `npx ganache-cli`
+1. `npm run test` - optionally run tests. It may fail for the first time, just run one more time.
 1. `npm run migrate:dev`
 1. `./cli.js deposit`
 1. `./cli.js withdraw <note from previous step> <destination eth address>`
@@ -45,5 +45,5 @@ spent since it has the same nullifier and it will prevent you from withdrawing y
 
 ## Credits
 
-Special thanks to @barryWhiteHat and @kobigurk for valuable input, 
+Special thanks to @barryWhiteHat and @kobigurk for valuable input,
 and to @jbaylina for awesome [Circom](https://github.com/iden3/circom) & [Websnark](https://github.com/iden3/websnark) framework

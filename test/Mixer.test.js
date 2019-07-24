@@ -127,6 +127,7 @@ contract('Mixer', accounts => {
 
       const input = stringifyBigInts({
         root,
+        nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(32)),
         nullifier: deposit.nullifier,
         receiver,
         fee,
@@ -179,15 +180,17 @@ contract('Mixer', accounts => {
       const input = stringifyBigInts({
         // public
         root,
-        nullifier: deposit.nullifier,
+        nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(32)),
         receiver,
         fee,
 
         // private
+        nullifier: deposit.nullifier,
         secret: deposit.secret,
         pathElements: path_elements,
         pathIndex: path_index,
       })
+
 
       const proof = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
       const { pi_a, pi_b, pi_c, publicSignals } = websnarkUtils.toSolidityInput(proof)
@@ -207,7 +210,7 @@ contract('Mixer', accounts => {
       balanceRecieverAfter.should.be.eq.BN(toBN(balanceRecieverBefore).add(toBN(value)).sub(feeBN))
 
       logs[0].event.should.be.equal('Withdraw')
-      logs[0].args.nullifier.should.be.eq.BN(toBN(deposit.nullifier.toString()))
+      logs[0].args.nullifier.should.be.eq.BN(toBN(input.nullifierHash.toString()))
       logs[0].args.fee.should.be.eq.BN(feeBN)
     })
 
@@ -220,6 +223,7 @@ contract('Mixer', accounts => {
 
       const input = stringifyBigInts({
         root,
+        nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(32)),
         nullifier: deposit.nullifier,
         receiver,
         fee,
@@ -244,6 +248,7 @@ contract('Mixer', accounts => {
       const oneEtherFee = bigInt(1e18) // 1 ether
       const input = stringifyBigInts({
         root,
+        nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(32)),
         nullifier: deposit.nullifier,
         receiver,
         fee: oneEtherFee,
@@ -266,6 +271,7 @@ contract('Mixer', accounts => {
       const { root, path_elements, path_index } = await tree.path(0)
 
       const input = stringifyBigInts({
+        nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(32)),
         root,
         nullifier: deposit.nullifier,
         receiver,
@@ -293,6 +299,7 @@ contract('Mixer', accounts => {
 
       const input = stringifyBigInts({
         root,
+        nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(32)),
         nullifier: deposit.nullifier,
         receiver,
         fee,
