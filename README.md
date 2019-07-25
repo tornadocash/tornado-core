@@ -11,7 +11,7 @@
 
 ## Security risks
 * Cryptographic tools used by mixer (zkSNARKS, Pedersen commitment, MiMC hash) are not yet extensively audited by cryptographic experts and may be vulnerable
-	* Note: we use MiMC hash only for merkle tree, so even if a preimage attack on MiMC is discovered, it will not allow to deanonymize users or drain mixer funds
+	* Note: we use MiMC hash only for merkle tree, so even if a preimage attack on MiMC is discovered, it will not allow to deanonymize users. To drain funds attacker needs to be able to generate arbitrary hash collisions, which is a pretty strong assumption.
 * Relayer is frontrunnable. When relayer submits a transaction someone can see it in tx pool and frontrun it with higher gas price to get the fee and drain relayer funds.
 	* Workaround: we can set high gas price so that (almost) all fee is used on gas. The relayer will not receive profit this way, but this approach is acceptable until we develop more sophisticated system that prevents frontrunning
 * Bugs in contract. Even though we have an extensive experience in smart contract security audits, we can still make mistakes. An external audit is needed to reduce probablility of bugs
