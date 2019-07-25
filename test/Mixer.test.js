@@ -198,6 +198,8 @@ contract('Mixer', accounts => {
       const balanceMixerBefore = await web3.eth.getBalance(mixer.address)
       const balanceRelayerBefore = await web3.eth.getBalance(relayer)
       const balanceRecieverBefore = await web3.eth.getBalance(toHex(receiver.toString()))
+      let isSpent = await mixer.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
+      isSpent.should.be.equal(false)
 
       const { logs } = await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer, gasPrice: '0' })
 
@@ -209,9 +211,12 @@ contract('Mixer', accounts => {
       balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore).add(feeBN))
       balanceRecieverAfter.should.be.eq.BN(toBN(balanceRecieverBefore).add(toBN(value)).sub(feeBN))
 
+
       logs[0].event.should.be.equal('Withdraw')
-      logs[0].args.nullifier.should.be.eq.BN(toBN(input.nullifierHash.toString()))
+      logs[0].args.nullifierHash.should.be.eq.BN(toBN(input.nullifierHash.toString()))
       logs[0].args.fee.should.be.eq.BN(feeBN)
+      isSpent = await mixer.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
+      isSpent.should.be.equal(true)
     })
 
     it('should prevent double spend', async () => {
