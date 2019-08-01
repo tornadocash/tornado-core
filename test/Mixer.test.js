@@ -180,6 +180,9 @@ contract('Mixer', accounts => {
 
       const balanceUserBefore = await web3.eth.getBalance(user)
 
+      // Uncomment to measure gas usage
+      // let gas = await mixer.deposit.estimateGas(toBN(deposit.commitment.toString()), { value, from: user, gasPrice: '0' })
+      // console.log('deposit gas:', gas)
       await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: user, gasPrice: '0' })
 
       const balanceUserAfter = await web3.eth.getBalance(user)
@@ -212,6 +215,9 @@ contract('Mixer', accounts => {
       let isSpent = await mixer.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
       isSpent.should.be.equal(false)
 
+      // Uncomment to measure gas usage
+      // gas = await mixer.withdraw.estimateGas(pi_a, pi_b, pi_c, publicSignals, { from: relayer, gasPrice: '0' })
+      // console.log('withdraw gas:', gas)
       const { logs } = await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer, gasPrice: '0' })
 
       const balanceMixerAfter = await web3.eth.getBalance(mixer.address)
