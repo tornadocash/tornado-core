@@ -62,11 +62,11 @@ contract('Mixer', accounts => {
   const sender = accounts[0]
   const levels = MERKLE_TREE_HEIGHT || 16
   const zeroValue = EMPTY_ELEMENT || 1337
-  const value = AMOUNT || '1000000000000000000'
+  const value = AMOUNT || '1000000000000000000' // 1 ether
   let snapshotId
   let prefix = 'test'
   let tree
-  const fee = bigInt(1e17)
+  const fee = bigInt(AMOUNT).shr(1) || bigInt(1e17)
   const receiver = getRandomReceiver()
   const relayer = accounts[1]
   let groth16
