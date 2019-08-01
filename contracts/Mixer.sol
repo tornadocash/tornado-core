@@ -80,6 +80,11 @@ contract Mixer is MerkleTreeWithHistory {
     isDepositsEnabled = !isDepositsEnabled;
   }
 
+  function setPauseAccount(address _newAccount) external {
+    require(msg.sender == pauseAccount, "unauthorized");
+    pauseAccount = _newAccount;
+  }
+
   function isSpent(uint256 nullifier) public view returns(bool) {
     return nullifierHashes[nullifier];
   }
