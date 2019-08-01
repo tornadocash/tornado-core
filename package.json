@@ -14,7 +14,8 @@
     "migrate": "npx truffle migrate --network kovan --reset",
     "migrate:dev": "npx truffle migrate --network development --reset",
     "browserify": "npx browserify cli.js -o index.js --exclude worker_threads",
-    "eslint": "npx eslint --ignore-path .gitignore ."
+    "eslint": "npx eslint --ignore-path .gitignore .",
+    "flat": "truffle-flattener contracts/Mixer.sol > Mixer_flat.sol"
   },
   "keywords": [],
   "author": "",
@@ -38,5 +39,8 @@
     "web3": "^1.0.0-beta.55",
     "web3-utils": "^1.0.0-beta.55",
     "websnark": "git+https://github.com/poma/websnark.git#271c74a76f4d9277c049283c45929fb3a5bb46fc"
+  },
+  "devDependencies": {
+    "truffle-flattener": "^1.4.0"
   }
 }

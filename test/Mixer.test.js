@@ -111,6 +111,17 @@ contract('Mixer', accounts => {
       logs[0].args.leafIndex.should.be.eq.BN(toBN(1))
     })
 
+    it('should not deposit if disabled', async () => {
+      let commitment = 42;
+      (await mixer.isDepositsEnabled()).should.be.equal(true)
+      const err = await mixer.toggleDeposits({ from: accounts[1] }).should.be.rejected
+      err.reason.should.be.equal('unauthorized')
+      await mixer.toggleDeposits({ from: sender });
+      (await mixer.isDepositsEnabled()).should.be.equal(false)
+      let error = await mixer.deposit(commitment, { value, from: sender }).should.be.rejected
+      error.reason.should.be.equal('deposits disabled')
+    })
+
     it('should throw if there is a such commitment', async () => {
       const commitment = 42
       await mixer.deposit(commitment, { value, from: sender }).should.be.fulfilled

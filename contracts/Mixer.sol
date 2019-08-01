@@ -8,6 +8,8 @@ contract IVerifier {
 
 contract Mixer is MerkleTreeWithHistory {
   uint256 public transferValue;
+  bool public isDepositsEnabled = true;
+  address public pauseAccount;
   mapping(uint256 => bool) public nullifierHashes;
   // we store all commitments just to prevent accidental deposits with the same commitment
   mapping(uint256 => bool) public commitments;
@@ -25,10 +27,12 @@ contract Mixer is MerkleTreeWithHistory {
     address _verifier,
     uint256 _transferValue,
     uint8 _merkleTreeHeight,
-    uint256 _emptyElement
+    uint256 _emptyElement,
+    address _pauseAccount
   ) MerkleTreeWithHistory(_merkleTreeHeight, _emptyElement) public {
     verifier = IVerifier(_verifier);
     transferValue = _transferValue;
+    pauseAccount = _pauseAccount;
   }
 
   /**
@@ -36,6 +40,7 @@ contract Mixer is MerkleTreeWithHistory {
     @param commitment the note commitment, which is PedersenHash(nullifier + secret)
   */
   function deposit(uint256 commitment) public payable {
+    require(isDepositsEnabled, "deposits disabled");
     require(msg.value == transferValue, "Please send `transferValue` ETH along with transaction");
     require(!commitments[commitment], "The commitment has been submitted");
     _insert(commitment);
@@ -68,6 +73,11 @@ contract Mixer is MerkleTreeWithHistory {
       msg.sender.transfer(fee);
     }
     emit Withdraw(receiver, nullifierHash, fee);
+  }
+
+  function toggleDeposits() external {
+    require(msg.sender == pauseAccount, "unauthorized");
+    isDepositsEnabled = !isDepositsEnabled;
   }
 
   function isSpent(uint256 nullifier) public view returns(bool) {
