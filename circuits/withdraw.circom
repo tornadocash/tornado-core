@@ -51,13 +51,11 @@ template Withdraw(levels, rounds) {
         tree.pathIndex[i] <== pathIndex[i];
     }
 
-    // Add hidden signals to make sure that tampering with receiver or fee will invalidate the snark proof
-    // Most likely it is not required, but it's better to stay on the safe side and it only takes 2 constraints
-    // Squares are used to prevent optimizer from removing those constraints
-    signal receiverSquare;
-    signal feeSquare;
-    receiverSquare <== receiver * receiver;
-    feeSquare <== fee * fee;
+    // Add hidden signal to make sure that tampering with receiver or fee will invalidate the snark proof
+    // Most likely it is not required, but it's better to stay on the safe side and it only takes 1 constraint
+    // Multiplication is used to prevent optimizer from removing this constraint
+    signal unused;
+    unused <== receiver * fee;
 }
 
-component main = Withdraw(16, 220);
+component main = Withdraw(2, 220);
