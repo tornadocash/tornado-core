@@ -238,7 +238,6 @@ contract('Mixer', accounts => {
       })
       const proof = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
       const { pi_a, pi_b, pi_c, publicSignals } = websnarkUtils.toSolidityInput(proof)
-      // publicSignals[1] ='0x' + toBN(publicSignals[1]).add(toBN('21888242871839275222246405745257275088548364400416034343698204186575808495617')).toString('hex')
       await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer }).should.be.fulfilled
       const error = await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('The note has been already spent')
