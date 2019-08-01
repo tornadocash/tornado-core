@@ -58,4 +58,4 @@ template Withdraw(levels, rounds) {
     unused <== receiver * fee;
 }
 
-component main = Withdraw(2, 220);
+component main = Withdraw(16, 220);
