@@ -62,11 +62,11 @@ contract('Mixer', accounts => {
   const sender = accounts[0]
   const levels = MERKLE_TREE_HEIGHT || 16
   const zeroValue = EMPTY_ELEMENT || 1337
-  const value = AMOUNT || '1000000000000000000'
+  const value = AMOUNT || '1000000000000000000' // 1 ether
   let snapshotId
   let prefix = 'test'
   let tree
-  const fee = bigInt(1e17)
+  const fee = bigInt(AMOUNT).shr(1) || bigInt(1e17)
   const receiver = getRandomReceiver()
   const relayer = accounts[1]
   let groth16
@@ -109,6 +109,17 @@ contract('Mixer', accounts => {
       logs[0].event.should.be.equal('Deposit')
       logs[0].args.commitment.should.be.eq.BN(toBN(commitment))
       logs[0].args.leafIndex.should.be.eq.BN(toBN(1))
+    })
+
+    it('should not deposit if disabled', async () => {
+      let commitment = 42;
+      (await mixer.isDepositsEnabled()).should.be.equal(true)
+      const err = await mixer.toggleDeposits({ from: accounts[1] }).should.be.rejected
+      err.reason.should.be.equal('unauthorized')
+      await mixer.toggleDeposits({ from: sender });
+      (await mixer.isDepositsEnabled()).should.be.equal(false)
+      let error = await mixer.deposit(commitment, { value, from: sender }).should.be.rejected
+      error.reason.should.be.equal('deposits disabled')
     })
 
     it('should throw if there is a such commitment', async () => {
@@ -169,6 +180,9 @@ contract('Mixer', accounts => {
 
       const balanceUserBefore = await web3.eth.getBalance(user)
 
+      // Uncomment to measure gas usage
+      // let gas = await mixer.deposit.estimateGas(toBN(deposit.commitment.toString()), { value, from: user, gasPrice: '0' })
+      // console.log('deposit gas:', gas)
       await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: user, gasPrice: '0' })
 
       const balanceUserAfter = await web3.eth.getBalance(user)
@@ -201,6 +215,9 @@ contract('Mixer', accounts => {
       let isSpent = await mixer.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
       isSpent.should.be.equal(false)
 
+      // Uncomment to measure gas usage
+      // gas = await mixer.withdraw.estimateGas(pi_a, pi_b, pi_c, publicSignals, { from: relayer, gasPrice: '0' })
+      // console.log('withdraw gas:', gas)
       const { logs } = await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer, gasPrice: '0' })
 
       const balanceMixerAfter = await web3.eth.getBalance(mixer.address)

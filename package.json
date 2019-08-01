@@ -14,7 +14,8 @@
     "migrate": "npx truffle migrate --network kovan --reset",
     "migrate:dev": "npx truffle migrate --network development --reset",
     "browserify": "npx browserify cli.js -o index.js --exclude worker_threads",
-    "eslint": "npx eslint --ignore-path .gitignore ."
+    "eslint": "npx eslint --ignore-path .gitignore .",
+    "flat": "truffle-flattener contracts/Mixer.sol > Mixer_flat.sol"
   },
   "keywords": [],
   "author": "",
@@ -28,7 +29,6 @@
     "circomlib": "^0.0.10",
     "dotenv": "^8.0.0",
     "eslint": "^6.0.1",
-    "express": "^4.17.1",
     "ganache-cli": "^6.4.5",
     "snarkjs": "git+https://github.com/iden3/snarkjs.git#c428706ef69930e378c31199ff8d66ee13fada85",
     "truffle": "^5.0.27",
@@ -37,6 +37,9 @@
     "truffle-hdwallet-provider": "^1.0.14",
     "web3": "^1.0.0-beta.55",
     "web3-utils": "^1.0.0-beta.55",
-    "websnark": "git+https://github.com/poma/websnark.git#271c74a76f4d9277c049283c45929fb3a5bb46fc"
+    "websnark": "git+https://github.com/peppersec/websnark.git#ed6a4d8a6fb081a62af26820980046bbb602d559"
+  },
+  "devDependencies": {
+    "truffle-flattener": "^1.4.0"
   }
 }
