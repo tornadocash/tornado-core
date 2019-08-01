@@ -21,7 +21,7 @@ const pedersenHash = (data) => circomlib.babyJub.unpackPoint(circomlib.pedersenH
 
 function createDeposit(nullifier, secret) {
   let deposit = { nullifier, secret }
-  deposit.preimage = Buffer.concat([deposit.nullifier.leInt2Buff(32), deposit.secret.leInt2Buff(32)])
+  deposit.preimage = Buffer.concat([deposit.nullifier.leInt2Buff(31), deposit.secret.leInt2Buff(31)])
   deposit.commitment = pedersenHash(deposit.preimage)
   return deposit
 }
@@ -61,7 +61,7 @@ async function withdraw(note, receiver) {
     })
   const tree = new merkleTree(MERKLE_TREE_HEIGHT, EMPTY_ELEMENT, leaves)
   const validRoot = await mixer.methods.isKnownRoot(await tree.root()).call()
-  const nullifierHash = pedersenHash(deposit.nullifier.leInt2Buff(32))
+  const nullifierHash = pedersenHash(deposit.nullifier.leInt2Buff(31))
   const nullifierHashToCheck = nullifierHash.toString(16).padStart('66', '0x000000')
   const isSpent = await mixer.methods.isSpent(nullifierHashToCheck).call()
   assert(validRoot === true)
