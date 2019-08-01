@@ -220,15 +220,9 @@ contract('Mixer', accounts => {
     })
 
     it('should prevent double spend', async () => {
-
       const deposit = generateDeposit()
       await tree.insert(deposit.commitment)
       await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: sender })
-
-      const deposit2 = generateDeposit()
-      await tree.insert(deposit2.commitment)
-      await mixer.deposit(toBN(deposit2.commitment.toString()), { value, from: sender })
-
 
       const { root, path_elements, path_index } = await tree.path(0)
 
@@ -251,15 +245,9 @@ contract('Mixer', accounts => {
     })
 
     it('should prevent double spend with overflow', async () => {
-
       const deposit = generateDeposit()
       await tree.insert(deposit.commitment)
       await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: sender })
-
-      const deposit2 = generateDeposit()
-      await tree.insert(deposit2.commitment)
-      await mixer.deposit(toBN(deposit2.commitment.toString()), { value, from: sender })
-
 
       const { root, path_elements, path_index } = await tree.path(0)
 
