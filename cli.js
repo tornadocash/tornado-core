@@ -172,6 +172,18 @@ if (inBrowser) {
       else
         printHelp(1)
       break
+    case 'auto':
+      if (args.length === 1) {
+        (async () => {
+          await init()
+          const note = await deposit()
+          await withdraw(note, (await web3.eth.getAccounts())[0])
+          process.exit(0)
+        })()
+      }
+      else
+        printHelp(1)
+      break
 
     default:
       printHelp(1)
