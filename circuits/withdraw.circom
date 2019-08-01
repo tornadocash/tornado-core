@@ -30,7 +30,6 @@ template CommitmentHasher() {
 template Withdraw(levels, rounds) {
     signal input root;
     signal input nullifierHash;
-    // TODO: Check if we need some kind of explicit constraints or something for those 2 inputs
     signal input receiver; // not taking part in any computations
     signal input fee; // not taking part in any computations
     signal private input nullifier;
@@ -51,6 +50,14 @@ template Withdraw(levels, rounds) {
         tree.pathElements[i] <== pathElements[i];
         tree.pathIndex[i] <== pathIndex[i];
     }
+
+    // Add hidden signals to make sure that tampering with receiver or fee will invalidate the snark proof
+    // Most likely it is not required, but it's better to stay on the safe side and it only takes 2 constraints
+    // Squares are used to prevent optimizer from removing those constraints
+    signal receiverSquare;
+    signal feeSquare;
+    receiverSquare <== receiver * receiver;
+    feeSquare <== fee * fee;
 }
 
 component main = Withdraw(16, 220);
