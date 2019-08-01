@@ -220,9 +220,15 @@ contract('Mixer', accounts => {
     })
 
     it('should prevent double spend', async () => {
+
       const deposit = generateDeposit()
       await tree.insert(deposit.commitment)
       await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: sender })
+
+      const deposit2 = generateDeposit()
+      await tree.insert(deposit2.commitment)
+      await mixer.deposit(toBN(deposit2.commitment.toString()), { value, from: sender })
+
 
       const { root, path_elements, path_index } = await tree.path(0)
 
@@ -236,12 +242,42 @@ contract('Mixer', accounts => {
         pathElements: path_elements,
         pathIndex: path_index,
       })
-
       const proof = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
       const { pi_a, pi_b, pi_c, publicSignals } = websnarkUtils.toSolidityInput(proof)
+      // publicSignals[1] ='0x' + toBN(publicSignals[1]).add(toBN('21888242871839275222246405745257275088548364400416034343698204186575808495617')).toString('hex')
       await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer }).should.be.fulfilled
       const error = await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('The note has been already spent')
+    })
+
+    it('should prevent double spend with overflow', async () => {
+
+      const deposit = generateDeposit()
+      await tree.insert(deposit.commitment)
+      await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: sender })
+
+      const deposit2 = generateDeposit()
+      await tree.insert(deposit2.commitment)
+      await mixer.deposit(toBN(deposit2.commitment.toString()), { value, from: sender })
+
+
+      const { root, path_elements, path_index } = await tree.path(0)
+
+      const input = stringifyBigInts({
+        root,
+        nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(32)),
+        nullifier: deposit.nullifier,
+        receiver,
+        fee,
+        secret: deposit.secret,
+        pathElements: path_elements,
+        pathIndex: path_index,
+      })
+      const proof = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
+      const { pi_a, pi_b, pi_c, publicSignals } = websnarkUtils.toSolidityInput(proof)
+      publicSignals[1] ='0x' + toBN(publicSignals[1]).add(toBN('21888242871839275222246405745257275088548364400416034343698204186575808495617')).toString('hex')
+      const error = await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer }).should.be.rejected
+      error.reason.should.be.equal('verifier-gte-snark-scalar-field')
     })
 
     it('fee should be less or equal transfer value', async () => {
@@ -312,7 +348,6 @@ contract('Mixer', accounts => {
         pathElements: path_elements,
         pathIndex: path_index,
       })
-
       const proof = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
       let { pi_a, pi_b, pi_c, publicSignals } = websnarkUtils.toSolidityInput(proof)
       const originalPublicSignals = publicSignals.slice()
