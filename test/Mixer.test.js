@@ -60,6 +60,7 @@ function snarkVerify(proof) {
 contract('Mixer', accounts => {
   let mixer
   const sender = accounts[0]
+  const operator = accounts[0]
   const levels = MERKLE_TREE_HEIGHT || 16
   const zeroValue = EMPTY_ELEMENT || 1337
   const value = AMOUNT || '1000000000000000000' // 1 ether
@@ -211,6 +212,7 @@ contract('Mixer', accounts => {
 
       const balanceMixerBefore = await web3.eth.getBalance(mixer.address)
       const balanceRelayerBefore = await web3.eth.getBalance(relayer)
+      const balanceOperatorBefore = await web3.eth.getBalance(operator)
       const balanceRecieverBefore = await web3.eth.getBalance(toHex(receiver.toString()))
       let isSpent = await mixer.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
       isSpent.should.be.equal(false)
@@ -222,10 +224,12 @@ contract('Mixer', accounts => {
 
       const balanceMixerAfter = await web3.eth.getBalance(mixer.address)
       const balanceRelayerAfter = await web3.eth.getBalance(relayer)
+      const balanceOperatorAfter = await web3.eth.getBalance(operator)
       const balanceRecieverAfter = await web3.eth.getBalance(toHex(receiver.toString()))
       const feeBN = toBN(fee.toString())
       balanceMixerAfter.should.be.eq.BN(toBN(balanceMixerBefore).sub(toBN(value)))
-      balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore).add(feeBN))
+      balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore))
+      balanceOperatorAfter.should.be.eq.BN(toBN(balanceOperatorBefore).add(feeBN))
       balanceRecieverAfter.should.be.eq.BN(toBN(balanceRecieverBefore).add(toBN(value)).sub(feeBN))
 
 
@@ -383,6 +387,29 @@ contract('Mixer', accounts => {
 
       // should work with original values
       await mixer.withdraw(originalPi_a, pi_b, pi_c, originalPublicSignals, { from: relayer }).should.be.fulfilled
+    })
+  })
+
+  describe('#changeOperator', () => {
+    it('should work', async () => {
+      let operator = await mixer.operator()
+      operator.should.be.equal(sender)
+
+      const newOperator = accounts[7]
+      await mixer.changeOperator(newOperator).should.be.fulfilled
+
+      operator = await mixer.operator()
+      operator.should.be.equal(newOperator)
+    })
+
+    it('cannot change from different address', async () => {
+      let operator = await mixer.operator()
+      operator.should.be.equal(sender)
+
+      const newOperator = accounts[7]
+      const error = await mixer.changeOperator(newOperator, { from:  accounts[7] }).should.be.rejected
+      error.reason.should.be.equal('unauthorized')
+
     })
   })
 
