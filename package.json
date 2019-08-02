@@ -31,7 +31,7 @@
     "dotenv": "^8.0.0",
     "eslint": "^6.0.1",
     "ganache-cli": "^6.4.5",
-    "snarkjs": "git+https://github.com/iden3/snarkjs.git#c428706ef69930e378c31199ff8d66ee13fada85",
+    "snarkjs": "^0.1.16",
     "truffle": "^5.0.27",
     "truffle-artifactor": "^4.0.23",
     "truffle-contract": "^4.0.24",
