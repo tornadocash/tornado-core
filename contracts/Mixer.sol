@@ -26,7 +26,7 @@ contract Mixer is MerkleTreeWithHistory {
   mapping(uint256 => bool) public nullifierHashes;
   // we store all commitments just to prevent accidental deposits with the same commitment
   mapping(uint256 => bool) public commitments;
-  IVerifier verifier;
+  IVerifier public verifier;
 
   event Deposit(uint256 indexed commitment, uint256 leafIndex, uint256 timestamp);
   event Withdraw(address to, uint256 nullifierHash, uint256 fee);

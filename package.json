@@ -12,7 +12,7 @@
     "build:contract": "npx truffle compile",
     "test": "npx truffle test",
     "migrate": "npx truffle migrate --network kovan --reset",
-    "migrate:mainnet": "npx truffle migrate --network mainnet --reset",
+    "migrate:mainnet": "npx truffle migrate --network mainnet",
     "migrate:dev": "npx truffle migrate --network development --reset",
     "browserify": "npx browserify cli.js -o index.js --exclude worker_threads",
     "eslint": "npx eslint --ignore-path .gitignore .",
