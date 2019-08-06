@@ -44,7 +44,7 @@ async function getBalance(receiver) {
 
 async function withdraw(note, receiver) {
   let buf = Buffer.from(note.slice(2), 'hex')
-  let deposit = createDeposit(bigInt.leBuff2int(buf.slice(0, 32)), bigInt.leBuff2int(buf.slice(32, 64)))
+  let deposit = createDeposit(bigInt.leBuff2int(buf.slice(0, 31)), bigInt.leBuff2int(buf.slice(31, 62)))
 
   console.log('Getting current state from mixer contract')
   const events = await mixer.getPastEvents('Deposit', { fromBlock: mixer.deployedBlock, toBlock: 'latest' })
@@ -174,7 +174,7 @@ if (inBrowser) {
         printHelp(1)
       break
     case 'withdraw':
-      if (args.length === 3 && /^0x[0-9a-fA-F]{128}$/.test(args[1]) && /^0x[0-9a-fA-F]{40}$/.test(args[2])) {
+      if (args.length === 3 && /^0x[0-9a-fA-F]{124}$/.test(args[1]) && /^0x[0-9a-fA-F]{40}$/.test(args[2])) {
         init().then(() => withdraw(args[1], args[2])).then(() => process.exit(0)).catch(err => {console.log(err); process.exit(1)})
       }
       else
