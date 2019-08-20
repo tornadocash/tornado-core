@@ -8,7 +8,7 @@ const fs = require('fs')
 const { toBN, toHex, randomHex } = require('web3-utils')
 const { takeSnapshot, revertSnapshot } = require('../lib/ganacheHelper')
 
-const Mixer = artifacts.require('./Mixer.sol')
+const Mixer = artifacts.require('./ETHMixer.sol')
 const { AMOUNT, MERKLE_TREE_HEIGHT, EMPTY_ELEMENT } = process.env
 
 const websnarkUtils = require('websnark/src/utils')
