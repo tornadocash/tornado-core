@@ -85,7 +85,7 @@ contract('Mixer', accounts => {
     )
     mixer = await Mixer.deployed()
     token = await Token.deployed()
-    token.mint(sender, value)
+    await token.mint(sender, value)
     snapshotId = await takeSnapshot()
     groth16 = await buildGroth16()
     circuit = require('../build/circuits/withdraw.json')
@@ -100,7 +100,7 @@ contract('Mixer', accounts => {
   })
 
   describe('#deposit', () => {
-    it.only('should work', async () => {
+    it('should work', async () => {
       const commitment = 43
       await token.approve(mixer.address, value)
 
@@ -109,6 +109,75 @@ contract('Mixer', accounts => {
       logs[0].event.should.be.equal('Deposit')
       logs[0].args.commitment.should.be.eq.BN(toBN(commitment))
       logs[0].args.leafIndex.should.be.eq.BN(toBN(0))
+    })
+  })
+
+  describe('#withdraw', () => {
+    it('should work', async () => {
+      const deposit = generateDeposit()
+      const user = accounts[4]
+      await tree.insert(deposit.commitment)
+      await token.mint(user, value)
+
+      const balanceUserBefore = await token.balanceOf(user)
+      await token.approve(mixer.address, value, { from: user })
+      // Uncomment to measure gas usage
+      // let gas = await mixer.deposit.estimateGas(toBN(deposit.commitment.toString()), { value, from: user, gasPrice: '0' })
+      // console.log('deposit gas:', gas)
+      await mixer.deposit(toBN(deposit.commitment.toString()), { from: user, gasPrice: '0' })
+
+      const balanceUserAfter = await token.balanceOf(user)
+      balanceUserAfter.should.be.eq.BN(toBN(balanceUserBefore).sub(toBN(value)))
+
+      const { root, path_elements, path_index } = await tree.path(0)
+
+      // Circuit input
+      const input = stringifyBigInts({
+        // public
+        root,
+        nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
+        receiver,
+        fee,
+
+        // private
+        nullifier: deposit.nullifier,
+        secret: deposit.secret,
+        pathElements: path_elements,
+        pathIndex: path_index,
+      })
+
+
+      const proof = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
+      const { pi_a, pi_b, pi_c, publicSignals } = websnarkUtils.toSolidityInput(proof)
+
+      const balanceMixerBefore = await token.balanceOf(mixer.address)
+      const balanceRelayerBefore = await token.balanceOf(relayer)
+      const balanceOperatorBefore = await token.balanceOf(operator)
+      const balanceRecieverBefore = await token.balanceOf(toHex(receiver.toString()))
+      let isSpent = await mixer.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
+      isSpent.should.be.equal(false)
+
+      // Uncomment to measure gas usage
+      // gas = await mixer.withdraw.estimateGas(pi_a, pi_b, pi_c, publicSignals, { from: relayer, gasPrice: '0' })
+      // console.log('withdraw gas:', gas)
+      const { logs } = await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer, gasPrice: '0' })
+
+      const balanceMixerAfter = await token.balanceOf(mixer.address)
+      const balanceRelayerAfter = await token.balanceOf(relayer)
+      const balanceOperatorAfter = await token.balanceOf(operator)
+      const balanceRecieverAfter = await token.balanceOf(toHex(receiver.toString()))
+      const feeBN = toBN(fee.toString())
+      balanceMixerAfter.should.be.eq.BN(toBN(balanceMixerBefore).sub(toBN(value)))
+      balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore))
+      balanceOperatorAfter.should.be.eq.BN(toBN(balanceOperatorBefore).add(feeBN))
+      balanceRecieverAfter.should.be.eq.BN(toBN(balanceRecieverBefore).add(toBN(value)).sub(feeBN))
+
+
+      logs[0].event.should.be.equal('Withdraw')
+      logs[0].args.nullifierHash.should.be.eq.BN(toBN(input.nullifierHash.toString()))
+      logs[0].args.fee.should.be.eq.BN(feeBN)
+      isSpent = await mixer.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
+      isSpent.should.be.equal(true)
     })
   })
 
