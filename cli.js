@@ -13,7 +13,7 @@ const buildGroth16 = require('websnark/src/groth16')
 const websnarkUtils = require('websnark/src/utils')
 
 let web3, mixer, circuit, proving_key, groth16
-let MERKLE_TREE_HEIGHT, AMOUNT, EMPTY_ELEMENT
+let MERKLE_TREE_HEIGHT, ETH_AMOUNT, EMPTY_ELEMENT
 const inBrowser = (typeof window !== 'undefined')
 
 const rbigint = (nbytes) => snarkjs.bigInt.leBuff2int(crypto.randomBytes(nbytes))
@@ -30,7 +30,7 @@ async function deposit() {
   const deposit = createDeposit(rbigint(31), rbigint(31))
 
   console.log('Submitting deposit transaction')
-  await mixer.methods.deposit('0x' + deposit.commitment.toString(16)).send({ value: AMOUNT, from: (await web3.eth.getAccounts())[0], gas:1e6 })
+  await mixer.methods.deposit('0x' + deposit.commitment.toString(16)).send({ value: ETH_AMOUNT, from: (await web3.eth.getAccounts())[0], gas:1e6 })
 
   const note = '0x' + deposit.preimage.toString('hex')
   console.log('Your note:', note)
@@ -103,7 +103,7 @@ async function init() {
     circuit = await (await fetch('build/circuits/withdraw.json')).json()
     proving_key = await (await fetch('build/circuits/withdraw_proving_key.bin')).arrayBuffer()
     MERKLE_TREE_HEIGHT = 16
-    AMOUNT = 1e18
+    ETH_AMOUNT = 1e18
     EMPTY_ELEMENT = 0
   } else {
     web3 = new Web3('http://localhost:8545', null, { transactionConfirmationBlocks: 1 })
@@ -112,7 +112,7 @@ async function init() {
     proving_key = fs.readFileSync('build/circuits/withdraw_proving_key.bin').buffer
     require('dotenv').config()
     MERKLE_TREE_HEIGHT = process.env.MERKLE_TREE_HEIGHT
-    AMOUNT = process.env.AMOUNT
+    ETH_AMOUNT = process.env.ETH_AMOUNT
     EMPTY_ELEMENT = process.env.EMPTY_ELEMENT
   }
   groth16 = await buildGroth16()

@@ -16,7 +16,7 @@
     "migrate:dev": "npx truffle migrate --network development --reset",
     "browserify": "npx browserify cli.js -o index.js --exclude worker_threads",
     "eslint": "npx eslint --ignore-path .gitignore .",
-    "flat": "truffle-flattener contracts/Mixer.sol > Mixer_flat.sol"
+    "flat": "truffle-flattener contracts/ETHMixer.sol > ETHMixer_flat.sol contracts/ERC20Mixer.sol > ERC20Mixer_flat.sol"
   },
   "keywords": [],
   "author": "",

@@ -9,7 +9,7 @@ const { toBN, toHex, randomHex } = require('web3-utils')
 const { takeSnapshot, revertSnapshot } = require('../lib/ganacheHelper')
 
 const Mixer = artifacts.require('./ETHMixer.sol')
-const { AMOUNT, MERKLE_TREE_HEIGHT, EMPTY_ELEMENT } = process.env
+const { ETH_AMOUNT, MERKLE_TREE_HEIGHT, EMPTY_ELEMENT } = process.env
 
 const websnarkUtils = require('websnark/src/utils')
 const buildGroth16 = require('websnark/src/groth16')
@@ -57,17 +57,17 @@ function snarkVerify(proof) {
   return snarkjs['groth'].isValid(verification_key, proof, proof.publicSignals)
 }
 
-contract('Mixer', accounts => {
+contract('ETHMixer', accounts => {
   let mixer
   const sender = accounts[0]
   const operator = accounts[0]
   const levels = MERKLE_TREE_HEIGHT || 16
   const zeroValue = EMPTY_ELEMENT || 1337
-  const value = AMOUNT || '1000000000000000000' // 1 ether
+  const value = ETH_AMOUNT || '1000000000000000000' // 1 ether
   let snapshotId
   let prefix = 'test'
   let tree
-  const fee = bigInt(AMOUNT).shr(1) || bigInt(1e17)
+  const fee = bigInt(ETH_AMOUNT).shr(1) || bigInt(1e17)
   const receiver = getRandomReceiver()
   const relayer = accounts[1]
   let groth16
@@ -90,8 +90,8 @@ contract('Mixer', accounts => {
 
   describe('#constructor', () => {
     it('should initialize', async () => {
-      const transferValue = await mixer.transferValue()
-      transferValue.should.be.eq.BN(toBN(value))
+      const etherDenomination = await mixer.etherDenomination()
+      etherDenomination.should.be.eq.BN(toBN(value))
     })
   })
 

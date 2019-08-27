@@ -94,3 +94,5 @@ typings/
 # DynamoDB Local files
 .dynamodb/
 
+ERC20Mixer_flat.sol
+ETHMixer_flat.sol

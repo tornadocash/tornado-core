@@ -18,7 +18,6 @@ contract IVerifier {
 }
 
 contract Mixer is MerkleTreeWithHistory {
-  uint256 public transferValue;
   bool public isDepositsEnabled = true;
   // operator can disable new deposits in case of emergency
   // it also receives a relayer fee
@@ -34,24 +33,20 @@ contract Mixer is MerkleTreeWithHistory {
   /**
     @dev The constructor
     @param _verifier the address of SNARK verifier for this contract
-    @param _transferValue the value for all deposits in this contract in wei
+    @param _merkleTreeHeight the height of deposits' Merkle Tree
+    @param _emptyElement default element of the deposits' Merkle Tree
+    @param _operator operator address (see operator above)
   */
   constructor(
     address _verifier,
-    uint256 _transferValue,
     uint8 _merkleTreeHeight,
     uint256 _emptyElement,
     address payable _operator
   ) MerkleTreeWithHistory(_merkleTreeHeight, _emptyElement) public {
     verifier = IVerifier(_verifier);
-    transferValue = _transferValue;
     operator = _operator;
   }
 
-  /**
-    @dev Deposit funds into mixer. The caller must send value equal to `transferValue` of this mixer.
-    @param commitment the note commitment, which is PedersenHash(nullifier + secret)
-  */
   function _deposit(uint256 commitment) internal {
     require(isDepositsEnabled, "deposits disabled");
     require(!commitments[commitment], "The commitment has been submitted");
@@ -59,14 +54,6 @@ contract Mixer is MerkleTreeWithHistory {
     commitments[commitment] = true;
   }
 
-  /**
-    @dev Withdraw deposit from the mixer. `a`, `b`, and `c` are zkSNARK proof data, and input is an array of circuit public inputs
-    `input` array consists of:
-      - merkle root of all deposits in the mixer
-      - hash of unique deposit nullifier to prevent double spends
-      - the receiver of funds
-      - optional fee that goes to the transaction sender (usually a relay)
-  */
   function _withdraw(uint256[2] memory a, uint256[2][2] memory b, uint256[2] memory c, uint256[4] memory input) internal {
     uint256 root = input[0];
     uint256 nullifierHash = input[1];

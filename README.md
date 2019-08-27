@@ -41,6 +41,19 @@ spent since it has the same nullifier and it will prevent you from withdrawing y
 1. `npx http-server` - serve current dir, you can use any other http server
 1. Open `localhost:8080`
 
+## Deploy ETH Tornado Cash
+1. `cp .env.example .env`
+1. Tune all necessary params
+1. `npx truffle migrate --f 2 --to 4`
+
+## Deploy ERC20 Tornado Cash
+1. `cp .env.example .env`
+1. Tune all necessary params
+1. `npx truffle migrate --f 2 --to 3`
+1. `npx truffle migrate --f 5`
+
+**Note**. If you want to reuse the same verifier for all the mixers, then after you deployed one of the mixers you should only run 4th or 5th migration for ETH or ERC20 mixers respectively (`--f 4 --to 4` or `--f 5`).
+
 ## Credits
 
 Special thanks to @barryWhiteHat and @kobigurk for valuable input,

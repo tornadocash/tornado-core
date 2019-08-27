@@ -5,17 +5,16 @@ require('chai')
   .should()
 const fs = require('fs')
 
-const { toBN, toHex, randomHex } = require('web3-utils')
+const { toBN, toHex } = require('web3-utils')
 const { takeSnapshot, revertSnapshot } = require('../lib/ganacheHelper')
 
 const Mixer = artifacts.require('./ERC20Mixer.sol')
 const Token = artifacts.require('./ERC20Mock.sol')
-const { AMOUNT, MERKLE_TREE_HEIGHT, EMPTY_ELEMENT } = process.env
+const { ETH_AMOUNT, TOKEN_AMOUNT, MERKLE_TREE_HEIGHT, EMPTY_ELEMENT } = process.env
 
 const websnarkUtils = require('websnark/src/utils')
 const buildGroth16 = require('websnark/src/groth16')
 const stringifyBigInts = require('websnark/tools/stringifybigint').stringifyBigInts
-const unstringifyBigInts2 = require('snarkjs/src/stringifybigint').unstringifyBigInts
 const snarkjs = require('snarkjs')
 const bigInt = snarkjs.bigInt
 const crypto = require('crypto')
@@ -35,15 +34,6 @@ function generateDeposit() {
   return deposit
 }
 
-// eslint-disable-next-line no-unused-vars
-function BNArrayToStringArray(array) {
-  const arrayToPrint = []
-  array.forEach(item => {
-    arrayToPrint.push(item.toString())
-  })
-  return arrayToPrint
-}
-
 function getRandomReceiver() {
   let receiver = rbigint(20)
   while (toHex(receiver.toString()).length !== 42) {
@@ -52,24 +42,19 @@ function getRandomReceiver() {
   return receiver
 }
 
-function snarkVerify(proof) {
-  proof = unstringifyBigInts2(websnarkUtils.fromSolidityInput(proof))
-  const verification_key = unstringifyBigInts2(require('../build/circuits/withdraw_verification_key.json'))
-  return snarkjs['groth'].isValid(verification_key, proof, proof.publicSignals)
-}
-
-contract('Mixer', accounts => {
+contract('ERC20Mixer', accounts => {
   let mixer
   let token
   const sender = accounts[0]
   const operator = accounts[0]
   const levels = MERKLE_TREE_HEIGHT || 16
   const zeroValue = EMPTY_ELEMENT || 1337
-  const value = AMOUNT || '1000000000000000000' // 1 ether
+  const tokenDenomination = TOKEN_AMOUNT || '1000000000000000000' // 1 ether
+  const value = ETH_AMOUNT || '1000000000000000000' // 1 ether
   let snapshotId
   let prefix = 'test'
   let tree
-  const fee = bigInt(AMOUNT).shr(1) || bigInt(1e17)
+  const fee = bigInt(ETH_AMOUNT).shr(1) || bigInt(1e17)
   const receiver = getRandomReceiver()
   const relayer = accounts[1]
   let groth16
@@ -85,7 +70,7 @@ contract('Mixer', accounts => {
     )
     mixer = await Mixer.deployed()
     token = await Token.deployed()
-    await token.mint(sender, value)
+    await token.mint(sender, tokenDenomination)
     snapshotId = await takeSnapshot()
     groth16 = await buildGroth16()
     circuit = require('../build/circuits/withdraw.json')
@@ -102,9 +87,9 @@ contract('Mixer', accounts => {
   describe('#deposit', () => {
     it('should work', async () => {
       const commitment = 43
-      await token.approve(mixer.address, value)
+      await token.approve(mixer.address, tokenDenomination)
 
-      let { logs } = await mixer.deposit(commitment, { from: sender })
+      let { logs } = await mixer.deposit(commitment, { value, from: sender })
 
       logs[0].event.should.be.equal('Deposit')
       logs[0].args.commitment.should.be.eq.BN(toBN(commitment))
@@ -117,17 +102,17 @@ contract('Mixer', accounts => {
       const deposit = generateDeposit()
       const user = accounts[4]
       await tree.insert(deposit.commitment)
-      await token.mint(user, value)
+      await token.mint(user, tokenDenomination)
 
       const balanceUserBefore = await token.balanceOf(user)
-      await token.approve(mixer.address, value, { from: user })
+      await token.approve(mixer.address, tokenDenomination, { from: user })
       // Uncomment to measure gas usage
       // let gas = await mixer.deposit.estimateGas(toBN(deposit.commitment.toString()), { value, from: user, gasPrice: '0' })
       // console.log('deposit gas:', gas)
-      await mixer.deposit(toBN(deposit.commitment.toString()), { from: user, gasPrice: '0' })
+      await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: user, gasPrice: '0' })
 
       const balanceUserAfter = await token.balanceOf(user)
-      balanceUserAfter.should.be.eq.BN(toBN(balanceUserBefore).sub(toBN(value)))
+      balanceUserAfter.should.be.eq.BN(toBN(balanceUserBefore).sub(toBN(tokenDenomination)))
 
       const { root, path_elements, path_index } = await tree.path(0)
 
@@ -152,8 +137,9 @@ contract('Mixer', accounts => {
 
       const balanceMixerBefore = await token.balanceOf(mixer.address)
       const balanceRelayerBefore = await token.balanceOf(relayer)
-      const balanceOperatorBefore = await token.balanceOf(operator)
+      const ethBalanceOperatorBefore = await web3.eth.getBalance(operator)
       const balanceRecieverBefore = await token.balanceOf(toHex(receiver.toString()))
+      const ethBalanceRecieverBefore = await web3.eth.getBalance(toHex(receiver.toString()))
       let isSpent = await mixer.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
       isSpent.should.be.equal(false)
 
@@ -164,13 +150,15 @@ contract('Mixer', accounts => {
 
       const balanceMixerAfter = await token.balanceOf(mixer.address)
       const balanceRelayerAfter = await token.balanceOf(relayer)
-      const balanceOperatorAfter = await token.balanceOf(operator)
+      const ethBalanceOperatorAfter = await web3.eth.getBalance(operator)
       const balanceRecieverAfter = await token.balanceOf(toHex(receiver.toString()))
+      const ethBalanceRecieverAfter = await web3.eth.getBalance(toHex(receiver.toString()))
       const feeBN = toBN(fee.toString())
-      balanceMixerAfter.should.be.eq.BN(toBN(balanceMixerBefore).sub(toBN(value)))
+      balanceMixerAfter.should.be.eq.BN(toBN(balanceMixerBefore).sub(toBN(tokenDenomination)))
       balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore))
-      balanceOperatorAfter.should.be.eq.BN(toBN(balanceOperatorBefore).add(feeBN))
-      balanceRecieverAfter.should.be.eq.BN(toBN(balanceRecieverBefore).add(toBN(value)).sub(feeBN))
+      ethBalanceOperatorAfter.should.be.eq.BN(toBN(ethBalanceOperatorBefore).add(feeBN))
+      balanceRecieverAfter.should.be.eq.BN(toBN(balanceRecieverBefore).add(toBN(tokenDenomination)))
+      ethBalanceRecieverAfter.should.be.eq.BN(toBN(ethBalanceRecieverBefore).add(toBN(value)).sub(feeBN))
 
 
       logs[0].event.should.be.equal('Withdraw')
