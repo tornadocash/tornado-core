@@ -30,7 +30,7 @@
     "circom": "0.0.30",
     "circomlib": "^0.0.10",
     "dotenv": "^8.0.0",
-    "eslint": "^6.0.1",
+    "eslint": "^6.2.2",
     "ganache-cli": "^6.4.5",
     "snarkjs": "^0.1.16",
     "truffle": "^5.0.27",
