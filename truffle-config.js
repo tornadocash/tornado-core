@@ -45,7 +45,7 @@ module.exports = {
     kovan: {
       provider: () => new HDWalletProvider(process.env.PRIVATE_KEY, 'https://kovan.infura.io/v3/c7463beadf2144e68646ff049917b716'),
       network_id: 42,
-      gas: 7000000,
+      gas: 6000000,
       gasPrice: utils.toWei('1', 'gwei'),
       // confirmations: 0,
       // timeoutBlocks: 200,
