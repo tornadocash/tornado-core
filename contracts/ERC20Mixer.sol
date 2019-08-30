@@ -12,10 +12,9 @@
 pragma solidity ^0.5.8;
 
 import "./Mixer.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract ERC20Mixer is Mixer {
-  IERC20 public token;
+  address public token;
   // mixed token amount
   uint256 public tokenDenomination;
   // ether value to cover network fee (for relayer) and to have some ETH on a brand new address
@@ -27,7 +26,7 @@ contract ERC20Mixer is Mixer {
     uint8 _merkleTreeHeight,
     uint256 _emptyElement,
     address payable _operator,
-    IERC20 _token,
+    address _token,
     uint256 _tokenDenomination
   ) Mixer(_verifier, _merkleTreeHeight, _emptyElement, _operator) public {
     token = _token;
@@ -42,7 +41,7 @@ contract ERC20Mixer is Mixer {
   */
   function deposit(uint256 commitment) public payable {
     require(msg.value == etherFeeDenomination, "Please send `etherFeeDenomination` ETH along with transaction");
-    require(token.transferFrom(msg.sender, address(this), tokenDenomination), "Approve before using");
+    transferFrom(msg.sender, address(this), tokenDenomination);
     _deposit(commitment);
 
     emit Deposit(commitment, next_index - 1, block.timestamp);
@@ -69,8 +68,46 @@ contract ERC20Mixer is Mixer {
       operator.transfer(fee);
     }
 
-    token.transfer(receiver, tokenDenomination);
+    transfer(receiver, tokenDenomination);
 
     emit Withdraw(receiver, nullifierHash, fee);
+  }
+
+  function transferFrom(address from, address to, uint256 amount) internal {
+    bool success;
+    bytes memory data;
+    bytes4 transferFromSelector = 0x23b872dd;
+    (success, data) = token.call(
+        abi.encodeWithSelector(
+            transferFromSelector,
+            from, to, amount
+        )
+    );
+    require(success, "not enough allowed tokens");
+    if (data.length > 0) {
+      assembly {
+        success := mload(add(data, 0x20))
+      }
+      require(success, "not enough allowed tokens");
+    }
+  }
+
+  function transfer(address to, uint256 amount) internal {
+    bool success;
+    bytes memory data;
+    bytes4 transferSelector = 0xa9059cbb;
+    (success, data) = token.call(
+        abi.encodeWithSelector(
+            transferSelector,
+            to, amount
+        )
+    );
+    require(success, "not enough tokens");
+    if (data.length > 0) {
+      assembly {
+        success := mload(add(data, 0x20))
+      }
+      require(success, "not enough tokens");
+    }
   }
 }

@@ -13,7 +13,7 @@ module.exports = function(deployer, network, accounts) {
     const miMC = await MiMC.deployed()
     await ERC20Mixer.link(MiMC, miMC.address)
     let token = ERC20_TOKEN
-    if(deployer.network !== 'mainnet') {
+    if(token === '') {
       const tokenInstance = await deployer.deploy(ERC20Mock)
       token = tokenInstance.address
     }
