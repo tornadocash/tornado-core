@@ -99,7 +99,7 @@ async function init() {
   let contractJson
   if (inBrowser) {
     web3 = new Web3(window.web3.currentProvider, null, { transactionConfirmationBlocks: 1 })
-    contractJson = await (await fetch('build/contracts/Mixer.json')).json()
+    contractJson = await (await fetch('build/contracts/ETHMixer.json')).json()
     circuit = await (await fetch('build/circuits/withdraw.json')).json()
     proving_key = await (await fetch('build/circuits/withdraw_proving_key.bin')).arrayBuffer()
     MERKLE_TREE_HEIGHT = 16
@@ -107,7 +107,7 @@ async function init() {
     EMPTY_ELEMENT = 0
   } else {
     web3 = new Web3('http://localhost:8545', null, { transactionConfirmationBlocks: 1 })
-    contractJson = require('./build/contracts/Mixer.json')
+    contractJson = require('./build/contracts/ETHMixer.json')
     circuit = require('./build/circuits/withdraw.json')
     proving_key = fs.readFileSync('build/circuits/withdraw_proving_key.bin').buffer
     require('dotenv').config()
