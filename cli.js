@@ -75,6 +75,7 @@ async function withdraw(note, receiver) {
     root: root,
     nullifierHash,
     receiver: bigInt(receiver),
+    relayer: bigInt(0),
     fee: bigInt(0),
 
     // private

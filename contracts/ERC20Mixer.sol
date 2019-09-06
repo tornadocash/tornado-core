@@ -36,12 +36,12 @@ contract ERC20Mixer is Mixer {
     safeErc20TransferFrom(msg.sender, address(this), mixDenomination);
   }
 
-  function _processWithdraw(address payable _receiver, uint256 _fee) internal {
+  function _processWithdraw(address payable _receiver, address payable _relayer, uint256 _fee) internal {
     _receiver.transfer(userEther);
 
     safeErc20Transfer(_receiver, mixDenomination - _fee);
     if (_fee > 0) {
-      safeErc20Transfer(operator, _fee);
+      safeErc20Transfer(_relayer, _fee);
     }
   }
 
