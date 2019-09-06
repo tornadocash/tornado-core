@@ -26,6 +26,7 @@ contract Mixer is MerkleTreeWithHistory {
   // we store all commitments just to prevent accidental deposits with the same commitment
   mapping(uint256 => bool) public commitments;
   IVerifier public verifier;
+  uint256 public mixDenomination;
 
   event Deposit(uint256 indexed commitment, uint256 leafIndex, uint256 timestamp);
   event Withdraw(address to, uint256 nullifierHash, uint256 fee);
@@ -39,31 +40,54 @@ contract Mixer is MerkleTreeWithHistory {
   */
   constructor(
     address _verifier,
+    uint256 _mixDenomination,
     uint8 _merkleTreeHeight,
     uint256 _emptyElement,
     address payable _operator
   ) MerkleTreeWithHistory(_merkleTreeHeight, _emptyElement) public {
     verifier = IVerifier(_verifier);
     operator = _operator;
+    mixDenomination = _mixDenomination;
   }
-
-  function _deposit(uint256 commitment) internal {
+  /**
+    @dev Deposit funds into mixer. The caller must send value equal to `mixDenomination` of this mixer.
+    @param commitment the note commitment, which is PedersenHash(nullifier + secret)
+  */
+  /**
+    @dev Deposit funds into the mixer. The caller must send ETH value equal to `userEther` of this mixer.
+    The caller also has to have at least `mixDenomination` amount approved for the mixer.
+    @param commitment the note commitment, which is PedersenHash(nullifier + secret)
+  */
+  function deposit(uint256 commitment) public payable {
     require(isDepositsEnabled, "deposits disabled");
     require(!commitments[commitment], "The commitment has been submitted");
+    _processDeposit();
     _insert(commitment);
     commitments[commitment] = true;
-  }
 
-  function _withdraw(uint256[2] memory a, uint256[2][2] memory b, uint256[2] memory c, uint256[4] memory input) internal {
+    emit Deposit(commitment, next_index - 1, block.timestamp);
+  }
+  /**
+    @dev Withdraw deposit from the mixer. `a`, `b`, and `c` are zkSNARK proof data, and input is an array of circuit public inputs
+    `input` array consists of:
+      - merkle root of all deposits in the mixer
+      - hash of unique deposit nullifier to prevent double spends
+      - the receiver of funds
+      - optional fee that goes to the transaction sender (usually a relay)
+  */
+  function withdraw(uint256[2] memory a, uint256[2][2] memory b, uint256[2] memory c, uint256[4] memory input) public {
     uint256 root = input[0];
     uint256 nullifierHash = input[1];
-
+    address payable receiver = address(input[2]);
+    uint256 fee = input[3];
+    require(fee < mixDenomination, "Fee exceeds transfer value");
     require(!nullifierHashes[nullifierHash], "The note has been already spent");
 
     require(isKnownRoot(root), "Cannot find your merkle root"); // Make sure to use a recent one
     require(verifier.verifyProof(a, b, c, input), "Invalid withdraw proof");
-
     nullifierHashes[nullifierHash] = true;
+    _processWithdraw(receiver, fee);
+    emit Withdraw(receiver, nullifierHash, fee);
   }
 
   function toggleDeposits() external {
@@ -79,4 +103,8 @@ contract Mixer is MerkleTreeWithHistory {
   function isSpent(uint256 nullifier) public view returns(bool) {
     return nullifierHashes[nullifier];
   }
+
+  function _processDeposit() internal {}
+  function _processWithdraw(address payable _receiver, uint256 _fee) internal {}
+
 }

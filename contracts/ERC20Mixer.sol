@@ -15,65 +15,37 @@ import "./Mixer.sol";
 
 contract ERC20Mixer is Mixer {
   address public token;
-  // mixed token amount
-  uint256 public tokenDenomination;
   // ether value to cover network fee (for relayer) and to have some ETH on a brand new address
-  uint256 public etherFeeDenomination;
+  uint256 public userEther;
 
   constructor(
     address _verifier,
-    uint256 _etherFeeDenomination,
+    uint256 _userEther,
     uint8 _merkleTreeHeight,
     uint256 _emptyElement,
     address payable _operator,
     address _token,
-    uint256 _tokenDenomination
-  ) Mixer(_verifier, _merkleTreeHeight, _emptyElement, _operator) public {
+    uint256 _mixDenomination
+  ) Mixer(_verifier, _mixDenomination, _merkleTreeHeight, _emptyElement, _operator) public {
     token = _token;
-    tokenDenomination = _tokenDenomination;
-    etherFeeDenomination = _etherFeeDenomination;
+    userEther = _userEther;
   }
 
-  /**
-    @dev Deposit funds into the mixer. The caller must send ETH value equal to `etherFeeDenomination` of this mixer.
-    The caller also has to have at least `tokenDenomination` amount approved for the mixer.
-    @param commitment the note commitment, which is PedersenHash(nullifier + secret)
-  */
-  function deposit(uint256 commitment) public payable {
-    require(msg.value == etherFeeDenomination, "Please send `etherFeeDenomination` ETH along with transaction");
-    transferFrom(msg.sender, address(this), tokenDenomination);
-    _deposit(commitment);
-
-    emit Deposit(commitment, next_index - 1, block.timestamp);
+  function _processDeposit() internal {
+    require(msg.value == userEther, "Please send `userEther` ETH along with transaction");
+    safeErc20TransferFrom(msg.sender, address(this), mixDenomination);
   }
 
-  /**
-    @dev Withdraw deposit from the mixer. `a`, `b`, and `c` are zkSNARK proof data, and input is an array of circuit public inputs
-    `input` array consists of:
-      - merkle root of all deposits in the mixer
-      - hash of unique deposit nullifier to prevent double spends
-      - the receiver of funds
-      - optional fee that goes to the transaction sender (usually a relay)
-  */
-  function withdraw(uint256[2] memory a, uint256[2][2] memory b, uint256[2] memory c, uint256[4] memory input) public {
-    _withdraw(a, b, c, input);
-    address payable receiver = address(input[2]);
-    uint256 fee = input[3];
-    uint256 nullifierHash = input[1];
+  function _processWithdraw(address payable _receiver, uint256 _fee) internal {
+    _receiver.transfer(userEther);
 
-    require(fee < etherFeeDenomination, "Fee exceeds transfer value");
-    receiver.transfer(etherFeeDenomination - fee);
-
-    if (fee > 0) {
-      operator.transfer(fee);
+    safeErc20Transfer(_receiver, mixDenomination - _fee);
+    if (_fee > 0) {
+      safeErc20Transfer(operator, _fee);
     }
-
-    transfer(receiver, tokenDenomination);
-
-    emit Withdraw(receiver, nullifierHash, fee);
   }
 
-  function transferFrom(address from, address to, uint256 amount) internal {
+  function safeErc20TransferFrom(address from, address to, uint256 amount) internal {
     bool success;
     bytes memory data;
     bytes4 transferFromSelector = 0x23b872dd;
@@ -92,7 +64,7 @@ contract ERC20Mixer is Mixer {
     }
   }
 
-  function transfer(address to, uint256 amount) internal {
+  function safeErc20Transfer(address to, uint256 amount) internal {
     bool success;
     bytes memory data;
     bytes4 transferSelector = 0xa9059cbb;

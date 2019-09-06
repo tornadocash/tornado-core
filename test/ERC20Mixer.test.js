@@ -122,7 +122,6 @@ contract('ERC20Mixer', accounts => {
       balanceUserAfter.should.be.eq.BN(toBN(balanceUserBefore).sub(toBN(tokenDenomination)))
 
       const { root, path_elements, path_index } = await tree.path(0)
-
       // Circuit input
       const input = stringifyBigInts({
         // public
@@ -149,7 +148,6 @@ contract('ERC20Mixer', accounts => {
       const ethBalanceRecieverBefore = await web3.eth.getBalance(toHex(receiver.toString()))
       let isSpent = await mixer.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
       isSpent.should.be.equal(false)
-
       // Uncomment to measure gas usage
       // gas = await mixer.withdraw.estimateGas(pi_a, pi_b, pi_c, publicSignals, { from: relayer, gasPrice: '0' })
       // console.log('withdraw gas:', gas)
@@ -161,12 +159,11 @@ contract('ERC20Mixer', accounts => {
       const balanceRecieverAfter = await token.balanceOf(toHex(receiver.toString()))
       const ethBalanceRecieverAfter = await web3.eth.getBalance(toHex(receiver.toString()))
       const feeBN = toBN(fee.toString())
-      balanceMixerAfter.should.be.eq.BN(toBN(balanceMixerBefore).sub(toBN(tokenDenomination)))
+      balanceMixerAfter.should.be.eq.BN(toBN(balanceMixerBefore).sub(toBN(value)))
       balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore))
-      ethBalanceOperatorAfter.should.be.eq.BN(toBN(ethBalanceOperatorBefore).add(feeBN))
-      balanceRecieverAfter.should.be.eq.BN(toBN(balanceRecieverBefore).add(toBN(tokenDenomination)))
-      ethBalanceRecieverAfter.should.be.eq.BN(toBN(ethBalanceRecieverBefore).add(toBN(value)).sub(feeBN))
-
+      ethBalanceOperatorAfter.should.be.eq.BN(toBN(ethBalanceOperatorBefore))
+      balanceRecieverAfter.should.be.eq.BN(toBN(balanceRecieverBefore).add(toBN(tokenDenomination).sub(feeBN)))
+      ethBalanceRecieverAfter.should.be.eq.BN(toBN(ethBalanceRecieverBefore).add(toBN(value)))
 
       logs[0].event.should.be.equal('Withdraw')
       logs[0].args.nullifierHash.should.be.eq.BN(toBN(input.nullifierHash.toString()))
@@ -258,9 +255,9 @@ contract('ERC20Mixer', accounts => {
     })
     it.skip('should work with REAL DAI', async () => {
       // dont forget to specify your token in .env
-      // and sent `tokenDenomination` to accounts[0] (0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1)
+      // and send `tokenDenomination` to accounts[0] (0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1)
       // run ganache as
-      // ganache-cli --fork https://kovan.infura.io/v3/27a9649f826b4e31a83e07ae09a87448@13146218 -d --keepAliveTimeout 20
+      // npx ganache-cli --fork https://kovan.infura.io/v3/27a9649f826b4e31a83e07ae09a87448@13146218 -d --keepAliveTimeout 20
       const deposit = generateDeposit()
       const user = accounts[4]
       const userBal = await token.balanceOf(user)

@@ -90,7 +90,7 @@ contract('ETHMixer', accounts => {
 
   describe('#constructor', () => {
     it('should initialize', async () => {
-      const etherDenomination = await mixer.etherDenomination()
+      const etherDenomination = await mixer.mixDenomination()
       etherDenomination.should.be.eq.BN(toBN(value))
     })
   })
