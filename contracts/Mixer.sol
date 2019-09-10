@@ -29,7 +29,7 @@ contract Mixer is MerkleTreeWithHistory {
   uint256 public mixDenomination;
 
   event Deposit(uint256 indexed commitment, uint256 leafIndex, uint256 timestamp);
-  event Withdraw(address to, uint256 nullifierHash, address relayer, uint256 fee);
+  event Withdraw(address to, uint256 nullifierHash, address indexed relayer, uint256 fee);
 
   /**
     @dev The constructor

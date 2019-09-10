@@ -56,6 +56,8 @@ contract ERC20Mixer is Mixer {
         )
     );
     require(success, "not enough allowed tokens");
+
+    // if contract returns some data let's make sure that is `true` according to standard
     if (data.length > 0) {
       assembly {
         success := mload(add(data, 0x20))
@@ -75,6 +77,8 @@ contract ERC20Mixer is Mixer {
         )
     );
     require(success, "not enough tokens");
+
+    // if contract returns some data let's make sure that is `true` according to standard
     if (data.length > 0) {
       assembly {
         success := mload(add(data, 0x20))
