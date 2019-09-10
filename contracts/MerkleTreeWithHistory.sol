@@ -133,5 +133,3 @@ contract MerkleTreeWithHistory {
     return _zeros;
   }
 }
-
-
