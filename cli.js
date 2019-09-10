@@ -118,8 +118,6 @@ async function getBalance(receiver) {
   console.log('Balance is ', web3.utils.fromWei(balance))
 }
 
-const inBrowser = (typeof window !== 'undefined')
-
 /**
  * Init web3, contracts, and snark
  */
@@ -133,7 +131,7 @@ async function init() {
     circuit = await (await fetch('build/circuits/withdraw.json')).json()
     proving_key = await (await fetch('build/circuits/withdraw_proving_key.bin')).arrayBuffer()
     MERKLE_TREE_HEIGHT = 16
-    AMOUNT = 1e18
+    ETH_AMOUNT = 1e18
     EMPTY_ELEMENT = 1
   } else {
     // Initialize from local node
