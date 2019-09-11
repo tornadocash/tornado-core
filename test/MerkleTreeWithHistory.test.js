@@ -180,7 +180,7 @@ contract('MerkleTreeWithHistory', accounts => {
       zeroValue = 1337
       merkleTreeWithHistory = await MerkleTreeWithHistory.new(levels, zeroValue)
 
-      for (let i = 0; i < 2**levels; i++) {
+      for (let i = 0; i < 2**(levels - 1); i++) {
         await merkleTreeWithHistory.insert(i+42).should.be.fulfilled
       }
 
