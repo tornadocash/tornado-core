@@ -14,7 +14,7 @@ pragma solidity ^0.5.8;
 import "./MerkleTreeWithHistory.sol";
 
 contract IVerifier {
-  function verifyProof(uint256[2] memory a, uint256[2][2] memory b, uint256[2] memory c, uint256[4] memory input) public returns(bool);
+  function verifyProof(uint256[2] memory a, uint256[2][2] memory b, uint256[2] memory c, uint256[5] memory input) public returns(bool);
 }
 
 contract Mixer is MerkleTreeWithHistory {
@@ -29,7 +29,7 @@ contract Mixer is MerkleTreeWithHistory {
   uint256 public mixDenomination;
 
   event Deposit(uint256 indexed commitment, uint256 leafIndex, uint256 timestamp);
-  event Withdraw(address to, uint256 nullifierHash, uint256 fee);
+  event Withdraw(address to, uint256 nullifierHash, address indexed relayer, uint256 fee);
 
   /**
     @dev The constructor
@@ -75,19 +75,20 @@ contract Mixer is MerkleTreeWithHistory {
       - the receiver of funds
       - optional fee that goes to the transaction sender (usually a relay)
   */
-  function withdraw(uint256[2] memory a, uint256[2][2] memory b, uint256[2] memory c, uint256[4] memory input) public {
+  function withdraw(uint256[2] memory a, uint256[2][2] memory b, uint256[2] memory c, uint256[5] memory input) public {
     uint256 root = input[0];
     uint256 nullifierHash = input[1];
     address payable receiver = address(input[2]);
-    uint256 fee = input[3];
+    address payable relayer = address(input[3]);
+    uint256 fee = input[4];
     require(fee < mixDenomination, "Fee exceeds transfer value");
     require(!nullifierHashes[nullifierHash], "The note has been already spent");
 
     require(isKnownRoot(root), "Cannot find your merkle root"); // Make sure to use a recent one
     require(verifier.verifyProof(a, b, c, input), "Invalid withdraw proof");
     nullifierHashes[nullifierHash] = true;
-    _processWithdraw(receiver, fee);
-    emit Withdraw(receiver, nullifierHash, fee);
+    _processWithdraw(receiver, relayer, fee);
+    emit Withdraw(receiver, nullifierHash, relayer, fee);
   }
 
   function toggleDeposits() external {
@@ -105,6 +106,6 @@ contract Mixer is MerkleTreeWithHistory {
   }
 
   function _processDeposit() internal {}
-  function _processWithdraw(address payable _receiver, uint256 _fee) internal {}
+  function _processWithdraw(address payable _receiver, address payable _relayer, uint256 _fee) internal {}
 
 }

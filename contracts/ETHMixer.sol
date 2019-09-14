@@ -23,10 +23,10 @@ contract ETHMixer is Mixer {
   ) Mixer(_verifier, _mixDenomination, _merkleTreeHeight, _emptyElement, _operator) public {
   }
 
-  function _processWithdraw(address payable _receiver, uint256 _fee) internal {
+  function _processWithdraw(address payable _receiver, address payable _relayer, uint256 _fee) internal {
     _receiver.transfer(mixDenomination - _fee);
     if (_fee > 0) {
-      operator.transfer(_fee);
+      _relayer.transfer(_fee);
     }
   }
 

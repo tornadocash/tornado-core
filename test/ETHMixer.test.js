@@ -141,6 +141,7 @@ contract('ETHMixer', accounts => {
         root,
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         nullifier: deposit.nullifier,
+        relayer: operator,
         receiver,
         fee,
         secret: deposit.secret,
@@ -196,6 +197,7 @@ contract('ETHMixer', accounts => {
         // public
         root,
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
+        relayer: operator,
         receiver,
         fee,
 
@@ -235,6 +237,7 @@ contract('ETHMixer', accounts => {
 
       logs[0].event.should.be.equal('Withdraw')
       logs[0].args.nullifierHash.should.be.eq.BN(toBN(input.nullifierHash.toString()))
+      logs[0].args.relayer.should.be.eq.BN(operator)
       logs[0].args.fee.should.be.eq.BN(feeBN)
       isSpent = await mixer.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
       isSpent.should.be.equal(true)
@@ -251,6 +254,7 @@ contract('ETHMixer', accounts => {
         root,
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         nullifier: deposit.nullifier,
+        relayer: operator,
         receiver,
         fee,
         secret: deposit.secret,
@@ -275,6 +279,7 @@ contract('ETHMixer', accounts => {
         root,
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         nullifier: deposit.nullifier,
+        relayer: operator,
         receiver,
         fee,
         secret: deposit.secret,
@@ -299,6 +304,7 @@ contract('ETHMixer', accounts => {
         root,
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         nullifier: deposit.nullifier,
+        relayer: operator,
         receiver,
         fee: oneEtherFee,
         secret: deposit.secret,
@@ -323,6 +329,7 @@ contract('ETHMixer', accounts => {
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         root,
         nullifier: deposit.nullifier,
+        relayer: operator,
         receiver,
         fee,
         secret: deposit.secret,
@@ -350,6 +357,7 @@ contract('ETHMixer', accounts => {
         root,
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         nullifier: deposit.nullifier,
+        relayer: operator,
         receiver,
         fee,
         secret: deposit.secret,
