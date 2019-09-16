@@ -70,13 +70,13 @@ If you want, you can point the app to existing tornado contracts on Mainnet or K
 ## Deploy ETH Tornado Cash
 1. `cp .env.example .env`
 1. Tune all necessary params
-1. `npx truffle migrate --f 2 --to 4`
+1. `npx truffle migrate --network kovan --reset --f 2 --to 4`
 
 ## Deploy ERC20 Tornado Cash
 1. `cp .env.example .env`
 1. Tune all necessary params
-1. `npx truffle migrate --f 2 --to 3`
-1. `npx truffle migrate --f 5`
+1. `npx truffle migrate --network kovan --reset --f 2 --to 3`
+1. `npx truffle migrate --network kovan --reset --f 5`
 
 **Note**. If you want to reuse the same verifier for all the mixers, then after you deployed one of the mixers you should only run 4th or 5th migration for ETH or ERC20 mixers respectively (`--f 4 --to 4` or `--f 5`).
 
