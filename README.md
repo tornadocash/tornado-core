@@ -62,7 +62,7 @@ Use with command line version with Ganache:
 ### ERC20Mixer
 1. `npm run migrate:dev`
 1. `./cli.js depositErc20`
-1. `./cli.js withdraw <note from previous step> <destination eth address> <relayer eth address>`
+1. `./cli.js withdrawErc20 <note from previous step> <destination eth address> <relayer eth address>`
 1. `./cli.js balanceErc20 <destination eth address> <relayer eth address>`
 
 If you want, you can point the app to existing tornado contracts on Mainnet or Kovan, it should work without any changes
