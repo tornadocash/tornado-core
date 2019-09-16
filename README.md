@@ -45,13 +45,6 @@ You can see example usage in cli.js, it works both in console and in browser.
 1. `npx ganache-cli`
 1. `npm run test` - optionally run tests. It may fail for the first time, just run one more time.
 
-Use with command line version with Ganache:
-
-1. `npm run migrate:dev`
-1. `./cli.js deposit`
-1. `./cli.js withdraw <note from previous step> <destination eth address>`
-1. `./cli.js balance <destination eth address>`
-
 Use browser version on Kovan:
 
 1. `vi .env` - add your Kovan private key to deploy contracts
@@ -59,7 +52,33 @@ Use browser version on Kovan:
 1. `npx http-server` - serve current dir, you can use any other static http server
 1. Open `localhost:8080`
 
+Use with command line version with Ganache:
+### ETHMixer
+1. `npm run migrate:dev`
+1. `./cli.js deposit`
+1. `./cli.js withdraw <note from previous step> <destination eth address>`
+1. `./cli.js balance <destination eth address>`
+
+### ERC20Mixer
+1. `npm run migrate:dev`
+1. `./cli.js depositErc20`
+1. `./cli.js withdrawErc20 <note from previous step> <destination eth address> <relayer eth address>`
+1. `./cli.js balanceErc20 <destination eth address> <relayer eth address>`
+
 If you want, you can point the app to existing tornado contracts on Mainnet or Kovan, it should work without any changes
+
+## Deploy ETH Tornado Cash
+1. `cp .env.example .env`
+1. Tune all necessary params
+1. `npx truffle migrate --network kovan --reset --f 2 --to 4`
+
+## Deploy ERC20 Tornado Cash
+1. `cp .env.example .env`
+1. Tune all necessary params
+1. `npx truffle migrate --network kovan --reset --f 2 --to 3`
+1. `npx truffle migrate --network kovan --reset --f 5`
+
+**Note**. If you want to reuse the same verifier for all the mixers, then after you deployed one of the mixers you should only run 4th or 5th migration for ETH or ERC20 mixers respectively (`--f 4 --to 4` or `--f 5`).
 
 ## Credits
 

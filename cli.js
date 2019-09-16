@@ -12,8 +12,9 @@ const Web3 = require('web3')
 const buildGroth16 = require('websnark/src/groth16')
 const websnarkUtils = require('websnark/src/utils')
 
-let web3, mixer, circuit, proving_key, groth16
-let MERKLE_TREE_HEIGHT, AMOUNT, EMPTY_ELEMENT
+let web3, mixer, erc20mixer, circuit, proving_key, groth16, erc20
+let MERKLE_TREE_HEIGHT, ETH_AMOUNT, EMPTY_ELEMENT, ERC20_TOKEN
+const inBrowser = (typeof window !== 'undefined')
 
 /** Generate random number of specified byte length */
 const rbigint = (nbytes) => snarkjs.bigInt.leBuff2int(crypto.randomBytes(nbytes))
@@ -39,19 +40,103 @@ async function deposit() {
   const deposit = createDeposit(rbigint(31), rbigint(31))
 
   console.log('Submitting deposit transaction')
-  await mixer.methods.deposit('0x' + deposit.commitment.toString(16)).send({ value: AMOUNT, from: (await web3.eth.getAccounts())[0], gas:1e6 })
+  await mixer.methods.deposit('0x' + deposit.commitment.toString(16)).send({ value: ETH_AMOUNT, from: (await web3.eth.getAccounts())[0], gas:1e6 })
 
   const note = '0x' + deposit.preimage.toString('hex')
   console.log('Your note:', note)
   return note
 }
 
-/**
- * Make a withdrawal
- * @param note A preimage containing secret and nullifier
- * @param receiver Address for receiving funds
- * @returns {Promise<void>}
- */
+async function depositErc20() {
+  const account = (await web3.eth.getAccounts())[0]
+  const tokenAmount = process.env.TOKEN_AMOUNT
+  await erc20.methods.mint(account, tokenAmount).send({ from: account, gas:1e6 })
+
+  await erc20.methods.approve(erc20mixer.address, tokenAmount).send({ from: account, gas:1e6 })
+  const allowance = await erc20.methods.allowance(account, erc20mixer.address).call()
+  console.log('erc20mixer allowance', allowance.toString(10))
+
+  const deposit = createDeposit(rbigint(31), rbigint(31))
+  await erc20mixer.methods.deposit('0x' + deposit.commitment.toString(16)).send({ value: ETH_AMOUNT, from: account, gas:1e6 })
+
+  const balance = await erc20.methods.balanceOf(erc20mixer.address).call()
+  console.log('erc20mixer balance', balance.toString(10))
+  const note = '0x' + deposit.preimage.toString('hex')
+  console.log('Your note:', note)
+  return note
+}
+
+async function withdrawErc20(note, receiver, relayer) {
+  let buf = Buffer.from(note.slice(2), 'hex')
+  let deposit = createDeposit(bigInt.leBuff2int(buf.slice(0, 31)), bigInt.leBuff2int(buf.slice(31, 62)))
+
+  console.log('Getting current state from mixer contract')
+  const events = await erc20mixer.getPastEvents('Deposit', { fromBlock: erc20mixer.deployedBlock, toBlock: 'latest' })
+  let leafIndex
+
+  const commitment = deposit.commitment.toString(16).padStart('66', '0x000000')
+  const leaves = events
+    .sort((a, b) => a.returnValues.leafIndex.sub(b.returnValues.leafIndex))
+    .map(e => {
+      if (e.returnValues.commitment.eq(commitment)) {
+        leafIndex = e.returnValues.leafIndex.toNumber()
+      }
+      return e.returnValues.commitment
+    })
+  const tree = new merkleTree(MERKLE_TREE_HEIGHT, EMPTY_ELEMENT, leaves)
+  const validRoot = await erc20mixer.methods.isKnownRoot(await tree.root()).call()
+  const nullifierHash = pedersenHash(deposit.nullifier.leInt2Buff(31))
+  const nullifierHashToCheck = nullifierHash.toString(16).padStart('66', '0x000000')
+  const isSpent = await erc20mixer.methods.isSpent(nullifierHashToCheck).call()
+  assert(validRoot === true)
+  assert(isSpent === false)
+
+  assert(leafIndex >= 0)
+  const { root, path_elements, path_index } = await tree.path(leafIndex)
+  // Circuit input
+  const input = {
+    // public
+    root: root,
+    nullifierHash,
+    receiver: bigInt(receiver),
+    relayer: bigInt(relayer),
+    fee: bigInt(web3.utils.toWei('0.01')),
+
+    // private
+    nullifier: deposit.nullifier,
+    secret: deposit.secret,
+    pathElements: path_elements,
+    pathIndex: path_index,
+  }
+
+  console.log('Generating SNARK proof')
+  console.time('Proof time')
+  const proof = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
+  const { pi_a, pi_b, pi_c, publicSignals } = websnarkUtils.toSolidityInput(proof)
+  console.timeEnd('Proof time')
+
+  console.log('Submitting withdraw transaction')
+  await erc20mixer.methods.withdraw(pi_a, pi_b, pi_c, publicSignals).send({ from: (await web3.eth.getAccounts())[0], gas: 1e6 })
+  console.log('Done')
+}
+
+async function getBalance(receiver) {
+  const balance = await web3.eth.getBalance(receiver)
+  console.log('Balance is ', web3.utils.fromWei(balance))
+}
+
+async function getBalanceErc20(receiver, relayer) {
+  const balanceReceiver = await web3.eth.getBalance(receiver)
+  const balanceRelayer = await web3.eth.getBalance(relayer)
+  const tokenBalanceReceiver = await erc20.methods.balanceOf(receiver).call()
+  const tokenBalanceRelayer = await erc20.methods.balanceOf(relayer).call()
+  console.log('Receiver eth Balance is ', web3.utils.fromWei(balanceReceiver))
+  console.log('Relayer eth Balance is ', web3.utils.fromWei(balanceRelayer))
+
+  console.log('Receiver token Balance is ', web3.utils.fromWei(tokenBalanceReceiver.toString()))
+  console.log('Relayer token Balance is ', web3.utils.fromWei(tokenBalanceRelayer.toString()))
+}
+
 async function withdraw(note, receiver) {
   // Decode hex string and restore the deposit object
   let buf = Buffer.from(note.slice(2), 'hex')
@@ -88,6 +173,7 @@ async function withdraw(note, receiver) {
     root: root,
     nullifierHash,
     receiver: bigInt(receiver),
+    relayer: bigInt(0),
     fee: bigInt(0),
 
     // Private snark inputs
@@ -109,46 +195,51 @@ async function withdraw(note, receiver) {
 }
 
 /**
- * Get default wallet balance
- */
-async function getBalance(receiver) {
-  const balance = await web3.eth.getBalance(receiver)
-  console.log('Balance is ', web3.utils.fromWei(balance))
-}
-
-const inBrowser = (typeof window !== 'undefined')
-
-/**
  * Init web3, contracts, and snark
  */
 async function init() {
-  let contractJson
+  let contractJson, erc20ContractJson, erc20mixerJson
   if (inBrowser) {
     // Initialize using injected web3 (Metamask)
     // To assemble web version run `npm run browserify`
     web3 = new Web3(window.web3.currentProvider, null, { transactionConfirmationBlocks: 1 })
-    contractJson = await (await fetch('build/contracts/Mixer.json')).json()
+    contractJson = await (await fetch('build/contracts/ETHMixer.json')).json()
     circuit = await (await fetch('build/circuits/withdraw.json')).json()
     proving_key = await (await fetch('build/circuits/withdraw_proving_key.bin')).arrayBuffer()
     MERKLE_TREE_HEIGHT = 16
-    AMOUNT = 1e18
+    ETH_AMOUNT = 1e18
     EMPTY_ELEMENT = 1
   } else {
     // Initialize from local node
     web3 = new Web3('http://localhost:8545', null, { transactionConfirmationBlocks: 1 })
-    contractJson = require('./build/contracts/Mixer.json')
+    contractJson = require('./build/contracts/ETHMixer.json')
     circuit = require('./build/circuits/withdraw.json')
     proving_key = fs.readFileSync('build/circuits/withdraw_proving_key.bin').buffer
     require('dotenv').config()
     MERKLE_TREE_HEIGHT = process.env.MERKLE_TREE_HEIGHT
-    AMOUNT = process.env.AMOUNT
+    ETH_AMOUNT = process.env.ETH_AMOUNT
     EMPTY_ELEMENT = process.env.EMPTY_ELEMENT
+    ERC20_TOKEN = process.env.ERC20_TOKEN
+    erc20ContractJson = require('./build/contracts/ERC20Mock.json')
+    erc20mixerJson = require('./build/contracts/ERC20Mixer.json')
   }
   groth16 = await buildGroth16()
   let netId = await web3.eth.net.getId()
-  const tx = await web3.eth.getTransaction(contractJson.networks[netId].transactionHash)
-  mixer = new web3.eth.Contract(contractJson.abi, contractJson.networks[netId].address)
-  mixer.deployedBlock = tx.blockNumber
+  if (contractJson.networks[netId]) {
+    const tx = await web3.eth.getTransaction(contractJson.networks[netId].transactionHash)
+    mixer = new web3.eth.Contract(contractJson.abi, contractJson.networks[netId].address)
+    mixer.deployedBlock = tx.blockNumber
+  }
+
+  const tx3 = await web3.eth.getTransaction(erc20mixerJson.networks[netId].transactionHash)
+  erc20mixer = new web3.eth.Contract(erc20mixerJson.abi, erc20mixerJson.networks[netId].address)
+  erc20mixer.deployedBlock = tx3.blockNumber
+
+  if(ERC20_TOKEN === '') {
+    erc20 = new web3.eth.Contract(erc20ContractJson.abi, erc20ContractJson.networks[netId].address)
+    const tx2 = await web3.eth.getTransaction(erc20ContractJson.networks[netId].transactionHash)
+    erc20.deployedBlock = tx2.blockNumber
+  }
   console.log('Loaded')
 }
 
@@ -196,15 +287,35 @@ if (inBrowser) {
       else
         printHelp(1)
       break
+    case 'depositErc20':
+      if (args.length === 1) {
+        init().then(() => depositErc20()).then(() => process.exit(0)).catch(err => {console.log(err); process.exit(1)})
+      }
+      else
+        printHelp(1)
+      break
     case 'balance':
       if (args.length === 2 && /^0x[0-9a-fA-F]{40}$/.test(args[1])) {
         init().then(() => getBalance(args[1])).then(() => process.exit(0)).catch(err => {console.log(err); process.exit(1)})
       } else
         printHelp(1)
       break
+    case 'balanceErc20':
+      if (args.length === 3 && /^0x[0-9a-fA-F]{40}$/.test(args[1]) && /^0x[0-9a-fA-F]{40}$/.test(args[2])) {
+        init().then(() => getBalanceErc20(args[1], args[2])).then(() => process.exit(0)).catch(err => {console.log(err); process.exit(1)})
+      } else
+        printHelp(1)
+      break
     case 'withdraw':
       if (args.length === 3 && /^0x[0-9a-fA-F]{124}$/.test(args[1]) && /^0x[0-9a-fA-F]{40}$/.test(args[2])) {
         init().then(() => withdraw(args[1], args[2])).then(() => process.exit(0)).catch(err => {console.log(err); process.exit(1)})
+      }
+      else
+        printHelp(1)
+      break
+    case 'withdrawErc20':
+      if (args.length === 4 && /^0x[0-9a-fA-F]{124}$/.test(args[1]) && /^0x[0-9a-fA-F]{40}$/.test(args[2]) && /^0x[0-9a-fA-F]{40}$/.test(args[3])) {
+        init().then(() => withdrawErc20(args[1], args[2], args[3])).then(() => process.exit(0)).catch(err => {console.log(err); process.exit(1)})
       }
       else
         printHelp(1)

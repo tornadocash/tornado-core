@@ -16,12 +16,13 @@
     "migrate:dev": "npx truffle migrate --network development --reset",
     "browserify": "npx browserify cli.js -o index.js --exclude worker_threads",
     "eslint": "npx eslint --ignore-path .gitignore .",
-    "flat": "truffle-flattener contracts/Mixer.sol > Mixer_flat.sol"
+    "flat": "truffle-flattener contracts/ETHMixer.sol > ETHMixer_flat.sol contracts/ERC20Mixer.sol > ERC20Mixer_flat.sol"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@openzeppelin/contracts": "^2.3.0",
     "bn-chai": "^1.0.1",
     "browserify": "^16.3.0",
     "chai": "^4.2.0",
@@ -29,7 +30,7 @@
     "circom": "0.0.30",
     "circomlib": "^0.0.10",
     "dotenv": "^8.0.0",
-    "eslint": "^6.0.1",
+    "eslint": "^6.2.2",
     "ganache-cli": "^6.4.5",
     "snarkjs": "^0.1.16",
     "truffle": "^5.0.27",

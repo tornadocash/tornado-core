@@ -45,7 +45,7 @@ module.exports = {
     kovan: {
       provider: () => new HDWalletProvider(process.env.PRIVATE_KEY, 'https://kovan.infura.io/v3/c7463beadf2144e68646ff049917b716'),
       network_id: 42,
-      gas: 7000000,
+      gas: 6000000,
       gasPrice: utils.toWei('1', 'gwei'),
       // confirmations: 0,
       // timeoutBlocks: 200,
@@ -77,7 +77,7 @@ module.exports = {
   // Configure your compilers
   compilers: {
     solc: {
-      version: '0.5.10',    // Fetch exact version from solc-bin (default: truffle's version)
+      version: '0.5.11',    // Fetch exact version from solc-bin (default: truffle's version)
       // docker: true,        // Use "0.5.1" you've installed locally with docker (default: false)
       settings: {          // See the solidity docs for advice about optimization and evmVersion
         optimizer: {
