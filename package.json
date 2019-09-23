@@ -42,6 +42,11 @@
     "websnark": "git+https://github.com/peppersec/websnark.git#ed6a4d8a6fb081a62af26820980046bbb602d559"
   },
   "devDependencies": {
+    "@openzeppelin/contracts-ethereum-package": "^2.2.3",
+    "@openzeppelin/gsn-helpers": "^0.2.0",
+    "@openzeppelin/gsn-provider": "^0.1.7",
+    "@openzeppelin/network": "^0.2.9",
+    "@openzeppelin/upgrades": "^2.5.3",
     "truffle-flattener": "^1.4.0"
   }
 }

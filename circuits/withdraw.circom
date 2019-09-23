@@ -31,8 +31,7 @@ template Withdraw(levels, rounds) {
     signal input root;
     signal input nullifierHash;
     signal input receiver; // not taking part in any computations
-    signal input relayer; // not taking part in any computations
-    signal input fee; // not taking part in any computations
+
     signal private input nullifier;
     signal private input secret;
     signal private input pathElements[levels];
@@ -56,11 +55,7 @@ template Withdraw(levels, rounds) {
     // Most likely it is not required, but it's better to stay on the safe side and it only takes 2 constraints
     // Squares are used to prevent optimizer from removing those constraints
     signal receiverSquare;
-    signal feeSquare;
-    signal relayerSquare;
     receiverSquare <== receiver * receiver;
-    feeSquare <== fee * fee;
-    relayerSquare <== relayer * relayer;
 }
 
 component main = Withdraw(16, 220);

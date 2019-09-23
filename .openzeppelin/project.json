@@ -1,0 +1,15 @@
+{
+  "manifestVersion": "2.2",
+  "contracts": {
+    "ETHMixer": "ETHMixer"
+  },
+  "dependencies": {},
+  "name": "tornado",
+  "version": "1.0.0",
+  "compiler": {
+    "manager": "truffle",
+    "compilerSettings": {
+      "optimizer": {}
+    }
+  }
+}
