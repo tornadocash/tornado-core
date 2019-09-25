@@ -258,13 +258,13 @@ async function withdrawViaRelayer(note, receiver) {
     verbose: true,
   }
   // const provider = new GSNProvider('https://rinkeby.infura.io/v3/c7463beadf2144e68646ff049917b716', { signKey: account })
-  const provider = new GSNDevProvider('http://localhost:8545', { signKey: account, ...HARDCODED_RELAYER_OPTS })
+  const provider = new GSNDevProvider('http://localhost:8545', { signKey: account, HARDCODED_RELAYER_OPTS })
   web3 = new Web3(provider)
   const netId = await web3.eth.net.getId()
   // eslint-disable-next-line require-atomic-updates
   mixer = new web3.eth.Contract(contractJson.abi, contractJson.networks[netId].address)
   console.log('mixer address', contractJson.networks[netId].address)
-  const tx = await mixer.methods.withdrawViaRelayer(pi_a, pi_b, pi_c, publicSignals).send({ from: account.address, gas: '5000000' })
+  const tx = await mixer.methods.withdrawViaRelayer(pi_a, pi_b, pi_c, publicSignals).send({ from: account.address, gas: '2000000' })
   console.log('tx', tx)
   console.log('Done')
 }

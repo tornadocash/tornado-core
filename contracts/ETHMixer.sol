@@ -36,11 +36,13 @@ contract ETHMixer is Mixer, GSNRecipient {
   function withdrawViaRelayer(uint256[2] memory a, uint256[2][2] memory b, uint256[2] memory c, uint256[3] memory input) public {
     uint256 root = input[0];
     uint256 nullifierHash = input[1];
+    address receiver = address(input[2]);
     require(!nullifierHashes[nullifierHash], "The note has been already spent");
 
     require(isKnownRoot(root), "Cannot find your merkle root"); // Make sure to use a recent one
     require(verifier.verifyProof(a, b, c, input), "Invalid withdraw proof");
     nullifierHashes[nullifierHash] = true;
+    emit Withdraw(receiver, nullifierHash, tx.origin);
     // we will process withdraw in postRelayedCall func
   }
 
@@ -49,24 +51,26 @@ contract ETHMixer is Mixer, GSNRecipient {
   function acceptRelayedCall(
     address relay,
     address from,
-    bytes calldata encodedFunction,
+    bytes memory encodedFunction,
     uint256 transactionFee,
     uint256 gasPrice,
     uint256 gasLimit,
     uint256 nonce,
-    bytes calldata approvalData,
+    bytes memory approvalData,
     uint256 maxPossibleCharge
-  ) external view returns (uint256, bytes memory) {
+  ) public view returns (uint256, bytes memory) {
     // think of a withdraw dry-run
-    if (_computeCharge(gasLimit, gasPrice, transactionFee) * 2 > mixDenomination) {
-      return (1, "Fee exceeds 50% of transfer value");
-    }
-
     if (!compareBytesWithSelector(encodedFunction, this.withdrawViaRelayer.selector)) {
-      return (2, "Only withdrawViaRelayer can be called");
+      return (1, "Only withdrawViaRelayer can be called");
     }
-
-    return _approveRelayedCall();
+    bytes memory recipient;
+    assembly {
+      let dataPointer := add(encodedFunction, 32)
+      let recipientPointer := mload(add(dataPointer, 324)) // 4 + (8 * 32) + (32) + (32) == selector + proof + root + nullifier
+      mstore(recipient, 32) // save array length
+      mstore(add(recipient, 32), recipientPointer) // save recipient address
+    }
+    return (0, recipient);
   }
 
   // this func is called by RelayerHub right before calling a target func
@@ -78,7 +82,7 @@ contract ETHMixer is Mixer, GSNRecipient {
     IRelayHub relayHub = IRelayHub(getHubAddr());
     address payable recipient;
     assembly {
-      recipient := sload(add(context, 324)) // 4 + (8 * 32) + (32) + (32) == selector + proof + root + nullifier
+      recipient := mload(add(context, 32))
     }
     emit Debug(actualCharge, context, recipient);
 
@@ -97,5 +101,10 @@ contract ETHMixer is Mixer, GSNRecipient {
   function withdrawFundsFromHub(uint256 amount, address payable dest) external {
     require(msg.sender == operator, "unauthorized");
     IRelayHub(getHubAddr()).withdraw(amount, dest);
+  }
+
+  function upgradeRelayHub(address newRelayHub) external {
+    require(msg.sender == operator, "unauthorized");
+    _upgradeRelayHub(newRelayHub);
   }
 }
