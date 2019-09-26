@@ -13,6 +13,6 @@ module.exports = function(deployer, network, accounts) {
     await ETHMixer.link(MiMC, miMC.address)
     const mixer = await deployer.deploy(ETHMixer, verifier.address, ETH_AMOUNT, MERKLE_TREE_HEIGHT, EMPTY_ELEMENT, accounts[0])
     console.log('ETHMixer\'s address ', mixer.address)
-    const tx = await mixer.initialize()
+    // const tx = await mixer.initialize()
   })
 }

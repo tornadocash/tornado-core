@@ -45,7 +45,7 @@ function getRandomReceiver() {
   return receiver
 }
 
-contract('GSN support', accounts => {
+contract.skip('GSN support', accounts => {
   let mixer
   let gsnMixer
   let relayHubAddress
@@ -93,7 +93,7 @@ contract('GSN support', accounts => {
   })
 
   describe('#withdrawViaRelayer', () => {
-    it.only('should work', async () => {
+    it('should work', async () => {
       const gasPrice = toBN('20000000000')
       const relayerTxFee = 10 // 20%
       const deposit = generateDeposit()
