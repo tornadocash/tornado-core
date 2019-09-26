@@ -11,16 +11,16 @@
 
 pragma solidity ^0.5.8;
 
-import "./Mixer.sol";
+import "./GSNMixer.sol";
 
-contract ETHMixer is Mixer {
+contract ETHMixer is GSNMixer {
   constructor(
     address _verifier,
     uint256 _mixDenomination,
     uint8 _merkleTreeHeight,
     uint256 _emptyElement,
     address payable _operator
-  ) Mixer(_verifier, _mixDenomination, _merkleTreeHeight, _emptyElement, _operator) public {
+  ) GSNMixer(_verifier, _mixDenomination, _merkleTreeHeight, _emptyElement, _operator) public {
   }
 
   function _processWithdraw(address payable _receiver, address payable _relayer, uint256 _fee) internal {
@@ -32,5 +32,22 @@ contract ETHMixer is Mixer {
 
   function _processDeposit() internal {
     require(msg.value == mixDenomination, "Please send `mixDenomination` ETH along with transaction");
+  }
+
+  event Debug(uint actualCharge, bytes context, address recipient);
+  // this func is called by RelayerHub right after calling a target func
+  function postRelayedCall(bytes memory context, bool /*success*/, uint actualCharge, bytes32 /*preRetVal*/) public onlyHub {
+    IRelayHub relayHub = IRelayHub(getHubAddr());
+    address payable recipient;
+    uint256 nullifierHash;
+    assembly {
+      recipient := mload(add(context, 32))
+      nullifierHash := mload(add(context, 64))
+    }
+    emit Debug(actualCharge, context, recipient);
+
+    recipient.transfer(mixDenomination - actualCharge);
+    relayHub.depositFor.value(actualCharge)(address(this));
+    emit Withdraw(recipient, nullifierHash, tx.origin, actualCharge);
   }
 }

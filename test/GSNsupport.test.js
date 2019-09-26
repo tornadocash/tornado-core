@@ -7,7 +7,7 @@ const fs = require('fs')
 const Web3 = require('web3')
 
 const { toBN, toHex, toChecksumAddress } = require('web3-utils')
-const { takeSnapshot, revertSnapshot, traceTransaction } = require('../lib/ganacheHelper')
+const { takeSnapshot, revertSnapshot } = require('../lib/ganacheHelper')
 const { deployRelayHub, fundRecipient } = require('@openzeppelin/gsn-helpers')
 const { GSNDevProvider } = require('@openzeppelin/gsn-provider')
 const { ephemeral } = require('@openzeppelin/network')
@@ -45,7 +45,7 @@ function getRandomReceiver() {
   return receiver
 }
 
-contract.skip('GSN support', accounts => {
+contract('GSN support', accounts => {
   let mixer
   let gsnMixer
   let relayHubAddress
@@ -93,7 +93,7 @@ contract.skip('GSN support', accounts => {
   })
 
   describe('#withdrawViaRelayer', () => {
-    it('should work', async () => {
+    it.only('should work', async () => {
       const gasPrice = toBN('20000000000')
       const relayerTxFee = 10 // 20%
       const deposit = generateDeposit()
@@ -120,6 +120,8 @@ contract.skip('GSN support', accounts => {
         root,
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         receiver,
+        relayer: operator, // this value wont be taken into account
+        fee: bigInt(1),    // this value wont be taken into account
 
         // private
         nullifier: deposit.nullifier,
@@ -158,8 +160,6 @@ contract.skip('GSN support', accounts => {
         value: 0
       })
       // console.log('tx', tx)
-      const debug = await traceTransaction(tx.transactionHash)
-      console.log('debug', debug.result.structLogs)
       const { events, gasUsed } = tx
       // console.log('events', events, gasUsed)
       const balanceMixerAfter = await web3.eth.getBalance(mixer.address)
