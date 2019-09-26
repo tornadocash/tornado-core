@@ -33,7 +33,6 @@ template Withdraw(levels, rounds) {
     signal input receiver; // not taking part in any computations
     signal input relayer; // not taking part in any computations
     signal input fee; // not taking part in any computations
-
     signal private input nullifier;
     signal private input secret;
     signal private input pathElements[levels];

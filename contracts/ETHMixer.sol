@@ -12,10 +12,8 @@
 pragma solidity ^0.5.8;
 
 import "./Mixer.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/GSN/GSNRecipient.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/GSN/IRelayHub.sol";
 
-contract ETHMixer is Mixer, GSNRecipient {
+contract ETHMixer is Mixer {
   constructor(
     address _verifier,
     uint256 _mixDenomination,
