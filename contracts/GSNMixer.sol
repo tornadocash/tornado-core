@@ -14,6 +14,7 @@ contract GSNMixer is Mixer, GSNRecipient {
   ) Mixer(_verifier, _mixDenomination, _merkleTreeHeight, _emptyElement, _operator) public {
   }
 
+  bool couldBeWithdrawn;
   modifier onlyHub() {
     require(msg.sender == getHubAddr(), "only relay hub");
     _;
@@ -27,7 +28,7 @@ contract GSNMixer is Mixer, GSNRecipient {
     require(isKnownRoot(root), "Cannot find your merkle root"); // Make sure to use a recent one
     require(verifier.verifyProof(a, b, c, input), "Invalid withdraw proof");
     nullifierHashes[nullifierHash] = true;
-
+    couldBeWithdrawn = true;
     // we will process withdraw in postRelayedCall func
   }
 

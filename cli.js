@@ -232,6 +232,8 @@ async function withdrawViaRelayer(note, receiver) {
     root: root,
     nullifierHash,
     receiver: bigInt(receiver),
+    relayer: bigInt(0),
+    fee: bigInt(web3.utils.toWei('0.01')),
 
     // Private snark inputs
     nullifier: deposit.nullifier,
@@ -257,10 +259,11 @@ async function withdrawViaRelayer(note, receiver) {
     gasLimit: 5000000,
     verbose: true,
   }
-  // const provider = new GSNProvider('https://rinkeby.infura.io/v3/c7463beadf2144e68646ff049917b716', { signKey: account })
-  const provider = new GSNDevProvider('http://localhost:8545', { signKey: account, HARDCODED_RELAYER_OPTS })
+  const provider = new GSNProvider('https://rinkeby.infura.io/v3/c7463beadf2144e68646ff049917b716', { signKey: account })
+  // const provider = new GSNDevProvider('http://localhost:8545', { signKey: account, HARDCODED_RELAYER_OPTS })
   web3 = new Web3(provider)
   const netId = await web3.eth.net.getId()
+  console.log('netId', netId)
   // eslint-disable-next-line require-atomic-updates
   mixer = new web3.eth.Contract(contractJson.abi, contractJson.networks[netId].address)
   console.log('mixer address', contractJson.networks[netId].address)

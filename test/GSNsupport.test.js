@@ -9,7 +9,7 @@ const Web3 = require('web3')
 const { toBN, toHex, toChecksumAddress } = require('web3-utils')
 const { takeSnapshot, revertSnapshot } = require('../lib/ganacheHelper')
 const { deployRelayHub, fundRecipient } = require('@openzeppelin/gsn-helpers')
-const { GSNDevProvider } = require('@openzeppelin/gsn-provider')
+const { GSNDevProvider, GSNProvider } = require('@openzeppelin/gsn-provider')
 const { ephemeral } = require('@openzeppelin/network')
 
 const Mixer = artifacts.require('./ETHMixer.sol')
@@ -143,7 +143,8 @@ contract('GSN support', accounts => {
       isSpent.should.be.equal(false)
 
       const account = ephemeral()
-      const provider = new GSNDevProvider('http://localhost:8545', {
+      // const provider = new GSNProvider('https://kovan.infura.io/v3/c7463beadf2144e68646ff049917b716', {
+      const provider = new GSNProvider('http://localhost:8545', {
         signKey: account,
         ownerAddress,
         relayerAddress,

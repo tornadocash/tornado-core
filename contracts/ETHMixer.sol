@@ -34,9 +34,12 @@ contract ETHMixer is GSNMixer {
     require(msg.value == mixDenomination, "Please send `mixDenomination` ETH along with transaction");
   }
 
-  event Debug(uint actualCharge, bytes context, address recipient);
   // this func is called by RelayerHub right after calling a target func
   function postRelayedCall(bytes memory context, bool /*success*/, uint actualCharge, bytes32 /*preRetVal*/) public onlyHub {
+    // this require allows to protect againt malicious relay hub that can drain the mixer
+    require(couldBeWithdrawn, "could be called only after withdrawViaRelayer");
+    couldBeWithdrawn = false;
+
     IRelayHub relayHub = IRelayHub(getHubAddr());
     address payable recipient;
     uint256 nullifierHash;
@@ -44,10 +47,10 @@ contract ETHMixer is GSNMixer {
       recipient := mload(add(context, 32))
       nullifierHash := mload(add(context, 64))
     }
-    emit Debug(actualCharge, context, recipient);
 
     recipient.transfer(mixDenomination - actualCharge);
     relayHub.depositFor.value(actualCharge)(address(this));
+
     emit Withdraw(recipient, nullifierHash, tx.origin, actualCharge);
   }
 }
