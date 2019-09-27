@@ -6,13 +6,14 @@ require('chai')
 const fs = require('fs')
 const Web3 = require('web3')
 
-const { toBN, toHex, toChecksumAddress } = require('web3-utils')
+const { toBN, toHex, toChecksumAddress, toWei } = require('web3-utils')
 const { takeSnapshot, revertSnapshot } = require('../lib/ganacheHelper')
 const { deployRelayHub, fundRecipient } = require('@openzeppelin/gsn-helpers')
 const { GSNDevProvider, GSNProvider } = require('@openzeppelin/gsn-provider')
 const { ephemeral } = require('@openzeppelin/network')
 
 const Mixer = artifacts.require('./ETHMixer.sol')
+const RelayHub = artifacts.require('./IRelayHub.sol')
 const { ETH_AMOUNT, MERKLE_TREE_HEIGHT, EMPTY_ELEMENT } = process.env
 
 const websnarkUtils = require('websnark/src/utils')
@@ -51,20 +52,25 @@ contract('GSN support', accounts => {
   let relayHubAddress
   const sender = accounts[0]
   const operator = accounts[0]
-  const ownerAddress = accounts[8]
-  const relayerAddress = accounts[9]
+  const relayerOwnerAddress = accounts[8]
+  const relayerAddress =  accounts[9]// '0x714992E1acbc7f888Be2A1784F0D23e73f4A1ead'
   const levels = MERKLE_TREE_HEIGHT || 16
   const zeroValue = EMPTY_ELEMENT || 1337
   const value = ETH_AMOUNT || '1000000000000000000' // 1 ether
   let snapshotId
   let prefix = 'test'
   let tree
-  const fee = bigInt(ETH_AMOUNT).shr(1) || bigInt(1e17)
   const receiver = getRandomReceiver()
-  const relayer = accounts[1]
   let groth16
   let circuit
   let proving_key
+  let unstakeDelay = 604800
+  let relayerTxFee = 20 // %
+  let signKey = ephemeral()
+  let gsnWeb3
+  const postRelayedCallMaxGas = 100000
+  const recipientCallsAtomicOverhead = 5000
+  let postRelayMaxGas = toBN(postRelayedCallMaxGas + recipientCallsAtomicOverhead)
 
   before(async () => {
     tree = new MerkleTree(
@@ -77,12 +83,29 @@ contract('GSN support', accounts => {
     relayHubAddress = toChecksumAddress(await deployRelayHub(web3, {
       from: sender
     }))
+
     await fundRecipient(web3, { recipient: mixer.address, relayHubAddress })
-    await mixer.upgradeRelayHub(relayHubAddress)
+    const currentHub = await mixer.getHubAddr()
+    if (relayHubAddress !== currentHub) {
+      await mixer.upgradeRelayHub(relayHubAddress)
+    }
+    const hub = await RelayHub.at(relayHubAddress)
+    await hub.stake(relayerAddress, unstakeDelay , { from: relayerOwnerAddress, value: toWei('1') })
+    await hub.registerRelay(relayerTxFee, 'http://gsn-dev-relayer.openzeppelin.com/', { from: relayerAddress })
+
     snapshotId = await takeSnapshot()
     groth16 = await buildGroth16()
     circuit = require('../build/circuits/withdraw.json')
     proving_key = fs.readFileSync('build/circuits/withdraw_proving_key.bin').buffer
+    const provider = new GSNDevProvider('http://localhost:8545', {
+      signKey,
+      relayerOwner: relayerOwnerAddress,
+      relayerAddress,
+      verbose: true,
+      txFee: relayerTxFee
+    })
+    gsnWeb3 = new Web3(provider, null, { transactionConfirmationBlocks: 1 })
+    gsnMixer = new gsnWeb3.eth.Contract(mixer.abi, mixer.address)
   })
 
   describe('#constructor', () => {
@@ -93,9 +116,8 @@ contract('GSN support', accounts => {
   })
 
   describe('#withdrawViaRelayer', () => {
-    it.only('should work', async () => {
+    it('should work', async () => {
       const gasPrice = toBN('20000000000')
-      const relayerTxFee = 10 // 20%
       const deposit = generateDeposit()
       const user = accounts[4]
       await tree.insert(deposit.commitment)
@@ -137,55 +159,48 @@ contract('GSN support', accounts => {
       const balanceMixerBefore = await web3.eth.getBalance(mixer.address)
       const balanceHubBefore = await web3.eth.getBalance(relayHubAddress)
       const balanceRelayerBefore = await web3.eth.getBalance(relayerAddress)
-      const balanceRelayerOwnerBefore = await web3.eth.getBalance(ownerAddress)
+      const balanceRelayerOwnerBefore = await web3.eth.getBalance(relayerOwnerAddress)
       const balanceRecieverBefore = await web3.eth.getBalance(toHex(receiver.toString()))
       let isSpent = await mixer.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
       isSpent.should.be.equal(false)
 
-      const account = ephemeral()
-      // const provider = new GSNProvider('https://kovan.infura.io/v3/c7463beadf2144e68646ff049917b716', {
-      const provider = new GSNProvider('http://localhost:8545', {
-        signKey: account,
-        ownerAddress,
-        relayerAddress,
-        verbose: true,
-        txFee: relayerTxFee
-      })
-      // console.log('relayerAddress', relayerAddress)
-      const gsnWeb3 = new Web3(provider, null, { transactionConfirmationBlocks: 1 })
-      gsnMixer = new gsnWeb3.eth.Contract(mixer.abi, mixer.address)
       const tx = await gsnMixer.methods.withdrawViaRelayer(pi_a, pi_b, pi_c, publicSignals).send({
-        from: account.address,
+        from: signKey.address,
         gas: 3e6,
         gasPrice,
         value: 0
       })
-      // console.log('tx', tx)
       const { events, gasUsed } = tx
-      // console.log('events', events, gasUsed)
       const balanceMixerAfter = await web3.eth.getBalance(mixer.address)
       const balanceHubAfter = await web3.eth.getBalance(relayHubAddress)
       const balanceRelayerAfter = await web3.eth.getBalance(relayerAddress)
-      const balanceRelayerOwnerAfter = await web3.eth.getBalance(ownerAddress)
+      const balanceRelayerOwnerAfter = await web3.eth.getBalance(relayerOwnerAddress)
       const balanceRecieverAfter = await web3.eth.getBalance(toHex(receiver.toString()))
-      console.log('balanceMixerBefore, balanceMixerAfter', balanceMixerBefore.toString(), balanceMixerAfter.toString())
-      console.log('balanceRecieverBefore, balanceRecieverAfter', balanceRecieverBefore.toString(), balanceRecieverAfter.toString())
-      console.log('balanceHubBefore, balanceHubAfter', balanceHubBefore.toString(), balanceHubAfter.toString())
-      console.log('balanceRelayerBefore, balanceRelayerAfter', balanceRelayerBefore.toString(), balanceRelayerAfter.toString(), toBN(balanceRelayerBefore).sub(toBN(balanceRelayerAfter)).toString())
-      console.log('balanceRelayerOwnerBefore, balanceRelayerOwnerAfter', balanceRelayerOwnerBefore.toString(), balanceRelayerOwnerAfter.toString())
-      // balanceMixerAfter.should.be.eq.BN(toBN(balanceMixerBefore).sub(toBN(value)))
+      // console.log('balanceMixerBefore, balanceMixerAfter', balanceMixerBefore.toString(), balanceMixerAfter.toString())
+      // console.log('balanceRecieverBefore, balanceRecieverAfter', balanceRecieverBefore.toString(), balanceRecieverAfter.toString())
+      // console.log('balanceHubBefore, balanceHubAfter', balanceHubBefore.toString(), balanceHubAfter.toString())
+      // console.log('balanceRelayerBefore, balanceRelayerAfter', balanceRelayerBefore.toString(), balanceRelayerAfter.toString(), toBN(balanceRelayerBefore).sub(toBN(balanceRelayerAfter)).toString())
+      // console.log('balanceRelayerOwnerBefore, balanceRelayerOwnerAfter', balanceRelayerOwnerBefore.toString(), balanceRelayerOwnerAfter.toString())
+      balanceMixerAfter.should.be.eq.BN(toBN(balanceMixerBefore).sub(toBN(value)))
       const networkFee = toBN(gasUsed).mul(gasPrice)
       const chargedFee = networkFee.add(networkFee.div(toBN(relayerTxFee)))
-      console.log('networkFee, calc chargedFee', networkFee.toString(), chargedFee.toString())
-      // const fee = toBN(value).sub(toBN(balanceRecieverAfter))
-      // console.log('actual charged fee', fee.toString())
-      balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore).sub(networkFee))
-      // balanceRelayerOwnerAfter.should.be.eq.BN(toBN(balanceRelayerOwnerBefore))
-      // balanceRecieverAfter.should.be.gt.BN(toBN(balanceRecieverBefore))
-      // balanceHubAfter.should.be.eq.BN(toBN(balanceHubBefore).add(fee))
+      // console.log('networkFee                 :', networkFee.toString())
+      // console.log('calculated chargedFee      :', chargedFee.toString())
+      const actualFee = toBN(value).sub(toBN(balanceRecieverAfter))
+      // console.log('actual fee                 :', actualFee.toString())
+      // const postRelayMaxCost = postRelayMaxGas.mul(gasPrice)
+      // const actualFeeWithoutPostCall = actualFee.sub(postRelayMaxCost)
+      // console.log('actualFeeWithoutPostCall   :', actualFeeWithoutPostCall.toString())
+      networkFee.should.be.lt.BN(chargedFee)
+      chargedFee.should.be.lt.BN(actualFee)
 
-      // console.log('events.Withdraw.returnValues.nullifierHash', events.Withdraw.returnValues.nullifierHash.toString(), input.nullifierHash.toString())
-      // events.Withdraw.returnValues.nullifierHash.should.be.eq.BN(toBN(input.nullifierHash.toString()))
+      balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore).sub(networkFee))
+      balanceRelayerOwnerAfter.should.be.eq.BN(toBN(balanceRelayerOwnerBefore))
+      balanceRecieverAfter.should.be.gt.BN(toBN(balanceRecieverBefore))
+      balanceRecieverAfter.should.be.lt.BN(toBN(value).sub(chargedFee))
+      balanceHubAfter.should.be.eq.BN(toBN(balanceHubBefore).add(actualFee))
+
+      toBN(events.Withdraw.returnValues.nullifierHash).should.be.eq.BN(toBN(input.nullifierHash.toString()))
       events.Withdraw.returnValues.relayer.should.be.eq.BN(relayerAddress)
       events.Withdraw.returnValues.to.should.be.eq.BN(toHex(receiver.toString()))
 

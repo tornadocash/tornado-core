@@ -44,7 +44,7 @@
   "devDependencies": {
     "@openzeppelin/contracts-ethereum-package": "^2.2.3",
     "@openzeppelin/gsn-helpers": "^0.2.0",
-    "@openzeppelin/gsn-provider": "^0.1.8",
+    "@openzeppelin/gsn-provider": "git+https://github.com/peppersec/openzeppelin-gsn-provider.git#69a75ba8bf37cdf9c60ebba2b191ec2630f2fb50",
     "@openzeppelin/network": "^0.2.9",
     "@openzeppelin/upgrades": "^2.5.3",
     "truffle-flattener": "^1.4.0"
