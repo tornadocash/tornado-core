@@ -9,7 +9,7 @@ const Web3 = require('web3')
 const { toBN, toHex, toChecksumAddress, toWei } = require('web3-utils')
 const { takeSnapshot, revertSnapshot } = require('../lib/ganacheHelper')
 const { deployRelayHub, fundRecipient } = require('@openzeppelin/gsn-helpers')
-const { GSNDevProvider, GSNProvider } = require('@openzeppelin/gsn-provider')
+const { GSNDevProvider, GSNProvider, utils } = require('@openzeppelin/gsn-provider')
 const { ephemeral } = require('@openzeppelin/network')
 
 const Mixer = artifacts.require('./ETHMixer.sol')
@@ -49,6 +49,7 @@ function getRandomReceiver() {
 contract('GSN support', accounts => {
   let mixer
   let gsnMixer
+  let hubInstance
   let relayHubAddress
   const sender = accounts[0]
   const operator = accounts[0]
@@ -68,6 +69,7 @@ contract('GSN support', accounts => {
   let relayerTxFee = 20 // %
   let signKey = ephemeral()
   let gsnWeb3
+  let gsnProvider
   const postRelayedCallMaxGas = 100000
   const recipientCallsAtomicOverhead = 5000
   let postRelayMaxGas = toBN(postRelayedCallMaxGas + recipientCallsAtomicOverhead)
@@ -89,22 +91,22 @@ contract('GSN support', accounts => {
     if (relayHubAddress !== currentHub) {
       await mixer.upgradeRelayHub(relayHubAddress)
     }
-    const hub = await RelayHub.at(relayHubAddress)
-    await hub.stake(relayerAddress, unstakeDelay , { from: relayerOwnerAddress, value: toWei('1') })
-    await hub.registerRelay(relayerTxFee, 'http://gsn-dev-relayer.openzeppelin.com/', { from: relayerAddress })
+    hubInstance = await RelayHub.at(relayHubAddress)
+    await hubInstance.stake(relayerAddress, unstakeDelay , { from: relayerOwnerAddress, value: toWei('1') })
+    await hubInstance.registerRelay(relayerTxFee, 'http://gsn-dev-relayer.openzeppelin.com/', { from: relayerAddress })
 
     snapshotId = await takeSnapshot()
     groth16 = await buildGroth16()
     circuit = require('../build/circuits/withdraw.json')
     proving_key = fs.readFileSync('build/circuits/withdraw_proving_key.bin').buffer
-    const provider = new GSNDevProvider('http://localhost:8545', {
+    gsnProvider = new GSNDevProvider('http://localhost:8545', {
       signKey,
       relayerOwner: relayerOwnerAddress,
       relayerAddress,
       verbose: true,
       txFee: relayerTxFee
     })
-    gsnWeb3 = new Web3(provider, null, { transactionConfirmationBlocks: 1 })
+    gsnWeb3 = new Web3(gsnProvider, null, { transactionConfirmationBlocks: 1 })
     gsnMixer = new gsnWeb3.eth.Contract(mixer.abi, mixer.address)
   })
 
@@ -206,6 +208,77 @@ contract('GSN support', accounts => {
 
       isSpent = await mixer.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
       isSpent.should.be.equal(true)
+    })
+
+    it.skip('should work with relayer selection', async () => {
+      // you should run a relayer or two manualy for this test
+      // npx oz-gsn run-relayer --port 8888
+      const gasPrice = toBN('20000000000')
+      const deposit = generateDeposit()
+      const user = accounts[4]
+      await tree.insert(deposit.commitment)
+
+      await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: user, gasPrice })
+      const { root, path_elements, path_index } = await tree.path(0)
+
+      // Circuit input
+      const input = stringifyBigInts({
+        // public
+        root,
+        nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
+        receiver,
+        relayer: operator, // this value wont be taken into account
+        fee: bigInt(1),    // this value wont be taken into account
+
+        // private
+        nullifier: deposit.nullifier,
+        secret: deposit.secret,
+        pathElements: path_elements,
+        pathIndex: path_index,
+      })
+
+
+      const proof = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
+      const { pi_a, pi_b, pi_c, publicSignals } = websnarkUtils.toSolidityInput(proof)
+
+      // create a provider to look up the relayers
+      gsnProvider = new GSNProvider('http://localhost:8545', {
+        signKey,
+        relayerOwner: relayerOwnerAddress,
+        relayerAddress,
+        verbose: true
+      })
+
+      hubInstance = utils.createRelayHub(web3, relayHubAddress)
+      gsnProvider.relayClient.serverHelper.setHub(hubInstance)
+      let relays = await gsnProvider.relayClient.serverHelper.fetchRelaysAdded()
+      console.log('all relays', relays)
+
+      const { relayUrl, transactionFee } = relays[1]
+      console.log('we are picking', relayUrl)
+      let blockFrom = 0
+      let pinger = await gsnProvider.relayClient.serverHelper.newActiveRelayPinger(blockFrom, relays[2].gasPrice)
+      const predefinedRelay = await pinger.getRelayAddressPing(relayUrl, transactionFee, relays[2].gasPrice )
+      console.log('relay status', predefinedRelay)
+
+      // eslint-disable-next-line require-atomic-updates
+      gsnProvider = new GSNProvider('http://localhost:8545', {
+        signKey,
+        relayerOwner: relayerOwnerAddress,
+        relayerAddress,
+        verbose: true,
+        predefinedRelay // select the relay we want to work with
+      })
+      gsnWeb3 = new Web3(gsnProvider, null, { transactionConfirmationBlocks: 1 })
+      gsnMixer = new gsnWeb3.eth.Contract(mixer.abi, mixer.address)
+
+      const tx = await gsnMixer.methods.withdrawViaRelayer(pi_a, pi_b, pi_c, publicSignals).send({
+        from: signKey.address,
+        gas: 3e6,
+        gasPrice,
+        value: 0
+      })
+      console.log('tx succeed', tx.status)
     })
   })
 
