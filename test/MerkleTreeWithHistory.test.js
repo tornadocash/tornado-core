@@ -10,7 +10,7 @@ const MerkleTreeWithHistory = artifacts.require('./MerkleTreeWithHistoryMock.sol
 const hasherContract = artifacts.require('./Hasher.sol')
 
 const MerkleTree = require('../lib/MerkleTree')
-const hasherImpl = require('../lib/MiMC')
+const hasherImpl = require('../lib/Poseidon')
 
 const { ETH_AMOUNT, MERKLE_TREE_HEIGHT, EMPTY_ELEMENT } = process.env
 

@@ -1,7 +1,7 @@
 /* global artifacts */
 const path = require('path')
 
-const genContract = require('circomlib/src/mimcsponge_gencontract.js')
+const genContract = require('circomlib/src/poseidon_gencontract.js')
 const Artifactor = require('truffle-artifactor')
 
 module.exports = function(deployer) {
@@ -12,7 +12,7 @@ module.exports = function(deployer) {
     await artifactor.save({
       contractName,
       abi: genContract.abi,
-      unlinked_binary: genContract.createCode('mimcsponge', 220),
+      unlinked_binary: genContract.createCode(),
     }).then(async () => {
       const hasherContract = artifacts.require(contractName)
       await deployer.deploy(hasherContract)

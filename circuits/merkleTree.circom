@@ -1,18 +1,17 @@
-include "../node_modules/circomlib/circuits/mimcsponge.circom";
+include "../node_modules/circomlib/circuits/poseidon.circom";
 
-// Computes MiMC(left + right)
+// Computes Poseidon(left + right)
 template HashLeftRight(rounds) {
     signal input left;
     signal input right;
 
     signal output hash;
 
-    component hasher = MiMCSponge(2, rounds, 1);
-    hasher.ins[0] <== left;
-    hasher.ins[1] <== right;
-    hasher.k <== 0;
+    component hasher = Poseidon(2, 6, 8, 57);
+    hasher.inputs[0] <== left;
+    hasher.inputs[1] <== right;
 
-    hash <== hasher.outs[0];
+    hash <== hasher.out;
 }
 
 // if pathIndex == 0 returns (left = inputElement, right = pathElement)

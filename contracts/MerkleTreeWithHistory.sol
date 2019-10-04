@@ -12,7 +12,7 @@
 pragma solidity ^0.5.8;
 
 library Hasher {
-  function MiMCSponge(uint256 in_xL, uint256 in_xR, uint256 in_k) public pure returns (uint256 xL, uint256 xR);
+  function poseidon(uint256[] memory input) public pure returns (uint256);
 }
 
 contract MerkleTreeWithHistory {
@@ -43,17 +43,10 @@ contract MerkleTreeWithHistory {
   }
 
   function hashLeftRight(uint256 left, uint256 right) public pure returns (uint256 hash) {
-    uint256 k = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
-    uint256 R = 0;
-    uint256 C = 0;
-
-    R = addmod(R, left, k);
-    (R, C) = Hasher.MiMCSponge(R, C, 0);
-
-    R = addmod(R, right, k);
-    (R, C) = Hasher.MiMCSponge(R, C, 0);
-
-    hash = R;
+    uint256[] memory data = new uint256[](2);
+    data[0] = left;
+    data[1] = right;
+    hash = MiMC.poseidon(data);
   }
 
   function _insert(uint256 leaf) internal {

@@ -40,7 +40,7 @@ async function deposit() {
   const deposit = createDeposit(rbigint(31), rbigint(31))
 
   console.log('Submitting deposit transaction')
-  await mixer.methods.deposit('0x' + deposit.commitment.toString(16)).send({ value: ETH_AMOUNT, from: (await web3.eth.getAccounts())[0], gas:1e6 })
+  await mixer.methods.deposit('0x' + deposit.commitment.toString(16)).send({ value: ETH_AMOUNT, from: (await web3.eth.getAccounts())[0], gas:4e6 })
 
   const note = '0x' + deposit.preimage.toString('hex')
   console.log('Your note:', note)
@@ -57,7 +57,7 @@ async function depositErc20() {
   console.log('erc20mixer allowance', allowance.toString(10))
 
   const deposit = createDeposit(rbigint(31), rbigint(31))
-  await erc20mixer.methods.deposit('0x' + deposit.commitment.toString(16)).send({ value: ETH_AMOUNT, from: account, gas:1e6 })
+  await erc20mixer.methods.deposit('0x' + deposit.commitment.toString(16)).send({ value: ETH_AMOUNT, from: account, gas:4e6 })
 
   const balance = await erc20.methods.balanceOf(erc20mixer.address).call()
   console.log('erc20mixer balance', balance.toString(10))
@@ -116,7 +116,7 @@ async function withdrawErc20(note, receiver, relayer) {
   console.timeEnd('Proof time')
 
   console.log('Submitting withdraw transaction')
-  await erc20mixer.methods.withdraw(proof, publicSignals).send({ from: (await web3.eth.getAccounts())[0], gas: 1e6 })
+  await erc20mixer.methods.withdraw(proof, publicSignals).send({ from: (await web3.eth.getAccounts())[0], gas: 4e6 })
   console.log('Done')
 }
 
@@ -190,7 +190,7 @@ async function withdraw(note, receiver) {
   console.timeEnd('Proof time')
 
   console.log('Submitting withdraw transaction')
-  await mixer.methods.withdraw(proof, publicSignals).send({ from: (await web3.eth.getAccounts())[0], gas: 1e6 })
+  await mixer.methods.withdraw(proof, publicSignals).send({ from: (await web3.eth.getAccounts())[0], gas: 4e6 })
   console.log('Done')
 }
 
