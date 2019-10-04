@@ -139,8 +139,8 @@ contract('ERC20Mixer', accounts => {
       })
 
 
-      const proof = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-      const { pi_a, pi_b, pi_c, publicSignals } = websnarkUtils.toSolidityInput(proof)
+      const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
+      const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
 
       const balanceMixerBefore = await token.balanceOf(mixer.address)
       const balanceRelayerBefore = await token.balanceOf(relayer)
@@ -150,9 +150,9 @@ contract('ERC20Mixer', accounts => {
       let isSpent = await mixer.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
       isSpent.should.be.equal(false)
       // Uncomment to measure gas usage
-      // gas = await mixer.withdraw.estimateGas(pi_a, pi_b, pi_c, publicSignals, { from: relayer, gasPrice: '0' })
+      // gas = await mixer.withdraw.estimateGas(proof, publicSignals, { from: relayer, gasPrice: '0' })
       // console.log('withdraw gas:', gas)
-      const { logs } = await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer, gasPrice: '0' })
+      const { logs } = await mixer.withdraw(proof, publicSignals, { from: relayer, gasPrice: '0' })
 
       const balanceMixerAfter = await token.balanceOf(mixer.address)
       const balanceRelayerAfter = await token.balanceOf(relayer)
@@ -221,8 +221,8 @@ contract('ERC20Mixer', accounts => {
       })
 
 
-      const proof = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-      const { pi_a, pi_b, pi_c, publicSignals } = websnarkUtils.toSolidityInput(proof)
+      const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
+      const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
 
       const balanceMixerBefore = await usdtToken.balanceOf(mixer.address)
       const balanceRelayerBefore = await usdtToken.balanceOf(relayer)
@@ -233,9 +233,9 @@ contract('ERC20Mixer', accounts => {
       isSpent.should.be.equal(false)
 
       // Uncomment to measure gas usage
-      // gas = await mixer.withdraw.estimateGas(pi_a, pi_b, pi_c, publicSignals, { from: relayer, gasPrice: '0' })
+      // gas = await mixer.withdraw.estimateGas(proof, publicSignals, { from: relayer, gasPrice: '0' })
       // console.log('withdraw gas:', gas)
-      const { logs } = await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer, gasPrice: '0' })
+      const { logs } = await mixer.withdraw(proof, publicSignals, { from: relayer, gasPrice: '0' })
 
       const balanceMixerAfter = await usdtToken.balanceOf(mixer.address)
       const balanceRelayerAfter = await usdtToken.balanceOf(relayer)
@@ -301,8 +301,8 @@ contract('ERC20Mixer', accounts => {
       })
 
 
-      const proof = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-      const { pi_a, pi_b, pi_c, publicSignals } = websnarkUtils.toSolidityInput(proof)
+      const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
+      const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
 
       const balanceMixerBefore = await token.balanceOf(mixer.address)
       const balanceRelayerBefore = await token.balanceOf(relayer)
@@ -313,9 +313,9 @@ contract('ERC20Mixer', accounts => {
       isSpent.should.be.equal(false)
 
       // Uncomment to measure gas usage
-      // gas = await mixer.withdraw.estimateGas(pi_a, pi_b, pi_c, publicSignals, { from: relayer, gasPrice: '0' })
+      // gas = await mixer.withdraw.estimateGas(proof, publicSignals, { from: relayer, gasPrice: '0' })
       // console.log('withdraw gas:', gas)
-      const { logs } = await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer, gasPrice: '0' })
+      const { logs } = await mixer.withdraw(proof, publicSignals, { from: relayer, gasPrice: '0' })
       console.log('withdraw done')
 
       const balanceMixerAfter = await token.balanceOf(mixer.address)

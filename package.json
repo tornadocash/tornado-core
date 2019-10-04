@@ -35,14 +35,14 @@
     "dotenv": "^8.0.0",
     "eslint": "^6.2.2",
     "ganache-cli": "^6.4.5",
-    "snarkjs": "^0.1.16",
+    "snarkjs": "git+https://github.com/peppersec/snarkjs.git#0e2f8ab28092ee6d922dc4d3ac7afc8ef5a25154",
     "truffle": "^5.0.27",
     "truffle-artifactor": "^4.0.23",
     "truffle-contract": "^4.0.24",
     "truffle-hdwallet-provider": "^1.0.14",
     "web3": "^1.0.0-beta.55",
     "web3-utils": "^1.0.0-beta.55",
-    "websnark": "git+https://github.com/peppersec/websnark.git#ed6a4d8a6fb081a62af26820980046bbb602d559"
+    "websnark": "git+https://github.com/peppersec/websnark.git#966eafc47df639195c98374d3c366c32acd6f231"
   },
   "devDependencies": {
     "truffle-flattener": "^1.4.0"

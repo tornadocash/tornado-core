@@ -52,7 +52,7 @@ function getRandomReceiver() {
 }
 
 function snarkVerify(proof) {
-  proof = unstringifyBigInts2(websnarkUtils.fromSolidityInput(proof))
+  proof = unstringifyBigInts2(proof)
   const verification_key = unstringifyBigInts2(require('../build/circuits/withdraw_verification_key.json'))
   return snarkjs['groth'].isValid(verification_key, proof, proof.publicSignals)
 }
@@ -149,28 +149,28 @@ contract('ETHMixer', accounts => {
         pathIndex: path_index,
       })
 
-      let proof = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-      const originalProof = JSON.parse(JSON.stringify(proof))
-      let result = snarkVerify(proof)
+      let proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
+      const originalProof = JSON.parse(JSON.stringify(proofData))
+      let result = snarkVerify(proofData)
       result.should.be.equal(true)
 
       // nullifier
-      proof.publicSignals[1] = '133792158246920651341275668520530514036799294649489851421007411546007850802'
-      result = snarkVerify(proof)
+      proofData.publicSignals[1] = '133792158246920651341275668520530514036799294649489851421007411546007850802'
+      result = snarkVerify(proofData)
       result.should.be.equal(false)
-      proof = originalProof
+      proofData = originalProof
 
       // try to cheat with recipient
-      proof.publicSignals[2] = '133738360804642228759657445999390850076318544422'
-      result = snarkVerify(proof)
+      proofData.publicSignals[2] = '133738360804642228759657445999390850076318544422'
+      result = snarkVerify(proofData)
       result.should.be.equal(false)
-      proof = originalProof
+      proofData = originalProof
 
       // fee
-      proof.publicSignals[3] = '1337100000000000000000'
-      result = snarkVerify(proof)
+      proofData.publicSignals[3] = '1337100000000000000000'
+      result = snarkVerify(proofData)
       result.should.be.equal(false)
-      proof = originalProof
+      proofData = originalProof
     })
   })
 
@@ -209,8 +209,8 @@ contract('ETHMixer', accounts => {
       })
 
 
-      const proof = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-      const { pi_a, pi_b, pi_c, publicSignals } = websnarkUtils.toSolidityInput(proof)
+      const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
+      const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
 
       const balanceMixerBefore = await web3.eth.getBalance(mixer.address)
       const balanceRelayerBefore = await web3.eth.getBalance(relayer)
@@ -220,9 +220,9 @@ contract('ETHMixer', accounts => {
       isSpent.should.be.equal(false)
 
       // Uncomment to measure gas usage
-      // gas = await mixer.withdraw.estimateGas(pi_a, pi_b, pi_c, publicSignals, { from: relayer, gasPrice: '0' })
+      // gas = await mixer.withdraw.estimateGas(proof, publicSignals, { from: relayer, gasPrice: '0' })
       // console.log('withdraw gas:', gas)
-      const { logs } = await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer, gasPrice: '0' })
+      const { logs } = await mixer.withdraw(proof, publicSignals, { from: relayer, gasPrice: '0' })
 
       const balanceMixerAfter = await web3.eth.getBalance(mixer.address)
       const balanceRelayerAfter = await web3.eth.getBalance(relayer)
@@ -261,10 +261,10 @@ contract('ETHMixer', accounts => {
         pathElements: path_elements,
         pathIndex: path_index,
       })
-      const proof = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-      const { pi_a, pi_b, pi_c, publicSignals } = websnarkUtils.toSolidityInput(proof)
-      await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer }).should.be.fulfilled
-      const error = await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer }).should.be.rejected
+      const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
+      const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
+      await mixer.withdraw(proof, publicSignals, { from: relayer }).should.be.fulfilled
+      const error = await mixer.withdraw(proof, publicSignals, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('The note has been already spent')
     })
 
@@ -286,10 +286,10 @@ contract('ETHMixer', accounts => {
         pathElements: path_elements,
         pathIndex: path_index,
       })
-      const proof = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-      const { pi_a, pi_b, pi_c, publicSignals } = websnarkUtils.toSolidityInput(proof)
+      const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
+      const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
       publicSignals[1] ='0x' + toBN(publicSignals[1]).add(toBN('21888242871839275222246405745257275088548364400416034343698204186575808495617')).toString('hex')
-      const error = await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer }).should.be.rejected
+      const error = await mixer.withdraw(proof, publicSignals, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('verifier-gte-snark-scalar-field')
     })
 
@@ -312,9 +312,9 @@ contract('ETHMixer', accounts => {
         pathIndex: path_index,
       })
 
-      const proof = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-      const { pi_a, pi_b, pi_c, publicSignals } = websnarkUtils.toSolidityInput(proof)
-      const error = await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer }).should.be.rejected
+      const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
+      const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
+      const error = await mixer.withdraw(proof, publicSignals, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('Fee exceeds transfer value')
     })
 
@@ -338,11 +338,11 @@ contract('ETHMixer', accounts => {
       })
 
       const dummyRoot = randomHex(32)
-      const proof = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-      const { pi_a, pi_b, pi_c, publicSignals } = websnarkUtils.toSolidityInput(proof)
+      const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
+      const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
       publicSignals[0] = dummyRoot
 
-      const error = await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer }).should.be.rejected
+      const error = await mixer.withdraw(proof, publicSignals, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('Cannot find your merkle root')
     })
 
@@ -364,37 +364,37 @@ contract('ETHMixer', accounts => {
         pathElements: path_elements,
         pathIndex: path_index,
       })
-      const proof = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-      let { pi_a, pi_b, pi_c, publicSignals } = websnarkUtils.toSolidityInput(proof)
+      const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
+      let { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
       const originalPublicSignals = publicSignals.slice()
-      const originalPi_a = pi_a.slice()
+      const originalProof = proof.slice()
 
       // receiver
       publicSignals[2] = '0x0000000000000000000000007a1f9131357404ef86d7c38dbffed2da70321337'
 
-      let error = await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer }).should.be.rejected
+      let error = await mixer.withdraw(proof, publicSignals, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('Invalid withdraw proof')
 
       // fee
       publicSignals = originalPublicSignals.slice()
       publicSignals[3] = '0x000000000000000000000000000000000000000000000000015345785d8a0000'
 
-      error = await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer }).should.be.rejected
+      error = await mixer.withdraw(proof, publicSignals, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('Invalid withdraw proof')
 
       // nullifier
       publicSignals = originalPublicSignals.slice()
       publicSignals[1] = '0x00abdfc78211f8807b9c6504a6e537e71b8788b2f529a95f1399ce124a8642ad'
 
-      error = await mixer.withdraw(pi_a, pi_b, pi_c, publicSignals, { from: relayer }).should.be.rejected
+      error = await mixer.withdraw(proof, publicSignals, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('Invalid withdraw proof')
 
       // proof itself
-      pi_a[0] = '0x261d81d8203437f29b38a88c4263476d858e6d9645cf21740461684412b31337'
-      await mixer.withdraw(pi_a, pi_b, pi_c, originalPublicSignals, { from: relayer }).should.be.rejected
+      proof[0] = '0x261d81d8203437f29b38a88c4263476d858e6d9645cf21740461684412b31337'
+      await mixer.withdraw(proof, originalPublicSignals, { from: relayer }).should.be.rejected
 
       // should work with original values
-      await mixer.withdraw(originalPi_a, pi_b, pi_c, originalPublicSignals, { from: relayer }).should.be.fulfilled
+      await mixer.withdraw(originalProof, originalPublicSignals, { from: relayer }).should.be.fulfilled
     })
   })
 

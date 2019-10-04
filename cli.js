@@ -111,12 +111,12 @@ async function withdrawErc20(note, receiver, relayer) {
 
   console.log('Generating SNARK proof')
   console.time('Proof time')
-  const proof = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-  const { pi_a, pi_b, pi_c, publicSignals } = websnarkUtils.toSolidityInput(proof)
+  const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
+  const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
   console.timeEnd('Proof time')
 
   console.log('Submitting withdraw transaction')
-  await erc20mixer.methods.withdraw(pi_a, pi_b, pi_c, publicSignals).send({ from: (await web3.eth.getAccounts())[0], gas: 1e6 })
+  await erc20mixer.methods.withdraw(proof, publicSignals).send({ from: (await web3.eth.getAccounts())[0], gas: 1e6 })
   console.log('Done')
 }
 
@@ -185,12 +185,12 @@ async function withdraw(note, receiver) {
 
   console.log('Generating SNARK proof')
   console.time('Proof time')
-  const proof = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-  const { pi_a, pi_b, pi_c, publicSignals } = websnarkUtils.toSolidityInput(proof)
+  const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
+  const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
   console.timeEnd('Proof time')
 
   console.log('Submitting withdraw transaction')
-  await mixer.methods.withdraw(pi_a, pi_b, pi_c, publicSignals).send({ from: (await web3.eth.getAccounts())[0], gas: 1e6 })
+  await mixer.methods.withdraw(proof, publicSignals).send({ from: (await web3.eth.getAccounts())[0], gas: 1e6 })
   console.log('Done')
 }
 

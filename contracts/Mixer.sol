@@ -14,7 +14,7 @@ pragma solidity ^0.5.8;
 import "./MerkleTreeWithHistory.sol";
 
 contract IVerifier {
-  function verifyProof(uint256[2] memory a, uint256[2][2] memory b, uint256[2] memory c, uint256[5] memory input) public returns(bool);
+  function verifyProof(uint256[8] memory proof, uint256[5] memory input) public returns(bool);
 }
 
 contract Mixer is MerkleTreeWithHistory {
@@ -83,7 +83,7 @@ contract Mixer is MerkleTreeWithHistory {
       - the receiver of funds
       - optional fee that goes to the transaction sender (usually a relay)
   */
-  function withdraw(uint256[2] memory a, uint256[2][2] memory b, uint256[2] memory c, uint256[5] memory input) public {
+  function withdraw(uint256[8] memory proof, uint256[5] memory input) public {
     uint256 root = input[0];
     uint256 nullifierHash = input[1];
     address payable receiver = address(input[2]);
@@ -93,7 +93,7 @@ contract Mixer is MerkleTreeWithHistory {
     require(!nullifierHashes[nullifierHash], "The note has been already spent");
 
     require(isKnownRoot(root), "Cannot find your merkle root"); // Make sure to use a recent one
-    require(verifier.verifyProof(a, b, c, input), "Invalid withdraw proof");
+    require(verifier.verifyProof(proof, input), "Invalid withdraw proof");
     nullifierHashes[nullifierHash] = true;
     _processWithdraw(receiver, relayer, fee);
     emit Withdraw(receiver, nullifierHash, relayer, fee);
