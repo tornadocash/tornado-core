@@ -320,12 +320,16 @@ if (inBrowser) {
       else
         printHelp(1)
       break
-    case 'auto':
+    case 'test':
       if (args.length === 1) {
         (async () => {
           await init()
+          const account = (await web3.eth.getAccounts())[0]
           const note = await deposit()
-          await withdraw(note, (await web3.eth.getAccounts())[0])
+          await withdraw(note, account)
+
+          const note2 = await deposit()
+          await withdraw(note2, account, account)
           process.exit(0)
         })()
       }
