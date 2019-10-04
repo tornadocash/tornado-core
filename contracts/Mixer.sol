@@ -19,6 +19,7 @@ contract IVerifier {
 
 contract Mixer is MerkleTreeWithHistory {
   bool public isDepositsEnabled = true;
+  bool public isVerifierUpdateAllowed = true;
   // operator can disable new deposits in case of emergency
   // it also receives a relayer fee
   address payable public operator;
@@ -94,6 +95,17 @@ contract Mixer is MerkleTreeWithHistory {
   function toggleDeposits() external {
     require(msg.sender == operator, "unauthorized");
     isDepositsEnabled = !isDepositsEnabled;
+  }
+
+  function updateVerifier(address newVerifier) external {
+    require(isVerifierUpdateAllowed, "verifier updates are disabled");
+    require(msg.sender == operator, "unauthorized");
+    verifier = IVerifier(newVerifier);
+  }
+
+  function disableVerifierUpdate() external {
+    require(msg.sender == operator, "unauthorized");
+    isVerifierUpdateAllowed = false;
   }
 
   function changeOperator(address payable _newAccount) external {
