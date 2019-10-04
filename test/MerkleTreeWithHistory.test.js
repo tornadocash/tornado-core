@@ -7,10 +7,10 @@ require('chai')
 const { takeSnapshot, revertSnapshot } = require('../lib/ganacheHelper')
 
 const MerkleTreeWithHistory = artifacts.require('./MerkleTreeWithHistoryMock.sol')
-const MiMC = artifacts.require('./MiMC.sol')
+const hasherContract = artifacts.require('./Hasher.sol')
 
 const MerkleTree = require('../lib/MerkleTree')
-const MimcHasher = require('../lib/MiMC')
+const hasherImpl = require('../lib/MiMC')
 
 const { ETH_AMOUNT, MERKLE_TREE_HEIGHT, EMPTY_ELEMENT } = process.env
 
@@ -25,7 +25,7 @@ function BNArrayToStringArray(array) {
 
 contract('MerkleTreeWithHistory', accounts => {
   let merkleTreeWithHistory
-  let miMC
+  let hasherInstance
   let levels = MERKLE_TREE_HEIGHT || 16
   let zeroValue = EMPTY_ELEMENT || 1337
   const sender = accounts[0]
@@ -43,8 +43,8 @@ contract('MerkleTreeWithHistory', accounts => {
       null,
       prefix,
     )
-    miMC = await MiMC.deployed()
-    await MerkleTreeWithHistory.link(MiMC, miMC.address)
+    hasherInstance = await hasherContract.deployed()
+    await MerkleTreeWithHistory.link(hasherContract, hasherInstance.address)
     merkleTreeWithHistory = await MerkleTreeWithHistory.new(levels, zeroValue)
     snapshotId = await takeSnapshot()
   })
@@ -67,7 +67,7 @@ contract('MerkleTreeWithHistory', accounts => {
     })
 
     it('tests insert', async () => {
-      hasher = new MimcHasher()
+      hasher = new hasherImpl()
       tree = new MerkleTree(
         2,
         zeroValue,
@@ -191,7 +191,7 @@ contract('MerkleTreeWithHistory', accounts => {
       error.reason.should.be.equal('Merkle tree is full. No more leafs can be added')
     })
 
-    it.skip('mimc gas', async () => {
+    it.skip('hasher gas', async () => {
       levels = 6
       zeroValue = 1337
       merkleTreeWithHistory = await MerkleTreeWithHistory.new(levels, zeroValue)
@@ -205,7 +205,7 @@ contract('MerkleTreeWithHistory', accounts => {
     await revertSnapshot(snapshotId.result)
     // eslint-disable-next-line require-atomic-updates
     snapshotId = await takeSnapshot()
-    hasher = new MimcHasher()
+    hasher = new hasherImpl()
     tree = new MerkleTree(
       levels,
       zeroValue,

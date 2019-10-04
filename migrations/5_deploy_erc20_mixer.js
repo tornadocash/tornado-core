@@ -2,7 +2,7 @@
 require('dotenv').config({ path: '../.env' })
 const ERC20Mixer = artifacts.require('ERC20Mixer')
 const Verifier = artifacts.require('Verifier')
-const MiMC = artifacts.require('MiMC')
+const hasherContract = artifacts.require('hasher')
 const ERC20Mock = artifacts.require('ERC20Mock')
 
 
@@ -10,8 +10,8 @@ module.exports = function(deployer, network, accounts) {
   return deployer.then(async () => {
     const { MERKLE_TREE_HEIGHT, ETH_AMOUNT, EMPTY_ELEMENT, ERC20_TOKEN, TOKEN_AMOUNT } = process.env
     const verifier = await Verifier.deployed()
-    const miMC = await MiMC.deployed()
-    await ERC20Mixer.link(MiMC, miMC.address)
+    const hasherInstance = await hasherContract.deployed()
+    await ERC20Mixer.link(hasherContract, hasherInstance.address)
     let token = ERC20_TOKEN
     if(token === '') {
       const tokenInstance = await deployer.deploy(ERC20Mock)
