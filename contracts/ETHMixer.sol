@@ -16,21 +16,21 @@ import "./Mixer.sol";
 contract ETHMixer is Mixer {
   constructor(
     address _verifier,
-    uint256 _mixDenomination,
+    uint256 _denomination,
     uint8 _merkleTreeHeight,
     uint256 _emptyElement,
     address payable _operator
-  ) Mixer(_verifier, _mixDenomination, _merkleTreeHeight, _emptyElement, _operator) public {
+  ) Mixer(_verifier, _denomination, _merkleTreeHeight, _emptyElement, _operator) public {
   }
 
   function _processWithdraw(address payable _receiver, address payable _relayer, uint256 _fee) internal {
-    _receiver.transfer(mixDenomination - _fee);
+    _receiver.transfer(denomination - _fee);
     if (_fee > 0) {
       _relayer.transfer(_fee);
     }
   }
 
   function _processDeposit() internal {
-    require(msg.value == mixDenomination, "Please send `mixDenomination` ETH along with transaction");
+    require(msg.value == denomination, "Please send `mixDenomination` ETH along with transaction");
   }
 }

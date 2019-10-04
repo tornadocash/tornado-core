@@ -25,21 +25,21 @@ contract ERC20Mixer is Mixer {
     uint256 _emptyElement,
     address payable _operator,
     address _token,
-    uint256 _mixDenomination
-  ) Mixer(_verifier, _mixDenomination, _merkleTreeHeight, _emptyElement, _operator) public {
+    uint256 _denomination
+  ) Mixer(_verifier, _denomination, _merkleTreeHeight, _emptyElement, _operator) public {
     token = _token;
     userEther = _userEther;
   }
 
   function _processDeposit() internal {
     require(msg.value == userEther, "Please send `userEther` ETH along with transaction");
-    safeErc20TransferFrom(msg.sender, address(this), mixDenomination);
+    safeErc20TransferFrom(msg.sender, address(this), denomination);
   }
 
   function _processWithdraw(address payable _receiver, address payable _relayer, uint256 _fee) internal {
     _receiver.transfer(userEther);
 
-    safeErc20Transfer(_receiver, mixDenomination - _fee);
+    safeErc20Transfer(_receiver, denomination - _fee);
     if (_fee > 0) {
       safeErc20Transfer(_relayer, _fee);
     }

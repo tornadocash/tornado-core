@@ -90,7 +90,7 @@ contract('ETHMixer', accounts => {
 
   describe('#constructor', () => {
     it('should initialize', async () => {
-      const etherDenomination = await mixer.mixDenomination()
+      const etherDenomination = await mixer.denomination()
       etherDenomination.should.be.eq.BN(toBN(value))
     })
   })
@@ -116,11 +116,11 @@ contract('ETHMixer', accounts => {
       let commitment = 42;
       (await mixer.isDepositsEnabled()).should.be.equal(true)
       const err = await mixer.toggleDeposits({ from: accounts[1] }).should.be.rejected
-      err.reason.should.be.equal('unauthorized')
+      err.reason.should.be.equal('Only operator can call this function.')
       await mixer.toggleDeposits({ from: sender });
       (await mixer.isDepositsEnabled()).should.be.equal(false)
       let error = await mixer.deposit(commitment, { value, from: sender }).should.be.rejected
-      error.reason.should.be.equal('deposits disabled')
+      error.reason.should.be.equal('deposits are disabled')
     })
 
     it('should throw if there is a such commitment', async () => {
@@ -416,8 +416,63 @@ contract('ETHMixer', accounts => {
 
       const newOperator = accounts[7]
       const error = await mixer.changeOperator(newOperator, { from:  accounts[7] }).should.be.rejected
-      error.reason.should.be.equal('unauthorized')
+      error.reason.should.be.equal('Only operator can call this function.')
 
+    })
+  })
+
+  describe('#updateVerifier', () => {
+    it('should work', async () => {
+      let operator = await mixer.operator()
+      operator.should.be.equal(sender)
+
+      const newVerifier = accounts[7]
+      await mixer.updateVerifier(newVerifier).should.be.fulfilled
+
+      verifier = await mixer.verifier()
+      verifier.should.be.equal(newVerifier)
+    })
+
+    it('cannot change from different address', async () => {
+      let operator = await mixer.operator()
+      operator.should.be.equal(sender)
+
+      const newVerifier = accounts[7]
+      const error = await mixer.updateVerifier(newVerifier, { from:  accounts[7] }).should.be.rejected
+      error.reason.should.be.equal('Only operator can call this function.')
+
+    })
+  })
+
+  describe('#disableVerifierUpdate', () => {
+    it('should work', async () => {
+      let operator = await mixer.operator()
+      operator.should.be.equal(sender)
+
+      let isVerifierUpdateAllowed = await mixer.isVerifierUpdateAllowed()
+      isVerifierUpdateAllowed.should.be.equal(true)
+
+      await mixer.disableVerifierUpdate().should.be.fulfilled
+
+      newValue = await mixer.isVerifierUpdateAllowed()
+      newValue.should.be.equal(false)
+    })
+
+    it('cannot update verifier after this function is called', async () => {
+      let operator = await mixer.operator()
+      operator.should.be.equal(sender)
+
+      let isVerifierUpdateAllowed = await mixer.isVerifierUpdateAllowed()
+      isVerifierUpdateAllowed.should.be.equal(true)
+
+      await mixer.disableVerifierUpdate().should.be.fulfilled
+
+      newValue = await mixer.isVerifierUpdateAllowed()
+      newValue.should.be.equal(false)
+
+      const newVerifier = accounts[7]
+      const error = await mixer.updateVerifier(newVerifier).should.be.rejected
+      error.reason.should.be.equal('Verifier updates have been disabled.')
     })
   })
 

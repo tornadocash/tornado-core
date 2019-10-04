@@ -18,16 +18,23 @@ contract IVerifier {
 }
 
 contract Mixer is MerkleTreeWithHistory {
-  bool public isDepositsEnabled = true;
-  bool public isVerifierUpdateAllowed = true;
-  // operator can disable new deposits in case of emergency
-  // it also receives a relayer fee
-  address payable public operator;
+  uint256 public denomination;
   mapping(uint256 => bool) public nullifierHashes;
   // we store all commitments just to prevent accidental deposits with the same commitment
   mapping(uint256 => bool) public commitments;
   IVerifier public verifier;
-  uint256 public mixDenomination;
+
+  // operator can
+  //  - receive a relayer fee
+  //  - disable new deposits in case of emergency
+  //  - update snark verification key until this ability is permanently disabled
+  address payable public operator;
+  bool public isDepositsEnabled = true;
+  bool public isVerifierUpdateAllowed = true;
+  modifier onlyOperator {
+    require(msg.sender == operator, "Only operator can call this function.");
+    _;
+  }
 
   event Deposit(uint256 indexed commitment, uint256 leafIndex, uint256 timestamp);
   event Withdraw(address to, uint256 nullifierHash, address indexed relayer, uint256 fee);
@@ -41,26 +48,22 @@ contract Mixer is MerkleTreeWithHistory {
   */
   constructor(
     address _verifier,
-    uint256 _mixDenomination,
+    uint256 _denomination,
     uint8 _merkleTreeHeight,
     uint256 _emptyElement,
     address payable _operator
   ) MerkleTreeWithHistory(_merkleTreeHeight, _emptyElement) public {
     verifier = IVerifier(_verifier);
     operator = _operator;
-    mixDenomination = _mixDenomination;
+    denomination = _denomination;
   }
+
   /**
-    @dev Deposit funds into mixer. The caller must send value equal to `mixDenomination` of this mixer.
-    @param commitment the note commitment, which is PedersenHash(nullifier + secret)
-  */
-  /**
-    @dev Deposit funds into the mixer. The caller must send ETH value equal to `userEther` of this mixer.
-    The caller also has to have at least `mixDenomination` amount approved for the mixer.
+    @dev Deposit funds into mixer. The caller must send (for ETH) or approve (for ERC20) value equal to or `denomination` of this mixer.
     @param commitment the note commitment, which is PedersenHash(nullifier + secret)
   */
   function deposit(uint256 commitment) public payable {
-    require(isDepositsEnabled, "deposits disabled");
+    require(isDepositsEnabled, "deposits are disabled");
     require(!commitments[commitment], "The commitment has been submitted");
     _processDeposit();
     _insert(commitment);
@@ -68,6 +71,10 @@ contract Mixer is MerkleTreeWithHistory {
 
     emit Deposit(commitment, next_index - 1, block.timestamp);
   }
+
+  /** @dev this function is defined in a child contract */
+  function _processDeposit() internal {}
+
   /**
     @dev Withdraw deposit from the mixer. `a`, `b`, and `c` are zkSNARK proof data, and input is an array of circuit public inputs
     `input` array consists of:
@@ -82,7 +89,7 @@ contract Mixer is MerkleTreeWithHistory {
     address payable receiver = address(input[2]);
     address payable relayer = address(input[3]);
     uint256 fee = input[4];
-    require(fee < mixDenomination, "Fee exceeds transfer value");
+    require(fee < denomination, "Fee exceeds transfer value");
     require(!nullifierHashes[nullifierHash], "The note has been already spent");
 
     require(isKnownRoot(root), "Cannot find your merkle root"); // Make sure to use a recent one
@@ -92,32 +99,41 @@ contract Mixer is MerkleTreeWithHistory {
     emit Withdraw(receiver, nullifierHash, relayer, fee);
   }
 
-  function toggleDeposits() external {
-    require(msg.sender == operator, "unauthorized");
-    isDepositsEnabled = !isDepositsEnabled;
-  }
+  /** @dev this function is defined in a child contract */
+  function _processWithdraw(address payable _receiver, address payable _relayer, uint256 _fee) internal {}
 
-  function updateVerifier(address newVerifier) external {
-    require(isVerifierUpdateAllowed, "verifier updates are disabled");
-    require(msg.sender == operator, "unauthorized");
-    verifier = IVerifier(newVerifier);
-  }
-
-  function disableVerifierUpdate() external {
-    require(msg.sender == operator, "unauthorized");
-    isVerifierUpdateAllowed = false;
-  }
-
-  function changeOperator(address payable _newAccount) external {
-    require(msg.sender == operator, "unauthorized");
-    operator = _newAccount;
-  }
-
+  /** @dev whether a note is already spent */
   function isSpent(uint256 nullifier) public view returns(bool) {
     return nullifierHashes[nullifier];
   }
 
-  function _processDeposit() internal {}
-  function _processWithdraw(address payable _receiver, address payable _relayer, uint256 _fee) internal {}
+  /**
+    @dev Allow operator to temporarily disable new deposits. This is needed to protect users funds in case a vulnerability is discovered.
+    It does not affect existing deposits.
+  */
+  function toggleDeposits() external onlyOperator {
+    isDepositsEnabled = !isDepositsEnabled;
+  }
 
+  /**
+    @dev allow operator to update SNARK verification keys. This is needed to update keys after the final trusted setup ceremony is held.
+    After that operator is supposed to permanently disable this ability.
+  */
+  function updateVerifier(address newVerifier) external onlyOperator {
+    require(isVerifierUpdateAllowed, "Verifier updates have been disabled.");
+    verifier = IVerifier(newVerifier);
+  }
+
+  /**
+    @dev an option for operator to permanently disable verification keys update ability.
+    This is supposed to be called after the final trusted setup ceremony is held.
+  */
+  function disableVerifierUpdate() external onlyOperator {
+    isVerifierUpdateAllowed = false;
+  }
+
+  /** @dev operator can change his address */
+  function changeOperator(address payable _newAccount) external onlyOperator {
+    operator = _newAccount;
+  }
 }
