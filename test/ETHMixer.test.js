@@ -429,7 +429,7 @@ contract('ETHMixer', accounts => {
       const newVerifier = accounts[7]
       await mixer.updateVerifier(newVerifier).should.be.fulfilled
 
-      verifier = await mixer.verifier()
+      const verifier = await mixer.verifier()
       verifier.should.be.equal(newVerifier)
     })
 
@@ -454,7 +454,7 @@ contract('ETHMixer', accounts => {
 
       await mixer.disableVerifierUpdate().should.be.fulfilled
 
-      newValue = await mixer.isVerifierUpdateAllowed()
+      const newValue = await mixer.isVerifierUpdateAllowed()
       newValue.should.be.equal(false)
     })
 
@@ -467,7 +467,7 @@ contract('ETHMixer', accounts => {
 
       await mixer.disableVerifierUpdate().should.be.fulfilled
 
-      newValue = await mixer.isVerifierUpdateAllowed()
+      const newValue = await mixer.isVerifierUpdateAllowed()
       newValue.should.be.equal(false)
 
       const newVerifier = accounts[7]

@@ -5,8 +5,7 @@ node_js:
 install:
   - npm ci
   - cp .env.example .env
-  - travis_wait 30 npm run build:circuit
-  - npm run build:contract
+  - travis_wait 30 npm run build
   - npx ganache-cli > /dev/null &
   - npm run migrate:dev
 script:

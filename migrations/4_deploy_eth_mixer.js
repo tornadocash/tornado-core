@@ -2,7 +2,7 @@
 require('dotenv').config({ path: '../.env' })
 const ETHMixer = artifacts.require('ETHMixer')
 const Verifier = artifacts.require('Verifier')
-const hasherContract = artifacts.require('hasher')
+const hasherContract = artifacts.require('Hasher')
 
 
 module.exports = function(deployer, network, accounts) {

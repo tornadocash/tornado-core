@@ -2,7 +2,7 @@
 require('dotenv').config({ path: '../.env' })
 const ERC20Mixer = artifacts.require('ERC20Mixer')
 const Verifier = artifacts.require('Verifier')
-const hasherContract = artifacts.require('hasher')
+const hasherContract = artifacts.require('Hasher')
 const ERC20Mock = artifacts.require('ERC20Mock')
 
 
