@@ -20,11 +20,11 @@ module.exports = function(deployer, network, accounts) {
     const mixer = await deployer.deploy(
       ERC20Mixer,
       verifier.address,
+      TOKEN_AMOUNT,
       MERKLE_TREE_HEIGHT,
       EMPTY_ELEMENT,
       accounts[0],
       token,
-      TOKEN_AMOUNT
     )
     console.log('ERC20Mixer\'s address ', mixer.address)
   })

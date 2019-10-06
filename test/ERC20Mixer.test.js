@@ -52,11 +52,11 @@ contract('ERC20Mixer', accounts => {
   const levels = MERKLE_TREE_HEIGHT || 16
   const zeroValue = EMPTY_ELEMENT || 1337
   let tokenDenomination = TOKEN_AMOUNT || '1000000000000000000' // 1 ether
-  const value = ETH_AMOUNT || '1000000000000000000' // 1 ether
   let snapshotId
   let prefix = 'test'
   let tree
   const fee = bigInt(ETH_AMOUNT).shr(1) || bigInt(1e17)
+  const refund = ETH_AMOUNT || '1000000000000000000' // 1 ether
   const receiver = getRandomReceiver()
   const relayer = accounts[1]
   let groth16
@@ -96,7 +96,7 @@ contract('ERC20Mixer', accounts => {
       const commitment = 43
       await token.approve(mixer.address, tokenDenomination)
 
-      let { logs } = await mixer.deposit(commitment, { value, from: sender })
+      let { logs } = await mixer.deposit(commitment, { from: sender })
 
       logs[0].event.should.be.equal('Deposit')
       logs[0].args.commitment.should.be.eq.BN(toBN(commitment))
@@ -114,9 +114,9 @@ contract('ERC20Mixer', accounts => {
       const balanceUserBefore = await token.balanceOf(user)
       await token.approve(mixer.address, tokenDenomination, { from: user })
       // Uncomment to measure gas usage
-      // let gas = await mixer.deposit.estimateGas(toBN(deposit.commitment.toString()), { value, from: user, gasPrice: '0' })
+      // let gas = await mixer.deposit.estimateGas(toBN(deposit.commitment.toString()), { from: user, gasPrice: '0' })
       // console.log('deposit gas:', gas)
-      await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: user, gasPrice: '0' })
+      await mixer.deposit(toBN(deposit.commitment.toString()), { from: user, gasPrice: '0' })
 
       const balanceUserAfter = await token.balanceOf(user)
       balanceUserAfter.should.be.eq.BN(toBN(balanceUserBefore).sub(toBN(tokenDenomination)))
@@ -130,6 +130,7 @@ contract('ERC20Mixer', accounts => {
         relayer,
         receiver,
         fee,
+        refund,
 
         // private
         nullifier: deposit.nullifier,
@@ -152,7 +153,7 @@ contract('ERC20Mixer', accounts => {
       // Uncomment to measure gas usage
       // gas = await mixer.withdraw.estimateGas(proof, publicSignals, { from: relayer, gasPrice: '0' })
       // console.log('withdraw gas:', gas)
-      const { logs } = await mixer.withdraw(proof, publicSignals, { from: relayer, gasPrice: '0' })
+      const { logs } = await mixer.withdraw(proof, publicSignals, { value: refund, from: relayer, gasPrice: '0' })
 
       const balanceMixerAfter = await token.balanceOf(mixer.address)
       const balanceRelayerAfter = await token.balanceOf(relayer)
@@ -164,7 +165,7 @@ contract('ERC20Mixer', accounts => {
       balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore).add(feeBN))
       ethBalanceOperatorAfter.should.be.eq.BN(toBN(ethBalanceOperatorBefore))
       balanceRecieverAfter.should.be.eq.BN(toBN(balanceRecieverBefore).add(toBN(tokenDenomination).sub(feeBN)))
-      ethBalanceRecieverAfter.should.be.eq.BN(toBN(ethBalanceRecieverBefore).add(toBN(value)))
+      ethBalanceRecieverAfter.should.be.eq.BN(toBN(ethBalanceRecieverBefore).add(toBN(refund)))
 
       logs[0].event.should.be.equal('Withdraw')
       logs[0].args.nullifierHash.should.be.eq.BN(toBN(input.nullifierHash.toString()))
@@ -196,7 +197,7 @@ contract('ERC20Mixer', accounts => {
       console.log('approve done')
       const allowanceUser = await usdtToken.allowance(user, mixer.address)
       console.log('allowanceUser', allowanceUser.toString())
-      await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: user, gasPrice: '0' })
+      await mixer.deposit(toBN(deposit.commitment.toString()), { from: user, gasPrice: '0' })
       console.log('deposit done')
 
       const balanceUserAfter = await usdtToken.balanceOf(user)
@@ -212,6 +213,7 @@ contract('ERC20Mixer', accounts => {
         relayer: operator,
         receiver,
         fee,
+        refund,
 
         // private
         nullifier: deposit.nullifier,
@@ -235,7 +237,7 @@ contract('ERC20Mixer', accounts => {
       // Uncomment to measure gas usage
       // gas = await mixer.withdraw.estimateGas(proof, publicSignals, { from: relayer, gasPrice: '0' })
       // console.log('withdraw gas:', gas)
-      const { logs } = await mixer.withdraw(proof, publicSignals, { from: relayer, gasPrice: '0' })
+      const { logs } = await mixer.withdraw(proof, publicSignals, { value: refund, from: relayer, gasPrice: '0' })
 
       const balanceMixerAfter = await usdtToken.balanceOf(mixer.address)
       const balanceRelayerAfter = await usdtToken.balanceOf(relayer)
@@ -247,7 +249,7 @@ contract('ERC20Mixer', accounts => {
       balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore))
       ethBalanceOperatorAfter.should.be.eq.BN(toBN(ethBalanceOperatorBefore).add(feeBN))
       balanceRecieverAfter.should.be.eq.BN(toBN(balanceRecieverBefore).add(toBN(tokenDenomination)))
-      ethBalanceRecieverAfter.should.be.eq.BN(toBN(ethBalanceRecieverBefore).add(toBN(value)).sub(feeBN))
+      ethBalanceRecieverAfter.should.be.eq.BN(toBN(ethBalanceRecieverBefore).add(toBN(refund)).sub(feeBN))
 
 
       logs[0].event.should.be.equal('Withdraw')
@@ -276,7 +278,7 @@ contract('ERC20Mixer', accounts => {
       console.log('balanceUserBefore', balanceUserBefore.toString())
       await token.approve(mixer.address, tokenDenomination, { from: user })
       console.log('approve done')
-      await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: user, gasPrice: '0' })
+      await mixer.deposit(toBN(deposit.commitment.toString()), { from: user, gasPrice: '0' })
       console.log('deposit done')
 
       const balanceUserAfter = await token.balanceOf(user)
@@ -292,6 +294,7 @@ contract('ERC20Mixer', accounts => {
         relayer: operator,
         receiver,
         fee,
+        refund,
 
         // private
         nullifier: deposit.nullifier,
@@ -315,7 +318,7 @@ contract('ERC20Mixer', accounts => {
       // Uncomment to measure gas usage
       // gas = await mixer.withdraw.estimateGas(proof, publicSignals, { from: relayer, gasPrice: '0' })
       // console.log('withdraw gas:', gas)
-      const { logs } = await mixer.withdraw(proof, publicSignals, { from: relayer, gasPrice: '0' })
+      const { logs } = await mixer.withdraw(proof, publicSignals, { value: refund, from: relayer, gasPrice: '0' })
       console.log('withdraw done')
 
       const balanceMixerAfter = await token.balanceOf(mixer.address)
@@ -328,7 +331,7 @@ contract('ERC20Mixer', accounts => {
       balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore))
       ethBalanceOperatorAfter.should.be.eq.BN(toBN(ethBalanceOperatorBefore).add(feeBN))
       balanceRecieverAfter.should.be.eq.BN(toBN(balanceRecieverBefore).add(toBN(tokenDenomination)))
-      ethBalanceRecieverAfter.should.be.eq.BN(toBN(ethBalanceRecieverBefore).add(toBN(value)).sub(feeBN))
+      ethBalanceRecieverAfter.should.be.eq.BN(toBN(ethBalanceRecieverBefore).add(toBN(refund)).sub(feeBN))
 
 
       logs[0].event.should.be.equal('Withdraw')

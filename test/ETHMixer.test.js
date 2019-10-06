@@ -68,6 +68,7 @@ contract('ETHMixer', accounts => {
   let prefix = 'test'
   let tree
   const fee = bigInt(ETH_AMOUNT).shr(1) || bigInt(1e17)
+  const refund = bigInt(0)
   const receiver = getRandomReceiver()
   const relayer = accounts[1]
   let groth16
@@ -144,6 +145,7 @@ contract('ETHMixer', accounts => {
         relayer: operator,
         receiver,
         fee,
+        refund,
         secret: deposit.secret,
         pathElements: path_elements,
         pathIndex: path_index,
@@ -200,6 +202,7 @@ contract('ETHMixer', accounts => {
         relayer: operator,
         receiver,
         fee,
+        refund,
 
         // private
         nullifier: deposit.nullifier,
@@ -257,6 +260,7 @@ contract('ETHMixer', accounts => {
         relayer: operator,
         receiver,
         fee,
+        refund,
         secret: deposit.secret,
         pathElements: path_elements,
         pathIndex: path_index,
@@ -282,6 +286,7 @@ contract('ETHMixer', accounts => {
         relayer: operator,
         receiver,
         fee,
+        refund,
         secret: deposit.secret,
         pathElements: path_elements,
         pathIndex: path_index,
@@ -307,6 +312,7 @@ contract('ETHMixer', accounts => {
         relayer: operator,
         receiver,
         fee: oneEtherFee,
+        refund,
         secret: deposit.secret,
         pathElements: path_elements,
         pathIndex: path_index,
@@ -332,6 +338,7 @@ contract('ETHMixer', accounts => {
         relayer: operator,
         receiver,
         fee,
+        refund,
         secret: deposit.secret,
         pathElements: path_elements,
         pathIndex: path_index,
@@ -360,6 +367,7 @@ contract('ETHMixer', accounts => {
         relayer: operator,
         receiver,
         fee,
+        refund,
         secret: deposit.secret,
         pathElements: path_elements,
         pathIndex: path_index,

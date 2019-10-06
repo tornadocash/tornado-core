@@ -39,9 +39,7 @@ You can see example usage in cli.js, it works both in console and in browser.
 
 1. `npm install`
 1. `cp .env.example .env`
-1. `npm run build:circuit` - this may take 10 minutes or more
-1. `npm run build:contract`
-1. `npm run browserify`
+1. `npm run build` - this may take 10 minutes or more
 1. `npx ganache-cli`
 1. `npm run test` - optionally run tests. It may fail for the first time, just run one more time.
 
