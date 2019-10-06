@@ -7,7 +7,7 @@ template HashLeftRight(rounds) {
 
     signal output hash;
 
-    component hasher = Poseidon(2, 6, 8, 57);
+    component hasher = Poseidon(2, 3, 8, 57);
     hasher.inputs[0] <== left;
     hasher.inputs[1] <== right;
 

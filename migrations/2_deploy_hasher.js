@@ -12,7 +12,7 @@ module.exports = function(deployer) {
     await artifactor.save({
       contractName,
       abi: genContract.abi,
-      unlinked_binary: genContract.createCode(),
+      unlinked_binary: genContract.createCode(3),
     }).then(async () => {
       const hasherContract = artifacts.require(contractName)
       await deployer.deploy(hasherContract)
