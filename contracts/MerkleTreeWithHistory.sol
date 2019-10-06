@@ -46,7 +46,7 @@ contract MerkleTreeWithHistory {
     uint256[] memory data = new uint256[](2);
     data[0] = left;
     data[1] = right;
-    hash = MiMC.poseidon(data);
+    hash = Hasher.poseidon(data);
   }
 
   function _insert(uint256 leaf) internal {
