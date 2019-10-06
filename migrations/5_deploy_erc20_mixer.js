@@ -20,7 +20,6 @@ module.exports = function(deployer, network, accounts) {
     const mixer = await deployer.deploy(
       ERC20Mixer,
       verifier.address,
-      ETH_AMOUNT,
       MERKLE_TREE_HEIGHT,
       EMPTY_ELEMENT,
       accounts[0],

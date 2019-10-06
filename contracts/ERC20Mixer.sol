@@ -15,12 +15,9 @@ import "./Mixer.sol";
 
 contract ERC20Mixer is Mixer {
   address public token;
-  // ether value to cover network fee (for relayer) and to have some ETH on a brand new address
-  uint256 public userEther;
 
   constructor(
     address _verifier,
-    uint256 _userEther,
     uint8 _merkleTreeHeight,
     uint256 _emptyElement,
     address payable _operator,
@@ -28,20 +25,21 @@ contract ERC20Mixer is Mixer {
     uint256 _denomination
   ) Mixer(_verifier, _denomination, _merkleTreeHeight, _emptyElement, _operator) public {
     token = _token;
-    userEther = _userEther;
   }
 
   function _processDeposit() internal {
-    require(msg.value == userEther, "Please send `userEther` ETH along with transaction");
     safeErc20TransferFrom(msg.sender, address(this), denomination);
   }
 
-  function _processWithdraw(address payable _receiver, address payable _relayer, uint256 _fee) internal {
-    _receiver.transfer(userEther);
+  function _processWithdraw(address payable _receiver, address payable _relayer, uint256 _fee, uint256 _refund) internal {
+    require(msg.value == _refund, "Incorrect refund amount received by the contract");
 
     safeErc20Transfer(_receiver, denomination - _fee);
     if (_fee > 0) {
       safeErc20Transfer(_relayer, _fee);
+    }
+    if (_refund > 0) {
+      _receiver.transfer(_refund);
     }
   }
 

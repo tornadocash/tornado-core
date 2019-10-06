@@ -14,7 +14,7 @@ pragma solidity ^0.5.8;
 import "./MerkleTreeWithHistory.sol";
 
 contract IVerifier {
-  function verifyProof(uint256[8] memory proof, uint256[5] memory input) public returns(bool);
+  function verifyProof(uint256[8] memory proof, uint256[6] memory input) public returns(bool);
 }
 
 contract Mixer is MerkleTreeWithHistory {
@@ -76,31 +76,32 @@ contract Mixer is MerkleTreeWithHistory {
   function _processDeposit() internal {}
 
   /**
-    @dev Withdraw deposit from the mixer. `a`, `b`, and `c` are zkSNARK proof data, and input is an array of circuit public inputs
+    @dev Withdraw deposit from the mixer. `proof` is a zkSNARK proof data, and input is an array of circuit public inputs
     `input` array consists of:
       - merkle root of all deposits in the mixer
       - hash of unique deposit nullifier to prevent double spends
       - the receiver of funds
       - optional fee that goes to the transaction sender (usually a relay)
   */
-  function withdraw(uint256[8] memory proof, uint256[5] memory input) public {
+  function withdraw(uint256[8] memory proof, uint256[6] memory input) public payable {
     uint256 root = input[0];
     uint256 nullifierHash = input[1];
     address payable receiver = address(input[2]);
     address payable relayer = address(input[3]);
     uint256 fee = input[4];
+    uint256 refund = input[5];
     require(fee < denomination, "Fee exceeds transfer value");
     require(!nullifierHashes[nullifierHash], "The note has been already spent");
 
     require(isKnownRoot(root), "Cannot find your merkle root"); // Make sure to use a recent one
     require(verifier.verifyProof(proof, input), "Invalid withdraw proof");
     nullifierHashes[nullifierHash] = true;
-    _processWithdraw(receiver, relayer, fee);
+    _processWithdraw(receiver, relayer, fee, refund);
     emit Withdraw(receiver, nullifierHash, relayer, fee);
   }
 
   /** @dev this function is defined in a child contract */
-  function _processWithdraw(address payable _receiver, address payable _relayer, uint256 _fee) internal {}
+  function _processWithdraw(address payable _receiver, address payable _relayer, uint256 _fee, uint256 _refund) internal {}
 
   /** @dev whether a note is already spent */
   function isSpent(uint256 nullifier) public view returns(bool) {

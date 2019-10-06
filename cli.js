@@ -101,6 +101,7 @@ async function withdrawErc20(note, receiver, relayer) {
     receiver: bigInt(receiver),
     relayer: bigInt(relayer),
     fee: bigInt(web3.utils.toWei('0.01')),
+    refund: bigInt(0),
 
     // private
     nullifier: deposit.nullifier,
@@ -175,6 +176,7 @@ async function withdraw(note, receiver) {
     receiver: bigInt(receiver),
     relayer: bigInt(0),
     fee: bigInt(0),
+    refund: bigInt(0),
 
     // Private snark inputs
     nullifier: deposit.nullifier,

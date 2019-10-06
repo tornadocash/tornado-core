@@ -33,6 +33,7 @@ template Withdraw(levels, rounds) {
     signal input receiver; // not taking part in any computations
     signal input relayer; // not taking part in any computations
     signal input fee; // not taking part in any computations
+    signal input refund; // not taking part in any computations
     signal private input nullifier;
     signal private input secret;
     signal private input pathElements[levels];
@@ -58,9 +59,11 @@ template Withdraw(levels, rounds) {
     signal receiverSquare;
     signal feeSquare;
     signal relayerSquare;
+    signal refundSquare;
     receiverSquare <== receiver * receiver;
     feeSquare <== fee * fee;
     relayerSquare <== relayer * relayer;
+    refundSquare <== refund * refund;
 }
 
 component main = Withdraw(16, 220);
