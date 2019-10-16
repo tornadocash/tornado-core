@@ -2,9 +2,9 @@
 
 Tornado is a non-custodial Ethereum and ERC20 mixer based on zkSNARKs. It improves transaction privacy by breaking the on-chain link between recipient and destination addresses. It uses a smart contract that accepts ETH deposits that can be withdrawn by a different address. Whenever ETH is withdrawn by the new address, there is no way to link the withdrawal to the deposit, ensuring complete privacy.
 
-To make a deposit user generates a secret and sends its hash (called a commitment) along with deposit amount to the Tornado smart contract. The contract accepts the deposit and adds the commitment to its list of deposits.
+To make a deposit user generates a secret and sends its hash (called a commitment) along with the deposit amount to the Tornado smart contract. The contract accepts the deposit and adds the commitment to its list of deposits.
 
-Later, the user decides to make a withdraw. In order to do that the user should provide a proof that he or she possesses a secret to an unspent commitment from the smart contract’s list of deposits. zkSnark technology allows to do that without revealing which exact deposit corresponds to this secret. The smart contract will check the proof, and transfer deposited funds to the address specified for withdrawal. An external observer will be unable to determine which deposit this withdrawal comes from.
+Later, the user decides to make a withdrawal. In order to do that, the user should provide a proof that he or she possesses a secret to an unspent commitment from the smart contract’s list of deposits. zkSnark technology allows that to happen without revealing which exact deposit corresponds to this secret. The smart contract will check the proof, and transfer deposited funds to the address specified for withdrawal. An external observer will be unable to determine which deposit this withdrawal came from.
 
 You can read more about it in [this medium article](https://medium.com/@tornado.cash.mixer/introducing-private-transactions-on-ethereum-now-42ee915babe0)
 
@@ -18,8 +18,8 @@ You can read more about it in [this medium article](https://medium.com/@tornado.
 ![mixer image](./mixer.png)
 
 ## Security risks
-* Cryptographic tools used by mixer (zkSNARKS, Pedersen commitment, MiMC hash) are not yet extensively audited by cryptographic experts and may be vulnerable
-	* Note: we use MiMC hash only for merkle tree, so even if a preimage attack on MiMC is discovered, it will not allow to deanonymize users. To drain funds attacker needs to be able to generate arbitrary hash collisions, which is a pretty strong assumption.
+* Cryptographic tools used by mixer (zkSNARKS, Pedersen commitment, MiMC hash) are yet NOT extensively audited by cryptographic experts and may be vulnerable
+ * Note: we use MiMC hash only for merkle tree, so even if a preimage attack on MiMC is discovered, it will not allow to deanonymize users. To drain funds attacker needs to be able to generate arbitrary hash collisions, which is a pretty strong assumption.
 * Bugs in contract. Even though we have an extensive experience in smart contract security audits, we can still make mistakes. An external audit is needed to reduce probablility of bugs. Our mixer is currently being audited, stay tuned.
 * Relayer is frontrunnable. When relayer submits a transaction someone can see it in tx pool and frontrun it with higher gas price to get the fee and drain relayer funds.
 	* Workaround: we can set high gas price so that (almost) all fee is used on gas
@@ -41,7 +41,7 @@ You can see example usage in cli.js, it works both in console and in browser.
 1. `cp .env.example .env`
 1. `npm run build` - this may take 10 minutes or more
 1. `npx ganache-cli`
-1. `npm run test` - optionally run tests. It may fail for the first time, just run one more time.
+1. `npm run test` - optionally runs tests. It may fail on the first try, just run it again.
 
 Use browser version on Kovan:
 
@@ -63,7 +63,7 @@ Use with command line version with Ganache:
 1. `./cli.js withdrawErc20 <note from previous step> <destination eth address> <relayer eth address>`
 1. `./cli.js balanceErc20 <destination eth address> <relayer eth address>`
 
-If you want, you can point the app to existing tornado contracts on Mainnet or Kovan, it should work without any changes
+If you want, you can point the app to existing tornado contracts on Mainnet or Kovan. It should work without any problems
 
 ## Deploy ETH Tornado Cash
 1. `cp .env.example .env`
