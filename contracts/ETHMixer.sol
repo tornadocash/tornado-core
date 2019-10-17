@@ -23,7 +23,7 @@ contract ETHMixer is Mixer {
   ) Mixer(_verifier, _denomination, _merkleTreeHeight, _emptyElement, _operator) public {
   }
 
-  function _processWithdraw(address payable _receiver, address payable _relayer, uint256 _fee, uint256 /* _refund */) internal {
+  function _processWithdraw(address payable _receiver, address payable _relayer, uint256 _fee, uint256 _refund) internal {
     require(msg.value == 0, "Message value is supposed to be zero for ETH mixer");
     require(_refund == 0, "Message value is supposed to be zero for ETH mixer");
 
