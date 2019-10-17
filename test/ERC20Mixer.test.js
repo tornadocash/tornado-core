@@ -145,9 +145,11 @@ contract('ERC20Mixer', accounts => {
 
       const balanceMixerBefore = await token.balanceOf(mixer.address)
       const balanceRelayerBefore = await token.balanceOf(relayer)
-      const ethBalanceOperatorBefore = await web3.eth.getBalance(operator)
       const balanceRecieverBefore = await token.balanceOf(toHex(receiver.toString()))
+
+      const ethBalanceOperatorBefore = await web3.eth.getBalance(operator)
       const ethBalanceRecieverBefore = await web3.eth.getBalance(toHex(receiver.toString()))
+      const ethBalanceRelayerBefore = await web3.eth.getBalance(relayer)
       let isSpent = await mixer.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
       isSpent.should.be.equal(false)
       // Uncomment to measure gas usage
@@ -160,12 +162,15 @@ contract('ERC20Mixer', accounts => {
       const ethBalanceOperatorAfter = await web3.eth.getBalance(operator)
       const balanceRecieverAfter = await token.balanceOf(toHex(receiver.toString()))
       const ethBalanceRecieverAfter = await web3.eth.getBalance(toHex(receiver.toString()))
+      const ethBalanceRelayerAfter = await web3.eth.getBalance(relayer)
       const feeBN = toBN(fee.toString())
       balanceMixerAfter.should.be.eq.BN(toBN(balanceMixerBefore).sub(toBN(tokenDenomination)))
       balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore).add(feeBN))
-      ethBalanceOperatorAfter.should.be.eq.BN(toBN(ethBalanceOperatorBefore))
       balanceRecieverAfter.should.be.eq.BN(toBN(balanceRecieverBefore).add(toBN(tokenDenomination).sub(feeBN)))
+
+      ethBalanceOperatorAfter.should.be.eq.BN(toBN(ethBalanceOperatorBefore))
       ethBalanceRecieverAfter.should.be.eq.BN(toBN(ethBalanceRecieverBefore).add(toBN(refund)))
+      ethBalanceRelayerAfter.should.be.eq.BN(toBN(ethBalanceRelayerBefore).sub(toBN(refund)))
 
       logs[0].event.should.be.equal('Withdraw')
       logs[0].args.nullifierHash.should.be.eq.BN(toBN(input.nullifierHash.toString()))
@@ -173,6 +178,45 @@ contract('ERC20Mixer', accounts => {
       logs[0].args.fee.should.be.eq.BN(feeBN)
       isSpent = await mixer.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
       isSpent.should.be.equal(true)
+    })
+
+    it('should reject with wrong refund value', async () => {
+      const deposit = generateDeposit()
+      const user = accounts[4]
+      await tree.insert(deposit.commitment)
+      await token.mint(user, tokenDenomination)
+      await token.approve(mixer.address, tokenDenomination, { from: user })
+      await mixer.deposit(toBN(deposit.commitment.toString()), { from: user, gasPrice: '0' })
+
+
+      const { root, path_elements, path_index } = await tree.path(0)
+      // Circuit input
+      const input = stringifyBigInts({
+        // public
+        root,
+        nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
+        relayer,
+        receiver,
+        fee,
+        refund,
+
+        // private
+        nullifier: deposit.nullifier,
+        secret: deposit.secret,
+        pathElements: path_elements,
+        pathIndex: path_index,
+      })
+
+
+      const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
+      const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
+
+      let { reason } = await mixer.withdraw(proof, publicSignals, { value: 1, from: relayer, gasPrice: '0' }).should.be.rejected
+      reason.should.be.equal('Incorrect refund amount received by the contract')
+
+
+      ;({ reason } = await mixer.withdraw(proof, publicSignals, { value: toBN(refund).mul(toBN(2)), from: relayer, gasPrice: '0' }).should.be.rejected)
+      reason.should.be.equal('Incorrect refund amount received by the contract')
     })
 
     it.skip('should work with REAL USDT', async () => {
