@@ -404,6 +404,33 @@ contract('ETHMixer', accounts => {
       // should work with original values
       await mixer.withdraw(originalProof, originalPublicSignals, { from: relayer }).should.be.fulfilled
     })
+
+    it('should reject with non zero refund', async () => {
+      const deposit = generateDeposit()
+      await tree.insert(deposit.commitment)
+      await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: sender })
+
+      const { root, path_elements, path_index } = await tree.path(0)
+
+      const input = stringifyBigInts({
+        nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
+        root,
+        nullifier: deposit.nullifier,
+        relayer: operator,
+        receiver,
+        fee,
+        refund: bigInt(1),
+        secret: deposit.secret,
+        pathElements: path_elements,
+        pathIndex: path_index,
+      })
+
+      const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
+      const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
+
+      const error = await mixer.withdraw(proof, publicSignals, { from: relayer }).should.be.rejected
+      error.reason.should.be.equal('Refund value is supposed to be zero for ETH mixer')
+    })
   })
 
   describe('#changeOperator', () => {
