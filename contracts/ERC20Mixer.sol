@@ -51,7 +51,7 @@ contract ERC20Mixer is Mixer {
     if (data.length > 0) {
       require(data.length == 32, "data length should be either 0 or 32 bytes");
       success = abi.decode(data, (bool));
-      require(success, "not enough allowed tokens");
+      require(success, "not enough allowed tokens. Token returns false.");
     }
   }
 
@@ -63,7 +63,7 @@ contract ERC20Mixer is Mixer {
     if (data.length > 0) {
       require(data.length == 32, "data length should be either 0 or 32 bytes");
       success = abi.decode(data, (bool));
-      require(success, "not enough tokens");
+      require(success, "not enough tokens. Token returns false.");
     }
   }
 }
