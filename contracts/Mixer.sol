@@ -62,7 +62,7 @@ contract Mixer is MerkleTreeWithHistory {
     @dev Deposit funds into mixer. The caller must send (for ETH) or approve (for ERC20) value equal to or `denomination` of this mixer.
     @param commitment the note commitment, which is PedersenHash(nullifier + secret)
   */
-  function deposit(uint256 commitment) public payable {
+  function deposit(uint256 commitment) external payable {
     require(isDepositsEnabled, "deposits are disabled");
     require(!commitments[commitment], "The commitment has been submitted");
     _processDeposit();
@@ -83,7 +83,7 @@ contract Mixer is MerkleTreeWithHistory {
       - the receiver of funds
       - optional fee that goes to the transaction sender (usually a relay)
   */
-  function withdraw(uint256[8] memory proof, uint256[6] memory input) public payable {
+  function withdraw(uint256[8] calldata proof, uint256[6] calldata input) external payable {
     uint256 root = input[0];
     uint256 nullifierHash = input[1];
     address payable receiver = address(input[2]);
@@ -104,7 +104,7 @@ contract Mixer is MerkleTreeWithHistory {
   function _processWithdraw(address payable _receiver, address payable _relayer, uint256 _fee, uint256 _refund) internal {}
 
   /** @dev whether a note is already spent */
-  function isSpent(uint256 nullifier) public view returns(bool) {
+  function isSpent(uint256 nullifier) external view returns(bool) {
     return nullifierHashes[nullifier];
   }
 
