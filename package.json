@@ -17,6 +17,7 @@
     "migrate": "npm run migrate:kovan",
     "migrate:dev": "npx truffle migrate --network development --reset",
     "migrate:kovan": "npx truffle migrate --network kovan --reset",
+    "migrate:rinkeby": "npx truffle migrate --network rinkeby --reset",
     "migrate:mainnet": "npx truffle migrate --network mainnet",
     "eslint": "npx eslint --ignore-path .gitignore .",
     "flat": "truffle-flattener contracts/ETHMixer.sol > ETHMixer_flat.sol contracts/ERC20Mixer.sol > ERC20Mixer_flat.sol"
