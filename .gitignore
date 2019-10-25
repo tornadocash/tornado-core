@@ -96,3 +96,6 @@ typings/
 
 ERC20Mixer_flat.sol
 ETHMixer_flat.sol
+
+.openzeppelin/.session
+.openzeppelin/dev-*.json

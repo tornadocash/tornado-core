@@ -11,6 +11,8 @@ const merkleTree = require('./lib/MerkleTree')
 const Web3 = require('web3')
 const buildGroth16 = require('websnark/src/groth16')
 const websnarkUtils = require('websnark/src/utils')
+const { GSNProvider, GSNDevProvider } = require('@openzeppelin/gsn-provider')
+const { ephemeral } = require('@openzeppelin/network')
 
 let web3, mixer, erc20mixer, circuit, proving_key, groth16, erc20
 let MERKLE_TREE_HEIGHT, ETH_AMOUNT, EMPTY_ELEMENT, ERC20_TOKEN
@@ -29,6 +31,7 @@ function createDeposit(nullifier, secret) {
   let deposit = { nullifier, secret }
   deposit.preimage = Buffer.concat([deposit.nullifier.leInt2Buff(31), deposit.secret.leInt2Buff(31)])
   deposit.commitment = pedersenHash(deposit.preimage)
+  deposit.nullifierHash = pedersenHash(nullifier.leInt2Buff(31))
   return deposit
 }
 
@@ -38,9 +41,10 @@ function createDeposit(nullifier, secret) {
  */
 async function deposit() {
   const deposit = createDeposit(rbigint(31), rbigint(31))
+  const fromAccount = (await web3.eth.getAccounts())[0]
 
   console.log('Submitting deposit transaction')
-  await mixer.methods.deposit('0x' + deposit.commitment.toString(16)).send({ value: ETH_AMOUNT, from: (await web3.eth.getAccounts())[0], gas:1e6 })
+  await mixer.methods.deposit('0x' + deposit.commitment.toString(16)).send({ value: ETH_AMOUNT, from: fromAccount, gas:1e6 })
 
   const note = '0x' + deposit.preimage.toString('hex')
   console.log('Your note:', note)
@@ -48,19 +52,21 @@ async function deposit() {
 }
 
 async function depositErc20() {
-  const account = (await web3.eth.getAccounts())[0]
+  const fromAccount = (await web3.eth.getAccounts())[0]
   const tokenAmount = process.env.TOKEN_AMOUNT
-  await erc20.methods.mint(account, tokenAmount).send({ from: account, gas:1e6 })
 
-  await erc20.methods.approve(erc20mixer.address, tokenAmount).send({ from: account, gas:1e6 })
-  const allowance = await erc20.methods.allowance(account, erc20mixer.address).call()
+  await erc20.methods.mint(fromAccount, tokenAmount).send({ from: fromAccount, gas:1e6 })
+
+  await erc20.methods.approve(erc20mixer.address, tokenAmount).send({ from: fromAccount, gas:1e6 })
+  const allowance = await erc20.methods.allowance(fromAccount, erc20mixer.address).call()
   console.log('erc20mixer allowance', allowance.toString(10))
 
   const deposit = createDeposit(rbigint(31), rbigint(31))
-  await erc20mixer.methods.deposit('0x' + deposit.commitment.toString(16)).send({ value: ETH_AMOUNT, from: account, gas:1e6 })
+  await erc20mixer.methods.deposit('0x' + deposit.commitment.toString(16)).send({ from: fromAccount, gas:1e6 })
 
   const balance = await erc20.methods.balanceOf(erc20mixer.address).call()
   console.log('erc20mixer balance', balance.toString(10))
+
   const note = '0x' + deposit.preimage.toString('hex')
   console.log('Your note:', note)
   return note
@@ -196,6 +202,92 @@ async function withdraw(note, receiver) {
   console.log('Done')
 }
 
+async function buildDepositTree() {
+  // Get all deposit events from smart contract and assemble merkle tree from them
+  console.log('Getting current state from mixer contract')
+  const events = await mixer.getPastEvents('Deposit', { fromBlock: mixer.deployedBlock, toBlock: 'latest' })
+  const leaves = events
+    .sort((a, b) => a.returnValues.leafIndex.sub(b.returnValues.leafIndex)) // Sort events in chronological order
+    .map(e => e.returnValues.commitment)
+  const tree = new merkleTree(MERKLE_TREE_HEIGHT, EMPTY_ELEMENT, leaves)
+}
+
+async function withdrawViaRelayer(note, receiver) {
+  // Decode hex string and restore the deposit object
+  let buf = Buffer.from(note.slice(2), 'hex')
+  let deposit = createDeposit(bigInt.leBuff2int(buf.slice(0, 31)), bigInt.leBuff2int(buf.slice(31, 62)))
+  const nullifierHash = pedersenHash(deposit.nullifier.leInt2Buff(31))
+  const paddedNullifierHash = nullifierHash.toString(16).padStart('66', '0x000000')
+  const paddedCommitment = deposit.commitment.toString(16).padStart('66', '0x000000')
+
+  // Get all deposit events from smart contract and assemble merkle tree from them
+  console.log('Getting current state from mixer contract')
+  const events = await mixer.getPastEvents('Deposit', { fromBlock: mixer.deployedBlock, toBlock: 'latest' })
+  const leaves = events
+    .sort((a, b) => a.returnValues.leafIndex.sub(b.returnValues.leafIndex)) // Sort events in chronological order
+    .map(e => e.returnValues.commitment)
+  const tree = new merkleTree(MERKLE_TREE_HEIGHT, EMPTY_ELEMENT, leaves)
+
+  // Find current commitment in the tree
+  let depositEvent = events.find(e => e.returnValues.commitment.eq(paddedCommitment))
+  let leafIndex = depositEvent ? depositEvent.returnValues.leafIndex.toNumber() : -1
+
+  // Validate that our data is correct
+  const isValidRoot = await mixer.methods.isKnownRoot(await tree.root()).call()
+  const isSpent = await mixer.methods.isSpent(paddedNullifierHash).call()
+  assert(isValidRoot === true, 'Merkle tree assembled incorrectly') // Merkle tree assembled correctly
+  assert(isSpent === false, 'The note is spent')    // The note is not spent
+  assert(leafIndex >= 0, 'Our deposit is not present in the tree')       // Our deposit is present in the tree
+
+  // Compute merkle proof of our commitment
+  const { root, path_elements, path_index } = await tree.path(leafIndex)
+
+  // Prepare circuit input
+  const input = {
+    // Public snark inputs
+    root: root,
+    nullifierHash,
+    receiver: bigInt(receiver),
+    relayer: bigInt(0),
+    fee: bigInt(web3.utils.toWei('0.01')),
+    refund: bigInt(0),
+
+    // Private snark inputs
+    nullifier: deposit.nullifier,
+    secret: deposit.secret,
+    pathElements: path_elements,
+    pathIndex: path_index,
+  }
+
+  console.log('Generating SNARK proof')
+  console.time('Proof time')
+  const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
+  const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
+  console.timeEnd('Proof time')
+
+  console.log('Submitting withdraw transaction via relayer')
+
+  const account = ephemeral()
+  const HARDCODED_RELAYER_OPTS = {
+    txFee: 90,
+    fixedGasPrice: 22000000001,
+    gasPrice: 22000000001,
+    fixedGasLimit: 5000000,
+    gasLimit: 5000000,
+    verbose: true,
+  }
+  const provider = new GSNProvider('https://rinkeby.infura.io/v3/c7463beadf2144e68646ff049917b716', { signKey: account })
+  // const provider = new GSNDevProvider('http://localhost:8545', { signKey: account, HARDCODED_RELAYER_OPTS })
+  web3 = new Web3(provider)
+  const netId = await web3.eth.net.getId()
+  console.log('netId', netId)
+  // eslint-disable-next-line require-atomic-updates
+  mixer = new web3.eth.Contract(contractJson.abi, contractJson.networks[netId].address)
+  console.log('mixer address', contractJson.networks[netId].address)
+  const tx = await mixer.methods.withdrawViaRelayer(proof, publicSignals).send({ from: account.address, gas: 2e6 })
+  console.log('tx', tx)
+  console.log('Done')
+}
 /**
  * Init web3, contracts, and snark
  */
@@ -275,6 +367,11 @@ if (inBrowser) {
     const receiver = (await web3.eth.getAccounts())[0]
     await withdraw(note, receiver)
   }
+  window.withdrawViaRelayer = async () => {
+    const note = prompt('Enter the note to withdrawViaRelayer')
+    const receiver = (await web3.eth.getAccounts())[0]
+    await withdrawViaRelayer(note, receiver)
+  }
   init()
 } else {
   const args = process.argv.slice(2)
@@ -318,6 +415,13 @@ if (inBrowser) {
     case 'withdrawErc20':
       if (args.length === 4 && /^0x[0-9a-fA-F]{124}$/.test(args[1]) && /^0x[0-9a-fA-F]{40}$/.test(args[2]) && /^0x[0-9a-fA-F]{40}$/.test(args[3])) {
         init().then(() => withdrawErc20(args[1], args[2], args[3])).then(() => process.exit(0)).catch(err => {console.log(err); process.exit(1)})
+      }
+      else
+        printHelp(1)
+      break
+    case 'withdrawViaRelayer':
+      if (args.length === 3 && /^0x[0-9a-fA-F]{124}$/.test(args[1]) && /^0x[0-9a-fA-F]{40}$/.test(args[2])) {
+        init().then(() => withdrawViaRelayer(args[1], args[2])).then(() => process.exit(0)).catch(err => {console.log(err); process.exit(1)})
       }
       else
         printHelp(1)

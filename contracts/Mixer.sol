@@ -90,14 +90,32 @@ contract Mixer is MerkleTreeWithHistory {
     address payable relayer = address(input[3]);
     uint256 fee = input[4];
     uint256 refund = input[5];
+
     require(fee < denomination, "Fee exceeds transfer value");
     require(!nullifierHashes[nullifierHash], "The note has been already spent");
-
     require(isKnownRoot(root), "Cannot find your merkle root"); // Make sure to use a recent one
     require(verifier.verifyProof(proof, input), "Invalid withdraw proof");
+
     nullifierHashes[nullifierHash] = true;
     _processWithdraw(receiver, relayer, fee, refund);
     emit Withdraw(receiver, nullifierHash, relayer, fee);
+  }
+
+  // todo: use this function in withdraw?
+  /**
+    @dev same checks as `withdraw` implemented as a view function. Used for relayers.
+  */
+  function checkWithdrawalValidity(uint256[8] calldata proof, uint256[6] calldata input) external view {
+    uint256 root = input[0];
+    uint256 nullifierHash = input[1];
+    //address payable receiver = address(input[2]);
+    //address payable relayer = address(input[3]);
+    uint256 fee = input[4];
+    uint256 refund = input[5];
+    require(fee < denomination, "Fee exceeds transfer value");
+    require(!nullifierHashes[nullifierHash], "The note has been already spent");
+    require(isKnownRoot(root), "Cannot find your merkle root"); // Make sure to use a recent one
+    require(verifier.verifyProof(proof, input), "Invalid withdraw proof");
   }
 
   /** @dev this function is defined in a child contract */
