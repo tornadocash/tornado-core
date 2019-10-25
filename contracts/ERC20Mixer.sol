@@ -60,7 +60,7 @@ contract ERC20Mixer is Mixer {
       assembly {
         success := mload(add(data, 0x20))
       }
-      require(success, "not enough allowed tokens");
+      require(success, "not enough allowed tokens. Token returns false.");
     }
   }
 
@@ -81,7 +81,7 @@ contract ERC20Mixer is Mixer {
       assembly {
         success := mload(add(data, 0x20))
       }
-      require(success, "not enough tokens");
+      require(success, "not enough tokens. Token returns false.");
     }
   }
 }
