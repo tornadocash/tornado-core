@@ -51,6 +51,15 @@ module.exports = {
       // timeoutBlocks: 200,
       skipDryRun: true
     },
+    rinkeby: {
+      provider: () => new HDWalletProvider(process.env.PRIVATE_KEY, 'https://rinkeby.infura.io/v3/c7463beadf2144e68646ff049917b716'),
+      network_id: 4,
+      gas: 6000000,
+      gasPrice: utils.toWei('1', 'gwei'),
+      // confirmations: 0,
+      // timeoutBlocks: 200,
+      skipDryRun: true
+    },
     mainnet: {
       provider: () => new HDWalletProvider(process.env.PRIVATE_KEY, 'http://ethereum-rpc.trustwalletapp.com'),
       network_id: 1,
