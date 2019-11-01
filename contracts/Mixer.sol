@@ -90,7 +90,7 @@ contract Mixer is MerkleTreeWithHistory {
     address payable relayer = address(input[3]);
     uint256 fee = input[4];
     uint256 refund = input[5];
-    require(fee < denomination, "Fee exceeds transfer value");
+    require(fee <= denomination, "Fee exceeds transfer value");
     require(!nullifierHashes[nullifierHash], "The note has been already spent");
 
     require(isKnownRoot(root), "Cannot find your merkle root"); // Make sure to use a recent one
