@@ -53,6 +53,7 @@ contract Mixer is MerkleTreeWithHistory {
     uint256 _emptyElement,
     address _operator
   ) MerkleTreeWithHistory(_merkleTreeHeight, _emptyElement) public {
+    require(_denomination > 0, "denomination should be greater than 0");
     verifier = _verifier;
     operator = _operator;
     denomination = _denomination;
