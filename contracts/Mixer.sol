@@ -74,7 +74,7 @@ contract Mixer is MerkleTreeWithHistory {
   }
 
   /** @dev this function is defined in a child contract */
-  function _processDeposit() internal {}
+  function _processDeposit() internal;
 
   /**
     @dev Withdraw deposit from the mixer. `proof` is a zkSNARK proof data, and input is an array of circuit public inputs
@@ -102,7 +102,7 @@ contract Mixer is MerkleTreeWithHistory {
   }
 
   /** @dev this function is defined in a child contract */
-  function _processWithdraw(address payable _receiver, address payable _relayer, uint256 _fee, uint256 _refund) internal {}
+  function _processWithdraw(address payable _receiver, address payable _relayer, uint256 _fee, uint256 _refund) internal;
 
   /** @dev whether a note is already spent */
   function isSpent(uint256 nullifier) public view returns(bool) {
