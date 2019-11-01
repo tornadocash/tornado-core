@@ -19,7 +19,7 @@ contract MerkleTreeWithHistory {
   uint256 public levels;
 
   uint256 constant ROOT_HISTORY_SIZE = 100;
-  uint256[] private _roots;
+  uint256[ROOT_HISTORY_SIZE] private _roots;
   uint256 public current_root = 0;
 
   uint256[] private _filled_subtrees;
@@ -38,7 +38,6 @@ contract MerkleTreeWithHistory {
       _filled_subtrees.push(_zeros[i]);
     }
 
-    _roots = new uint256[](ROOT_HISTORY_SIZE);
     _roots[0] = hashLeftRight(_zeros[levels - 1], _zeros[levels - 1]);
   }
 
@@ -122,7 +121,7 @@ contract MerkleTreeWithHistory {
     return _roots[current_root];
   }
 
-  function roots() public view returns(uint256[] memory) {
+  function roots() public view returns(uint256[ROOT_HISTORY_SIZE] memory) {
     return _roots;
   }
 
