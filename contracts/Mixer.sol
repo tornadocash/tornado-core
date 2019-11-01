@@ -47,13 +47,13 @@ contract Mixer is MerkleTreeWithHistory {
     @param _operator operator address (see operator above)
   */
   constructor(
-    address _verifier,
+    IVerifier _verifier,
     uint256 _denomination,
     uint8 _merkleTreeHeight,
     uint256 _emptyElement,
     address _operator
   ) MerkleTreeWithHistory(_merkleTreeHeight, _emptyElement) public {
-    verifier = IVerifier(_verifier);
+    verifier = _verifier;
     operator = _operator;
     denomination = _denomination;
   }

@@ -17,7 +17,7 @@ contract ERC20Mixer is Mixer {
   address public token;
 
   constructor(
-    address _verifier,
+    IVerifier _verifier,
     uint256 _denomination,
     uint8 _merkleTreeHeight,
     uint256 _emptyElement,
