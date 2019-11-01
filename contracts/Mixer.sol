@@ -135,7 +135,7 @@ contract Mixer is MerkleTreeWithHistory {
   }
 
   /** @dev operator can change his address */
-  function changeOperator(address _newAccount) external onlyOperator {
-    operator = _newAccount;
+  function changeOperator(address _newOperator) external onlyOperator {
+    operator = _newOperator;
   }
 }
