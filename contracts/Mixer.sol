@@ -28,7 +28,7 @@ contract Mixer is MerkleTreeWithHistory {
   //  - receive a relayer fee
   //  - disable new deposits in case of emergency
   //  - update snark verification key until this ability is permanently disabled
-  address payable public operator;
+  address public operator;
   bool public isDepositsEnabled = true;
   bool public isVerifierUpdateAllowed = true;
   modifier onlyOperator {
@@ -51,7 +51,7 @@ contract Mixer is MerkleTreeWithHistory {
     uint256 _denomination,
     uint8 _merkleTreeHeight,
     uint256 _emptyElement,
-    address payable _operator
+    address _operator
   ) MerkleTreeWithHistory(_merkleTreeHeight, _emptyElement) public {
     verifier = IVerifier(_verifier);
     operator = _operator;
@@ -134,7 +134,7 @@ contract Mixer is MerkleTreeWithHistory {
   }
 
   /** @dev operator can change his address */
-  function changeOperator(address payable _newAccount) external onlyOperator {
+  function changeOperator(address _newAccount) external onlyOperator {
     operator = _newAccount;
   }
 }

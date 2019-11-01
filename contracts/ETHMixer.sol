@@ -19,7 +19,7 @@ contract ETHMixer is Mixer {
     uint256 _denomination,
     uint8 _merkleTreeHeight,
     uint256 _emptyElement,
-    address payable _operator
+    address _operator
   ) Mixer(_verifier, _denomination, _merkleTreeHeight, _emptyElement, _operator) public {
   }
 
