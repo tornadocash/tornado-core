@@ -65,11 +65,11 @@ contract Mixer is MerkleTreeWithHistory {
   function deposit(uint256 commitment) public payable {
     require(isDepositsEnabled, "deposits are disabled");
     require(!commitments[commitment], "The commitment has been submitted");
-    _insert(commitment);
+    uint256 insertedIndex = _insert(commitment);
     commitments[commitment] = true;
     _processDeposit();
 
-    emit Deposit(commitment, next_index - 1, block.timestamp);
+    emit Deposit(commitment, insertedIndex, block.timestamp);
   }
 
   /** @dev this function is defined in a child contract */
