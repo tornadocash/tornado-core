@@ -20,7 +20,7 @@ contract MerkleTreeWithHistory {
 
   uint256 constant ROOT_HISTORY_SIZE = 100;
   uint256[ROOT_HISTORY_SIZE] public _roots;
-  uint256 public current_root = 0;
+  uint256 public current_root_index = 0;
 
   uint256[] private _filled_subtrees;
   uint256[] private _zeros;
@@ -79,8 +79,8 @@ contract MerkleTreeWithHistory {
       current_index /= 2;
     }
 
-    current_root = (current_root + 1) % ROOT_HISTORY_SIZE;
-    _roots[current_root] = current_level_hash;
+    current_root_index = (current_root_index + 1) % ROOT_HISTORY_SIZE;
+    _roots[current_root_index] = current_level_hash;
     return next_index - 1;
   }
 
@@ -90,14 +90,14 @@ contract MerkleTreeWithHistory {
     }
     // search most recent first
     uint256 i;
-    for(i = current_root; i < 2**256 - 1; i--) {
+    for(i = current_root_index; i < 2**256 - 1; i--) {
       if (root == _roots[i]) {
         return true;
       }
     }
 
     // process the rest of roots
-    for(i = ROOT_HISTORY_SIZE - 1; i > current_root; i--) {
+    for(i = ROOT_HISTORY_SIZE - 1; i > current_root_index; i--) {
       if (root == _roots[i]) {
         return true;
       }
@@ -118,7 +118,7 @@ contract MerkleTreeWithHistory {
   }
 
   function getLastRoot() public view returns(uint256) {
-    return _roots[current_root];
+    return _roots[current_root_index];
   }
 
   function roots() public view returns(uint256[ROOT_HISTORY_SIZE] memory) {
