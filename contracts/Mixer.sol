@@ -29,8 +29,8 @@ contract Mixer is MerkleTreeWithHistory {
   //  - disable new deposits in case of emergency
   //  - update snark verification key until this ability is permanently disabled
   address public operator;
-  bool public isDepositsEnabled = true;
-  bool public isVerifierUpdateAllowed = true;
+  bool public isDepositsDisabled;
+  bool public isVerifierUpdateDisabled;
   modifier onlyOperator {
     require(msg.sender == operator, "Only operator can call this function.");
     _;
@@ -63,7 +63,7 @@ contract Mixer is MerkleTreeWithHistory {
     @param commitment the note commitment, which is PedersenHash(nullifier + secret)
   */
   function deposit(uint256 commitment) public payable {
-    require(isDepositsEnabled, "deposits are disabled");
+    require(!isDepositsDisabled, "deposits are disabled");
     require(!commitments[commitment], "The commitment has been submitted");
     uint256 insertedIndex = _insert(commitment);
     commitments[commitment] = true;
@@ -112,8 +112,8 @@ contract Mixer is MerkleTreeWithHistory {
     @dev Allow operator to temporarily disable new deposits. This is needed to protect users funds in case a vulnerability is discovered.
     It does not affect existing deposits.
   */
-  function toggleDeposits() external onlyOperator {
-    isDepositsEnabled = !isDepositsEnabled;
+  function toggleDeposits(bool _state) external onlyOperator {
+    isDepositsDisabled = _state;
   }
 
   /**
@@ -121,7 +121,7 @@ contract Mixer is MerkleTreeWithHistory {
     After that operator is supposed to permanently disable this ability.
   */
   function updateVerifier(address newVerifier) external onlyOperator {
-    require(isVerifierUpdateAllowed, "Verifier updates have been disabled.");
+    require(!isVerifierUpdateDisabled, "Verifier updates have been disabled.");
     verifier = IVerifier(newVerifier);
   }
 
@@ -130,7 +130,7 @@ contract Mixer is MerkleTreeWithHistory {
     This is supposed to be called after the final trusted setup ceremony is held.
   */
   function disableVerifierUpdate() external onlyOperator {
-    isVerifierUpdateAllowed = false;
+    isVerifierUpdateDisabled = true;
   }
 
   /** @dev operator can change his address */
