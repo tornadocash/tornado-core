@@ -37,7 +37,7 @@ contract Mixer is MerkleTreeWithHistory {
   }
 
   event Deposit(uint256 indexed commitment, uint256 leafIndex, uint256 timestamp);
-  event Withdraw(address to, uint256 nullifierHash, address indexed relayer, uint256 fee);
+  event Withdrawal(address to, uint256 nullifierHash, address indexed relayer, uint256 fee);
 
   /**
     @dev The constructor
@@ -98,7 +98,7 @@ contract Mixer is MerkleTreeWithHistory {
     require(verifier.verifyProof(proof, input), "Invalid withdraw proof");
     nullifierHashes[nullifierHash] = true;
     _processWithdraw(receiver, relayer, fee, refund);
-    emit Withdraw(receiver, nullifierHash, relayer, fee);
+    emit Withdrawal(receiver, nullifierHash, relayer, fee);
   }
 
   /** @dev this function is defined in a child contract */

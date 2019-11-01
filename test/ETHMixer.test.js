@@ -242,7 +242,7 @@ contract('ETHMixer', accounts => {
       balanceRecieverAfter.should.be.eq.BN(toBN(balanceRecieverBefore).add(toBN(value)).sub(feeBN))
 
 
-      logs[0].event.should.be.equal('Withdraw')
+      logs[0].event.should.be.equal('Withdrawal')
       logs[0].args.nullifierHash.should.be.eq.BN(toBN(input.nullifierHash.toString()))
       logs[0].args.relayer.should.be.eq.BN(operator)
       logs[0].args.fee.should.be.eq.BN(feeBN)

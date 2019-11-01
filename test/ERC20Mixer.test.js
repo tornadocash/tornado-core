@@ -180,7 +180,7 @@ contract('ERC20Mixer', accounts => {
       ethBalanceRecieverAfter.should.be.eq.BN(toBN(ethBalanceRecieverBefore).add(toBN(refund)))
       ethBalanceRelayerAfter.should.be.eq.BN(toBN(ethBalanceRelayerBefore).sub(toBN(refund)))
 
-      logs[0].event.should.be.equal('Withdraw')
+      logs[0].event.should.be.equal('Withdrawal')
       logs[0].args.nullifierHash.should.be.eq.BN(toBN(input.nullifierHash.toString()))
       logs[0].args.relayer.should.be.eq.BN(relayer)
       logs[0].args.fee.should.be.eq.BN(feeBN)
@@ -304,7 +304,7 @@ contract('ERC20Mixer', accounts => {
       ethBalanceRecieverAfter.should.be.eq.BN(toBN(ethBalanceRecieverBefore).add(toBN(refund)).sub(feeBN))
 
 
-      logs[0].event.should.be.equal('Withdraw')
+      logs[0].event.should.be.equal('Withdrawal')
       logs[0].args.nullifierHash.should.be.eq.BN(toBN(input.nullifierHash.toString()))
       logs[0].args.relayer.should.be.eq.BN(operator)
       logs[0].args.fee.should.be.eq.BN(feeBN)
@@ -386,7 +386,7 @@ contract('ERC20Mixer', accounts => {
       ethBalanceRecieverAfter.should.be.eq.BN(toBN(ethBalanceRecieverBefore).add(toBN(refund)).sub(feeBN))
 
 
-      logs[0].event.should.be.equal('Withdraw')
+      logs[0].event.should.be.equal('Withdrawal')
       logs[0].args.nullifierHash.should.be.eq.BN(toBN(input.nullifierHash.toString()))
       logs[0].args.relayer.should.be.eq.BN(operator)
       logs[0].args.fee.should.be.eq.BN(feeBN)
