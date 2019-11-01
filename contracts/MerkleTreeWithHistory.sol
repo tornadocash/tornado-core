@@ -19,7 +19,7 @@ contract MerkleTreeWithHistory {
   uint256 public levels;
 
   uint256 constant ROOT_HISTORY_SIZE = 100;
-  uint256[ROOT_HISTORY_SIZE] private _roots;
+  uint256[ROOT_HISTORY_SIZE] public _roots;
   uint256 public current_root = 0;
 
   uint256[] private _filled_subtrees;
