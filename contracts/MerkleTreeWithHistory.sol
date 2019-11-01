@@ -18,7 +18,7 @@ library Hasher {
 contract MerkleTreeWithHistory {
   uint256 public levels;
 
-  uint8 constant ROOT_HISTORY_SIZE = 100;
+  uint256 constant ROOT_HISTORY_SIZE = 100;
   uint256[] private _roots;
   uint256 public current_root = 0;
 
