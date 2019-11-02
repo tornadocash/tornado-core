@@ -46,7 +46,11 @@ contract MerkleTreeWithHistory {
   }
 
   function hashLeftRight(uint256 _left, uint256 _right) public pure returns (uint256 hash) {
-    uint256 R = _left; // left is already checked to be less than field_size by snark verifier
+    // those checks should never trigger in practice, because they're already performed by the snark verifier
+    // added for convenience if someone decides to call this function directly
+    require(_left < FIELD_SIZE, "_left should be inside the field");
+    require(_right < FIELD_SIZE, "_right should be inside the field");
+    uint256 R = _left;
     uint256 C = 0;
 
     (R, C) = Hasher.MiMCSponge(R, C, 0);
