@@ -28,6 +28,7 @@ contract ERC20Mixer is Mixer {
   }
 
   function _processDeposit() internal {
+    require(msg.value == 0, "ETH value is supposed to be 0 for ETH mixer");
     safeErc20TransferFrom(msg.sender, address(this), denomination);
   }
 
