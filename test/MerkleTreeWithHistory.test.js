@@ -49,11 +49,11 @@ contract('MerkleTreeWithHistory', accounts => {
 
   describe('#constructor', () => {
     it('should initialize', async () => {
-      const filled_subtrees = await merkleTreeWithHistory.filled_subtrees()
       const zeroValue = await merkleTreeWithHistory.ZERO_VALUE()
-      filled_subtrees[0].should.be.eq.BN(zeroValue)
-      const zeros = await merkleTreeWithHistory.zeros()
-      zeros[0].should.be.eq.BN(zeroValue)
+      const firstSubtree = await merkleTreeWithHistory.filledSubtrees(0)
+      firstSubtree.should.be.eq.BN(zeroValue)
+      const firstZero = await merkleTreeWithHistory.zeros(0)
+      firstZero.should.be.eq.BN(zeroValue)
     })
   })
 
