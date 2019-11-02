@@ -27,7 +27,7 @@ template CommitmentHasher() {
 }
 
 // Verifies that commitment that corresponds to given secret and nullifier is included in the merkle tree of deposits
-template Withdraw(levels, rounds) {
+template Withdraw(levels) {
     signal input root;
     signal input nullifierHash;
     signal input receiver; // not taking part in any computations
@@ -45,7 +45,7 @@ template Withdraw(levels, rounds) {
 
     nullifierHash === hasher.nullifierHash;
 
-    component tree = MerkleTree(levels, rounds);
+    component tree = MerkleTree(levels);
     tree.leaf <== hasher.commitment;
     tree.root <== root;
     for (var i = 0; i < levels; i++) {
@@ -54,4 +54,4 @@ template Withdraw(levels, rounds) {
     }
 }
 
-component main = Withdraw(16, 220);
+component main = Withdraw(16);
