@@ -28,17 +28,20 @@ contract MerkleTreeWithHistory {
   uint32 public next_index = 0;
 
   constructor(uint256 tree_levels, uint256 zero_value) public {
+    require(tree_levels > 0, "tree_levels should be greater than zero");
     levels = tree_levels;
 
+    uint256 current_zero = zero_value;
     _zeros.push(zero_value);
-    _filled_subtrees.push(_zeros[0]);
+    _filled_subtrees.push(current_zero);
 
     for (uint8 i = 1; i < levels; i++) {
-      _zeros.push(hashLeftRight(_zeros[i-1], _zeros[i-1]));
-      _filled_subtrees.push(_zeros[i]);
+      current_zero = hashLeftRight(current_zero, current_zero);
+      _zeros.push(current_zero);
+      _filled_subtrees.push(current_zero);
     }
 
-    _roots[0] = hashLeftRight(_zeros[levels - 1], _zeros[levels - 1]);
+    _roots[0] = hashLeftRight(current_zero, current_zero);
   }
 
   function hashLeftRight(uint256 left, uint256 right) public pure returns (uint256 hash) {
