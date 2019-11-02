@@ -1,3 +1,5 @@
+pragma solidity ^0.5.8;
+
 contract ERC20Basic {
     uint public _totalSupply;
     function totalSupply() public view returns (uint);
