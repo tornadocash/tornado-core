@@ -105,8 +105,8 @@ contract Mixer is MerkleTreeWithHistory {
   function _processWithdraw(address payable _receiver, address payable _relayer, uint256 _fee, uint256 _refund) internal;
 
   /** @dev whether a note is already spent */
-  function isSpent(uint256 nullifier) public view returns(bool) {
-    return nullifierHashes[nullifier];
+  function isSpent(uint256 nullifierHash) public view returns(bool) {
+    return nullifierHashes[nullifierHash];
   }
 
   /**
