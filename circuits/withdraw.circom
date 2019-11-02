@@ -37,7 +37,7 @@ template Withdraw(levels) {
     signal private input nullifier;
     signal private input secret;
     signal private input pathElements[levels];
-    signal private input pathIndex[levels];
+    signal private input pathIndices[levels];
 
     component hasher = CommitmentHasher();
     hasher.nullifier <== nullifier;
@@ -50,7 +50,7 @@ template Withdraw(levels) {
     tree.root <== root;
     for (var i = 0; i < levels; i++) {
         tree.pathElements[i] <== pathElements[i];
-        tree.pathIndex[i] <== pathIndex[i];
+        tree.pathIndices[i] <== pathIndices[i];
     }
 }
 

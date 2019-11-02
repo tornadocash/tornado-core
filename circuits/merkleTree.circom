@@ -4,14 +4,12 @@ include "../node_modules/circomlib/circuits/mimcsponge.circom";
 template HashLeftRight() {
     signal input left;
     signal input right;
-
     signal output hash;
 
     component hasher = MiMCSponge(2, 220, 1);
     hasher.ins[0] <== left;
     hasher.ins[1] <== right;
     hasher.k <== 0;
-
     hash <== hasher.outs[0];
 }
 
@@ -27,12 +25,12 @@ template Mux() {
 }
 
 // Verifies that merkle proof is correct for given merkle root and a leaf
-// pathIndex input is an array of 0/1 selectors telling whether given pathElement is on the left or right side of merkle path
+// pathIndices input is an array of 0/1 selectors telling whether given pathElement is on the left or right side of merkle path
 template MerkleTree(levels) {
     signal input leaf;
     signal input root;
     signal private input pathElements[levels];
-    signal private input pathIndex[levels];
+    signal private input pathIndices[levels];
 
     component selectors[levels];
     component hashers[levels];
@@ -42,14 +40,13 @@ template MerkleTree(levels) {
         hashers[i] = HashLeftRight();
 
         selectors[i].in[1] <== pathElements[i];
-        selectors[i].s <== pathIndex[i];
+        selectors[i].s <== pathIndices[i];
 
         hashers[i].left <== selectors[i].out[0];
         hashers[i].right <== selectors[i].out[1];
     }
 
     selectors[0].in[0] <== leaf;
-
     for (var i = 1; i < levels; i++) {
         selectors[i].in[0] <== hashers[i-1].hash;
     }
