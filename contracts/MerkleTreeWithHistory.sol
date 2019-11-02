@@ -18,6 +18,7 @@ library Hasher {
 contract MerkleTreeWithHistory {
   uint256 public levels;
 
+  uint256 constant FIELD_SIZE = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
   uint256 constant ROOT_HISTORY_SIZE = 100;
   uint256[ROOT_HISTORY_SIZE] public _roots;
   uint256 public current_root_index = 0;
@@ -45,17 +46,15 @@ contract MerkleTreeWithHistory {
   }
 
   function hashLeftRight(uint256 left, uint256 right) public pure returns (uint256 hash) {
-    uint256 k = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
-    uint256 R = 0;
+    uint256 R = left; // left is already checked to be less than field_size by snark verifier
     uint256 C = 0;
 
-    R = addmod(R, left, k);
     (R, C) = Hasher.MiMCSponge(R, C, 0);
 
-    R = addmod(R, right, k);
+    R = addmod(R, right, FIELD_SIZE);
     (R, C) = Hasher.MiMCSponge(R, C, 0);
 
-    hash = R;
+    return R;
   }
 
   function _insert(uint256 leaf) internal returns(uint256 index) {
