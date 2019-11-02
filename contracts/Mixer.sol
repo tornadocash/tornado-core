@@ -14,7 +14,7 @@ pragma solidity ^0.5.8;
 import "./MerkleTreeWithHistory.sol";
 
 contract IVerifier {
-  function verifyProof(uint256[8] memory proof, uint256[6] memory input) public returns(bool);
+  function verifyProof(uint256[8] memory _proof, uint256[6] memory _input) public returns(bool);
 }
 
 contract Mixer is MerkleTreeWithHistory {
@@ -59,16 +59,16 @@ contract Mixer is MerkleTreeWithHistory {
 
   /**
     @dev Deposit funds into mixer. The caller must send (for ETH) or approve (for ERC20) value equal to or `denomination` of this mixer.
-    @param commitment the note commitment, which is PedersenHash(nullifier + secret)
+    @param _commitment the note commitment, which is PedersenHash(nullifier + secret)
   */
-  function deposit(uint256 commitment) public payable {
+  function deposit(uint256 _commitment) public payable {
     require(!isDepositsDisabled, "deposits are disabled");
-    require(!commitments[commitment], "The commitment has been submitted");
-    uint256 insertedIndex = _insert(commitment);
-    commitments[commitment] = true;
+    require(!commitments[_commitment], "The commitment has been submitted");
+    uint256 insertedIndex = _insert(_commitment);
+    commitments[_commitment] = true;
     _processDeposit();
 
-    emit Deposit(commitment, insertedIndex, block.timestamp);
+    emit Deposit(_commitment, insertedIndex, block.timestamp);
   }
 
   /** @dev this function is defined in a child contract */
@@ -82,18 +82,18 @@ contract Mixer is MerkleTreeWithHistory {
       - the receiver of funds
       - optional fee that goes to the transaction sender (usually a relay)
   */
-  function withdraw(uint256[8] memory proof, uint256[6] memory input) public payable {
-    uint256 root = input[0];
-    uint256 nullifierHash = input[1];
-    address payable receiver = address(input[2]);
-    address payable relayer = address(input[3]);
-    uint256 fee = input[4];
-    uint256 refund = input[5];
+  function withdraw(uint256[8] memory _proof, uint256[6] memory _input) public payable {
+    uint256 root = _input[0];
+    uint256 nullifierHash = _input[1];
+    address payable receiver = address(_input[2]);
+    address payable relayer = address(_input[3]);
+    uint256 fee = _input[4];
+    uint256 refund = _input[5];
     require(fee <= denomination, "Fee exceeds transfer value");
     require(!nullifierHashes[nullifierHash], "The note has been already spent");
 
     require(isKnownRoot(root), "Cannot find your merkle root"); // Make sure to use a recent one
-    require(verifier.verifyProof(proof, input), "Invalid withdraw proof");
+    require(verifier.verifyProof(_proof, _input), "Invalid withdraw proof");
     nullifierHashes[nullifierHash] = true;
     _processWithdraw(receiver, relayer, fee, refund);
     emit Withdrawal(receiver, nullifierHash, relayer, fee);
@@ -103,8 +103,8 @@ contract Mixer is MerkleTreeWithHistory {
   function _processWithdraw(address payable _receiver, address payable _relayer, uint256 _fee, uint256 _refund) internal;
 
   /** @dev whether a note is already spent */
-  function isSpent(uint256 nullifierHash) public view returns(bool) {
-    return nullifierHashes[nullifierHash];
+  function isSpent(uint256 _nullifierHash) public view returns(bool) {
+    return nullifierHashes[_nullifierHash];
   }
 
   /**
@@ -119,9 +119,9 @@ contract Mixer is MerkleTreeWithHistory {
     @dev allow operator to update SNARK verification keys. This is needed to update keys after the final trusted setup ceremony is held.
     After that operator is supposed to permanently disable this ability.
   */
-  function updateVerifier(address newVerifier) external onlyOperator {
+  function updateVerifier(address _newVerifier) external onlyOperator {
     require(!isVerifierUpdateDisabled, "Verifier updates have been disabled.");
-    verifier = IVerifier(newVerifier);
+    verifier = IVerifier(_newVerifier);
   }
 
   /**

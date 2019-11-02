@@ -28,30 +28,30 @@ contract ERC20Mixer is Mixer {
 
   function _processDeposit() internal {
     require(msg.value == 0, "ETH value is supposed to be 0 for ETH mixer");
-    safeErc20TransferFrom(msg.sender, address(this), denomination);
+    _safeErc20TransferFrom(msg.sender, address(this), denomination);
   }
 
   function _processWithdraw(address payable _receiver, address payable _relayer, uint256 _fee, uint256 _refund) internal {
     require(msg.value == _refund, "Incorrect refund amount received by the contract");
 
-    safeErc20Transfer(_receiver, denomination - _fee);
+    _safeErc20Transfer(_receiver, denomination - _fee);
     if (_fee > 0) {
-      safeErc20Transfer(_relayer, _fee);
+      _safeErc20Transfer(_relayer, _fee);
     }
     if (_refund > 0) {
       _receiver.transfer(_refund);
     }
   }
 
-  function safeErc20TransferFrom(address from, address to, uint256 amount) internal {
+  function _safeErc20TransferFrom(address _from, address _to, uint256 _amount) internal {
     bool success;
     bytes memory data;
     bytes4 transferFromSelector = 0x23b872dd;
     (success, data) = token.call(
-        abi.encodeWithSelector(
-            transferFromSelector,
-            from, to, amount
-        )
+      abi.encodeWithSelector(
+        transferFromSelector,
+        _from, _to, _amount
+      )
     );
     require(success, "not enough allowed tokens");
 
@@ -64,14 +64,14 @@ contract ERC20Mixer is Mixer {
     }
   }
 
-  function safeErc20Transfer(address to, uint256 amount) internal {
+  function _safeErc20Transfer(address _to, uint256 _amount) internal {
     bool success;
     bytes memory data;
     bytes4 transferSelector = 0xa9059cbb;
     (success, data) = token.call(
         abi.encodeWithSelector(
             transferSelector,
-            to, amount
+        _to, _amount
         )
     );
     require(success, "not enough tokens");
