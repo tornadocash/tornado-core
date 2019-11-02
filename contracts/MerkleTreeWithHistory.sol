@@ -18,8 +18,9 @@ library Hasher {
 contract MerkleTreeWithHistory {
   uint256 public levels;
 
-  uint256 constant FIELD_SIZE = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
-  uint256 constant ROOT_HISTORY_SIZE = 100;
+  uint256 public constant FIELD_SIZE = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
+  uint256 public constant ZERO_VALUE = 5702960885942360421128284892092891246826997279710054143430547229469817701242; // = MiMC("tornado")
+  uint256 public constant ROOT_HISTORY_SIZE = 100;
   uint256[ROOT_HISTORY_SIZE] public _roots;
   uint256 public current_root_index = 0;
 
@@ -28,12 +29,12 @@ contract MerkleTreeWithHistory {
 
   uint32 public next_index = 0;
 
-  constructor(uint256 tree_levels, uint256 zero_value) public {
+  constructor(uint256 tree_levels) public {
     require(tree_levels > 0, "tree_levels should be greater than zero");
     levels = tree_levels;
 
-    uint256 current_zero = zero_value;
-    _zeros.push(zero_value);
+    uint256 current_zero = ZERO_VALUE;
+    _zeros.push(ZERO_VALUE);
     _filled_subtrees.push(current_zero);
 
     for (uint8 i = 1; i < levels; i++) {

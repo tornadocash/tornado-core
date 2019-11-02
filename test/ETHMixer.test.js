@@ -9,7 +9,7 @@ const { toBN, toHex, randomHex } = require('web3-utils')
 const { takeSnapshot, revertSnapshot } = require('../lib/ganacheHelper')
 
 const Mixer = artifacts.require('./ETHMixer.sol')
-const { ETH_AMOUNT, MERKLE_TREE_HEIGHT, EMPTY_ELEMENT } = process.env
+const { ETH_AMOUNT, MERKLE_TREE_HEIGHT } = process.env
 
 const websnarkUtils = require('websnark/src/utils')
 const buildGroth16 = require('websnark/src/groth16')
@@ -62,7 +62,6 @@ contract('ETHMixer', accounts => {
   const sender = accounts[0]
   const operator = accounts[0]
   const levels = MERKLE_TREE_HEIGHT || 16
-  const zeroValue = EMPTY_ELEMENT || 1337
   const value = ETH_AMOUNT || '1000000000000000000' // 1 ether
   let snapshotId
   let prefix = 'test'
@@ -78,7 +77,6 @@ contract('ETHMixer', accounts => {
   before(async () => {
     tree = new MerkleTree(
       levels,
-      zeroValue,
       null,
       prefix,
     )
@@ -521,7 +519,6 @@ contract('ETHMixer', accounts => {
     snapshotId = await takeSnapshot()
     tree = new MerkleTree(
       levels,
-      zeroValue,
       null,
       prefix,
     )

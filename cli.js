@@ -13,7 +13,7 @@ const buildGroth16 = require('websnark/src/groth16')
 const websnarkUtils = require('websnark/src/utils')
 
 let web3, mixer, erc20mixer, circuit, proving_key, groth16, erc20
-let MERKLE_TREE_HEIGHT, ETH_AMOUNT, EMPTY_ELEMENT, ERC20_TOKEN
+let MERKLE_TREE_HEIGHT, ETH_AMOUNT, ERC20_TOKEN
 const inBrowser = (typeof window !== 'undefined')
 
 /** Generate random number of specified byte length */
@@ -83,7 +83,7 @@ async function withdrawErc20(note, receiver, relayer) {
       }
       return e.returnValues.commitment
     })
-  const tree = new merkleTree(MERKLE_TREE_HEIGHT, EMPTY_ELEMENT, leaves)
+  const tree = new merkleTree(MERKLE_TREE_HEIGHT, leaves)
   const validRoot = await erc20mixer.methods.isKnownRoot(await tree.root()).call()
   const nullifierHash = pedersenHash(deposit.nullifier.leInt2Buff(31))
   const nullifierHashToCheck = nullifierHash.toString(16).padStart('66', '0x000000')
@@ -152,7 +152,7 @@ async function withdraw(note, receiver) {
   const leaves = events
     .sort((a, b) => a.returnValues.leafIndex.sub(b.returnValues.leafIndex)) // Sort events in chronological order
     .map(e => e.returnValues.commitment)
-  const tree = new merkleTree(MERKLE_TREE_HEIGHT, EMPTY_ELEMENT, leaves)
+  const tree = new merkleTree(MERKLE_TREE_HEIGHT, leaves)
 
   // Find current commitment in the tree
   let depositEvent = events.find(e => e.returnValues.commitment.eq(paddedCommitment))
@@ -210,7 +210,6 @@ async function init() {
     proving_key = await (await fetch('build/circuits/withdraw_proving_key.bin')).arrayBuffer()
     MERKLE_TREE_HEIGHT = 16
     ETH_AMOUNT = 1e18
-    EMPTY_ELEMENT = 1
   } else {
     // Initialize from local node
     web3 = new Web3('http://localhost:8545', null, { transactionConfirmationBlocks: 1 })
@@ -220,7 +219,6 @@ async function init() {
     require('dotenv').config()
     MERKLE_TREE_HEIGHT = process.env.MERKLE_TREE_HEIGHT
     ETH_AMOUNT = process.env.ETH_AMOUNT
-    EMPTY_ELEMENT = process.env.EMPTY_ELEMENT
     ERC20_TOKEN = process.env.ERC20_TOKEN
     erc20ContractJson = require('./build/contracts/ERC20Mock.json')
     erc20mixerJson = require('./build/contracts/ERC20Mixer.json')

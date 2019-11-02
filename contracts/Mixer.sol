@@ -43,16 +43,14 @@ contract Mixer is MerkleTreeWithHistory {
     @dev The constructor
     @param _verifier the address of SNARK verifier for this contract
     @param _merkleTreeHeight the height of deposits' Merkle Tree
-    @param _emptyElement default element of the deposits' Merkle Tree
     @param _operator operator address (see operator above)
   */
   constructor(
     IVerifier _verifier,
     uint256 _denomination,
     uint8 _merkleTreeHeight,
-    uint256 _emptyElement,
     address _operator
-  ) MerkleTreeWithHistory(_merkleTreeHeight, _emptyElement) public {
+  ) MerkleTreeWithHistory(_merkleTreeHeight) public {
     require(_denomination > 0, "denomination should be greater than 0");
     verifier = _verifier;
     operator = _operator;

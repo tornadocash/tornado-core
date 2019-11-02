@@ -4,7 +4,7 @@ import '../MerkleTreeWithHistory.sol';
 
 contract MerkleTreeWithHistoryMock is MerkleTreeWithHistory {
 
-  constructor (uint8 tree_levels, uint256 zero_value) MerkleTreeWithHistory(tree_levels, zero_value) public {}
+  constructor (uint8 tree_levels) MerkleTreeWithHistory(tree_levels) public {}
 
   function insert(uint256 leaf) public {
       _insert(leaf);

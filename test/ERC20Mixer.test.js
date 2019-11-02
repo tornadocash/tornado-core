@@ -11,7 +11,7 @@ const { takeSnapshot, revertSnapshot } = require('../lib/ganacheHelper')
 const Mixer = artifacts.require('./ERC20Mixer.sol')
 const Token = artifacts.require('./ERC20Mock.sol')
 const USDTToken = artifacts.require('./IUSDT.sol')
-const { ETH_AMOUNT, TOKEN_AMOUNT, MERKLE_TREE_HEIGHT, EMPTY_ELEMENT, ERC20_TOKEN } = process.env
+const { ETH_AMOUNT, TOKEN_AMOUNT, MERKLE_TREE_HEIGHT, ERC20_TOKEN } = process.env
 
 const websnarkUtils = require('websnark/src/utils')
 const buildGroth16 = require('websnark/src/groth16')
@@ -50,7 +50,6 @@ contract('ERC20Mixer', accounts => {
   const sender = accounts[0]
   const operator = accounts[0]
   const levels = MERKLE_TREE_HEIGHT || 16
-  const zeroValue = EMPTY_ELEMENT || 1337
   let tokenDenomination = TOKEN_AMOUNT || '1000000000000000000' // 1 ether
   let snapshotId
   let prefix = 'test'
@@ -66,7 +65,6 @@ contract('ERC20Mixer', accounts => {
   before(async () => {
     tree = new MerkleTree(
       levels,
-      zeroValue,
       null,
       prefix,
     )
@@ -401,7 +399,6 @@ contract('ERC20Mixer', accounts => {
     snapshotId = await takeSnapshot()
     tree = new MerkleTree(
       levels,
-      zeroValue,
       null,
       prefix,
     )
