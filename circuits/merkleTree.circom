@@ -15,30 +15,15 @@ template HashLeftRight() {
     hash <== hasher.outs[0];
 }
 
-// if pathIndex == 0 returns (left = inputElement, right = pathElement)
-// if pathIndex == 1 returns (left = pathElement, right = inputElement)
-template Selector() {
-    signal input inputElement;
-    signal input pathElement;
-    signal input pathIndex;
+// if s == 0 returns [in[0], in[1]]
+// if s == 1 returns [in[1], in[0]]
+template Mux() {
+    signal input in[2];
+    signal input s;
+    signal output out[2];
 
-    signal output left;
-    signal output right;
-
-    signal leftSelector1;
-    signal leftSelector2;
-    signal rightSelector1;
-    signal rightSelector2;
-
-    pathIndex * (1-pathIndex) === 0
-
-    leftSelector1 <== (1 - pathIndex) * inputElement;
-    leftSelector2 <== (pathIndex) * pathElement;
-    rightSelector1 <== (pathIndex) * inputElement;
-    rightSelector2 <== (1 - pathIndex) * pathElement;
-
-    left <== leftSelector1 + leftSelector2;
-    right <== rightSelector1 + rightSelector2;
+    out[0] <== (in[1] - in[0])*s + in[0];
+    out[1] <== (in[0] - in[1])*s + in[1];
 }
 
 // Verifies that merkle proof is correct for given merkle root and a leaf
@@ -53,20 +38,20 @@ template MerkleTree(levels) {
     component hashers[levels];
 
     for (var i = 0; i < levels; i++) {
-        selectors[i] = Selector();
+        selectors[i] = Mux();
         hashers[i] = HashLeftRight();
 
-        selectors[i].pathElement <== pathElements[i];
-        selectors[i].pathIndex <== pathIndex[i];
+        selectors[i].in[1] <== pathElements[i];
+        selectors[i].s <== pathIndex[i];
 
-        hashers[i].left <== selectors[i].left;
-        hashers[i].right <== selectors[i].right;
+        hashers[i].left <== selectors[i].out[0];
+        hashers[i].right <== selectors[i].out[1];
     }
 
-    selectors[0].inputElement <== leaf;
+    selectors[0].in[0] <== leaf;
 
     for (var i = 1; i < levels; i++) {
-        selectors[i].inputElement <== hashers[i-1].hash;
+        selectors[i].in[0] <== hashers[i-1].hash;
     }
 
     root === hashers[levels - 1].hash;
