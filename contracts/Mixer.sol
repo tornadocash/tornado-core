@@ -35,7 +35,7 @@ contract Mixer is MerkleTreeWithHistory {
     _;
   }
 
-  event Deposit(uint256 indexed commitment, uint256 leafIndex, uint256 timestamp);
+  event Deposit(uint256 indexed commitment, uint32 leafIndex, uint256 timestamp);
   event Withdrawal(address to, uint256 nullifierHash, address indexed relayer, uint256 fee);
 
   /**
@@ -48,7 +48,7 @@ contract Mixer is MerkleTreeWithHistory {
   constructor(
     IVerifier _verifier,
     uint256 _denomination,
-    uint8 _merkleTreeHeight,
+    uint32 _merkleTreeHeight,
     address _operator
   ) MerkleTreeWithHistory(_merkleTreeHeight) public {
     require(_denomination > 0, "denomination should be greater than 0");
@@ -64,7 +64,7 @@ contract Mixer is MerkleTreeWithHistory {
   function deposit(uint256 _commitment) public payable {
     require(!isDepositsDisabled, "deposits are disabled");
     require(!commitments[_commitment], "The commitment has been submitted");
-    uint256 insertedIndex = _insert(_commitment);
+    uint32 insertedIndex = _insert(_commitment);
     commitments[_commitment] = true;
     _processDeposit();
 

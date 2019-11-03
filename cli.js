@@ -150,13 +150,13 @@ async function withdraw(note, receiver) {
   console.log('Getting current state from mixer contract')
   const events = await mixer.getPastEvents('Deposit', { fromBlock: mixer.deployedBlock, toBlock: 'latest' })
   const leaves = events
-    .sort((a, b) => a.returnValues.leafIndex.sub(b.returnValues.leafIndex)) // Sort events in chronological order
+    .sort((a, b) => a.returnValues.leafIndex - b.returnValues.leafIndex) // Sort events in chronological order
     .map(e => e.returnValues.commitment)
   const tree = new merkleTree(MERKLE_TREE_HEIGHT, leaves)
 
   // Find current commitment in the tree
   let depositEvent = events.find(e => e.returnValues.commitment.eq(paddedCommitment))
-  let leafIndex = depositEvent ? depositEvent.returnValues.leafIndex.toNumber() : -1
+  let leafIndex = depositEvent ? depositEvent.returnValues.leafIndex : -1
 
   // Validate that our data is correct
   const isValidRoot = await mixer.methods.isKnownRoot(await tree.root()).call()

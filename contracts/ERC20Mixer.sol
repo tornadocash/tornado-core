@@ -19,7 +19,7 @@ contract ERC20Mixer is Mixer {
   constructor(
     IVerifier _verifier,
     uint256 _denomination,
-    uint8 _merkleTreeHeight,
+    uint32 _merkleTreeHeight,
     address _operator,
     address _token
   ) Mixer(_verifier, _denomination, _merkleTreeHeight, _operator) public {
