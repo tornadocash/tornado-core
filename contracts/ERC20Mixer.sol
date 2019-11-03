@@ -57,6 +57,7 @@ contract ERC20Mixer is Mixer {
 
     // if contract returns some data let's make sure that is `true` according to standard
     if (data.length > 0) {
+      require(data.length == 32, "data length should be either 0 or 32 bytes");
       assembly {
         success := mload(add(data, 0x20))
       }
@@ -78,6 +79,7 @@ contract ERC20Mixer is Mixer {
 
     // if contract returns some data let's make sure that is `true` according to standard
     if (data.length > 0) {
+      require(data.length == 32, "data length should be either 0 or 32 bytes");
       assembly {
         success := mload(add(data, 0x20))
       }
