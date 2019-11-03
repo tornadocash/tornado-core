@@ -172,7 +172,7 @@ contract('MerkleTreeWithHistory', accounts => {
 
     it('should reject if tree is full', async () => {
       levels = 6
-      merkleTreeWithHistory = await MerkleTreeWithHistory.new(levels)
+      const merkleTreeWithHistory = await MerkleTreeWithHistory.new(levels)
 
       for (let i = 0; i < 2**levels; i++) {
         await merkleTreeWithHistory.insert(i+42).should.be.fulfilled
@@ -187,13 +187,39 @@ contract('MerkleTreeWithHistory', accounts => {
 
     it.skip('hasher gas', async () => {
       levels = 6
-      merkleTreeWithHistory = await MerkleTreeWithHistory.new(levels)
+      const merkleTreeWithHistory = await MerkleTreeWithHistory.new(levels)
       const zeroValue = await merkleTreeWithHistory.zeroValue()
 
       const gas = await merkleTreeWithHistory.hashLeftRight.estimateGas(zeroValue, zeroValue)
       console.log('gas', gas - 21000)
     })
   })
+
+  describe('#isKnownRoot', () => {
+    it('should work', async () => {
+      let path
+
+      for (let i = 1; i < 5; i++) {
+        await merkleTreeWithHistory.insert(i, { from: sender }).should.be.fulfilled
+        await tree.insert(i)
+        path = await tree.path(i - 1)
+        let isKnown = await merkleTreeWithHistory.isKnownRoot(path.root)
+        isKnown.should.be.equal(true)
+      }
+
+      await merkleTreeWithHistory.insert(42, { from: sender }).should.be.fulfilled
+      // check outdated root
+      let isKnown = await merkleTreeWithHistory.isKnownRoot(path.root)
+      isKnown.should.be.equal(true)
+    })
+
+    it('should not return uninitialized roots', async () => {
+      await merkleTreeWithHistory.insert(42, { from: sender }).should.be.fulfilled
+      let isKnown = await merkleTreeWithHistory.isKnownRoot(0)
+      isKnown.should.be.equal(false)
+    })
+  })
+
 
   afterEach(async () => {
     await revertSnapshot(snapshotId.result)

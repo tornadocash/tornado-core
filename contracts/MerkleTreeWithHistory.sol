@@ -97,20 +97,16 @@ contract MerkleTreeWithHistory {
     if (_root == 0) {
       return false;
     }
-    // search most recent first
-    uint256 i;
-    for(i = currentRootIndex; i < 2**256 - 1; i--) {
-      if (_root == roots[i]) {
-        return true;
-      }
-    }
-
-    // process the rest of roots
-    for(i = ROOT_HISTORY_SIZE - 1; i > currentRootIndex; i--) {
-      if (_root == roots[i]) {
-        return true;
-      }
-    }
+    uint256 i = currentRootIndex;
+    do {
+       if (_root == roots[i]) {
+           return true;
+       }
+       if (i == 0) {
+           i = ROOT_HISTORY_SIZE;
+       }
+       i--;
+    } while (i != currentRootIndex);
     return false;
   }
 
