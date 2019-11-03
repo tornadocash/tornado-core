@@ -6,7 +6,6 @@ include "merkleTree.circom";
 template CommitmentHasher() {
     signal private input nullifier;
     signal private input secret;
-
     signal output commitment;
     signal output nullifierHash;
 
@@ -42,8 +41,7 @@ template Withdraw(levels) {
     component hasher = CommitmentHasher();
     hasher.nullifier <== nullifier;
     hasher.secret <== secret;
-
-    nullifierHash === hasher.nullifierHash;
+    hasher.nullifierHash === nullifierHash;
 
     component tree = MerkleTree(levels);
     tree.leaf <== hasher.commitment;

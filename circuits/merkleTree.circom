@@ -1,6 +1,6 @@
 include "../node_modules/circomlib/circuits/mimcsponge.circom";
 
-// Computes MiMC(left + right)
+// Computes MiMC([left, right])
 template HashLeftRight() {
     signal input left;
     signal input right;
@@ -37,18 +37,13 @@ template MerkleTree(levels) {
 
     for (var i = 0; i < levels; i++) {
         selectors[i] = Mux();
-        hashers[i] = HashLeftRight();
-
+        selectors[i].in[0] <== i == 0 ? leaf : hashers[i - 1].hash;
         selectors[i].in[1] <== pathElements[i];
         selectors[i].s <== pathIndices[i];
 
+        hashers[i] = HashLeftRight();
         hashers[i].left <== selectors[i].out[0];
         hashers[i].right <== selectors[i].out[1];
-    }
-
-    selectors[0].in[0] <== leaf;
-    for (var i = 1; i < levels; i++) {
-        selectors[i].in[0] <== hashers[i-1].hash;
     }
 
     root === hashers[levels - 1].hash;
