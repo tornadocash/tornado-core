@@ -35,7 +35,7 @@ contract MerkleTreeWithHistory {
     levels = _treeLevels;
 
     uint256 currentZero = ZERO_VALUE;
-    zeros.push(ZERO_VALUE);
+    zeros.push(currentZero);
     filledSubtrees.push(currentZero);
 
     for (uint8 i = 1; i < levels; i++) {
@@ -55,12 +55,9 @@ contract MerkleTreeWithHistory {
     require(_right < FIELD_SIZE, "_right should be inside the field");
     uint256 R = _left;
     uint256 C = 0;
-
     (R, C) = Hasher.MiMCSponge(R, C, 0);
-
     R = addmod(R, _right, FIELD_SIZE);
     (R, C) = Hasher.MiMCSponge(R, C, 0);
-
     return R;
   }
 
