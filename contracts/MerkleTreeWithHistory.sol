@@ -24,18 +24,18 @@ contract MerkleTreeWithHistory {
   // the following variables are made public for easier testing and debugging and
   // are not supposed to be accessed in regular code
   uint32 public constant ROOT_HISTORY_SIZE = 100;
-  uint256[ROOT_HISTORY_SIZE] public roots;
+  bytes32[ROOT_HISTORY_SIZE] public roots;
   uint32 public currentRootIndex = 0;
   uint32 public nextIndex = 0;
-  uint256[] public filledSubtrees;
-  uint256[] public zeros;
+  bytes32[] public filledSubtrees;
+  bytes32[] public zeros;
 
   constructor(uint32 _treeLevels) public {
     require(_treeLevels > 0, "_treeLevels should be greater than zero");
     require(_treeLevels < 32, "_treeLevels should be less than 32");
     levels = _treeLevels;
 
-    uint256 currentZero = ZERO_VALUE;
+    bytes32 currentZero = bytes32(ZERO_VALUE);
     zeros.push(currentZero);
     filledSubtrees.push(currentZero);
 
@@ -51,24 +51,24 @@ contract MerkleTreeWithHistory {
   /**
     @dev Hash 2 tree leaves, returns MiMC(_left, _right)
   */
-  function hashLeftRight(uint256 _left, uint256 _right) public pure returns (uint256) {
-    require(_left < FIELD_SIZE, "_left should be inside the field");
-    require(_right < FIELD_SIZE, "_right should be inside the field");
-    uint256 R = _left;
+  function hashLeftRight(bytes32 _left, bytes32 _right) public pure returns (bytes32) {
+    require(uint256(_left) < FIELD_SIZE, "_left should be inside the field");
+    require(uint256(_right) < FIELD_SIZE, "_right should be inside the field");
+    uint256 R = uint256(_left);
     uint256 C = 0;
     (R, C) = Hasher.MiMCSponge(R, C, 0);
-    R = addmod(R, _right, FIELD_SIZE);
+    R = addmod(R, uint256(_right), FIELD_SIZE);
     (R, C) = Hasher.MiMCSponge(R, C, 0);
-    return R;
+    return bytes32(R);
   }
 
-  function _insert(uint256 _leaf) internal returns(uint32 index) {
+  function _insert(bytes32 _leaf) internal returns(uint32 index) {
     uint32 currentIndex = nextIndex;
     require(currentIndex != uint32(2)**levels, "Merkle tree is full. No more leafs can be added");
     nextIndex += 1;
-    uint256 currentLevelHash = _leaf;
-    uint256 left;
-    uint256 right;
+    bytes32 currentLevelHash = _leaf;
+    bytes32 left;
+    bytes32 right;
 
     for (uint32 i = 0; i < levels; i++) {
       if (currentIndex % 2 == 0) {
@@ -94,7 +94,7 @@ contract MerkleTreeWithHistory {
   /**
     @dev Whether the root is present in the root history
   */
-  function isKnownRoot(uint256 _root) public view returns(bool) {
+  function isKnownRoot(bytes32 _root) public view returns(bool) {
     if (_root == 0) {
       return false;
     }
@@ -114,7 +114,7 @@ contract MerkleTreeWithHistory {
   /**
     @dev Returns the last root
   */
-  function getLastRoot() public view returns(uint256) {
+  function getLastRoot() public view returns(bytes32) {
     return roots[currentRootIndex];
   }
 }

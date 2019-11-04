@@ -170,11 +170,11 @@ async function withdraw(note, receiver) {
   const tree = new merkleTree(MERKLE_TREE_HEIGHT, leaves)
 
   // Find current commitment in the tree
-  let depositEvent = events.find(e => e.returnValues.commitment.eq(paddedCommitment))
+  let depositEvent = events.find(e => e.returnValues.commitment === paddedCommitment)
   let leafIndex = depositEvent ? depositEvent.returnValues.leafIndex : -1
 
   // Validate that our data is correct
-  const isValidRoot = await mixer.methods.isKnownRoot(await tree.root()).call()
+  const isValidRoot = await mixer.methods.isKnownRoot(toHex(await tree.root())).call()
   const isSpent = await mixer.methods.isSpent(paddedNullifierHash).call()
   assert(isValidRoot === true) // Merkle tree assembled correctly
   assert(isSpent === false)    // The note is not spent

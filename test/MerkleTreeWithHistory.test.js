@@ -12,6 +12,9 @@ const hasherContract = artifacts.require('./Hasher.sol')
 const MerkleTree = require('../lib/MerkleTree')
 const hasherImpl = require('../lib/MiMC')
 
+const snarkjs = require('snarkjs')
+const bigInt = snarkjs.bigInt
+
 const { ETH_AMOUNT, MERKLE_TREE_HEIGHT } = process.env
 
 // eslint-disable-next-line no-unused-vars
@@ -21,6 +24,13 @@ function BNArrayToStringArray(array) {
     arrayToPrint.push(item.toString())
   })
   return arrayToPrint
+}
+
+function toFixedHex(number, length = 32) {
+  let str = bigInt(number).toString(16)
+  while (str.length < length * 2) str = '0' + str
+  str = '0x' + str
+  return str
 }
 
 contract('MerkleTreeWithHistory', accounts => {
@@ -51,9 +61,9 @@ contract('MerkleTreeWithHistory', accounts => {
     it('should initialize', async () => {
       const zeroValue = await merkleTreeWithHistory.ZERO_VALUE()
       const firstSubtree = await merkleTreeWithHistory.filledSubtrees(0)
-      firstSubtree.should.be.eq.BN(zeroValue)
+      firstSubtree.should.be.equal(toFixedHex(zeroValue))
       const firstZero = await merkleTreeWithHistory.zeros(0)
-      firstZero.should.be.eq.BN(zeroValue)
+      firstZero.should.be.equal(toFixedHex(zeroValue))
     })
   })
 
@@ -72,7 +82,7 @@ contract('MerkleTreeWithHistory', accounts => {
         null,
         prefix,
       )
-      await tree.insert('5')
+      await tree.insert(toFixedHex('5'))
       let { root, path_elements } = await tree.path(0)
       const calculated_root = hasher.hash(null,
         hasher.hash(null, '5', path_elements[0]),
@@ -162,11 +172,11 @@ contract('MerkleTreeWithHistory', accounts => {
       let rootFromContract
 
       for (let i = 1; i < 11; i++) {
-        await merkleTreeWithHistory.insert(i, { from: sender })
+        await merkleTreeWithHistory.insert(toFixedHex(i), { from: sender })
         await tree.insert(i)
         let { root } = await tree.path(i - 1)
         rootFromContract = await merkleTreeWithHistory.getLastRoot()
-        root.should.be.equal(rootFromContract.toString())
+        toFixedHex(root).should.be.equal(rootFromContract.toString())
       }
     })
 
@@ -175,13 +185,13 @@ contract('MerkleTreeWithHistory', accounts => {
       const merkleTreeWithHistory = await MerkleTreeWithHistory.new(levels)
 
       for (let i = 0; i < 2**levels; i++) {
-        await merkleTreeWithHistory.insert(i+42).should.be.fulfilled
+        await merkleTreeWithHistory.insert(toFixedHex(i+42)).should.be.fulfilled
       }
 
-      let error = await merkleTreeWithHistory.insert(1337).should.be.rejected
+      let error = await merkleTreeWithHistory.insert(toFixedHex(1337)).should.be.rejected
       error.reason.should.be.equal('Merkle tree is full. No more leafs can be added')
 
-      error = await merkleTreeWithHistory.insert(1).should.be.rejected
+      error = await merkleTreeWithHistory.insert(toFixedHex(1)).should.be.rejected
       error.reason.should.be.equal('Merkle tree is full. No more leafs can be added')
     })
 
@@ -200,22 +210,22 @@ contract('MerkleTreeWithHistory', accounts => {
       let path
 
       for (let i = 1; i < 5; i++) {
-        await merkleTreeWithHistory.insert(i, { from: sender }).should.be.fulfilled
+        await merkleTreeWithHistory.insert(toFixedHex(i), { from: sender }).should.be.fulfilled
         await tree.insert(i)
         path = await tree.path(i - 1)
-        let isKnown = await merkleTreeWithHistory.isKnownRoot(path.root)
+        let isKnown = await merkleTreeWithHistory.isKnownRoot(toFixedHex(path.root))
         isKnown.should.be.equal(true)
       }
 
-      await merkleTreeWithHistory.insert(42, { from: sender }).should.be.fulfilled
+      await merkleTreeWithHistory.insert(toFixedHex(42), { from: sender }).should.be.fulfilled
       // check outdated root
-      let isKnown = await merkleTreeWithHistory.isKnownRoot(path.root)
+      let isKnown = await merkleTreeWithHistory.isKnownRoot(toFixedHex(path.root))
       isKnown.should.be.equal(true)
     })
 
     it('should not return uninitialized roots', async () => {
-      await merkleTreeWithHistory.insert(42, { from: sender }).should.be.fulfilled
-      let isKnown = await merkleTreeWithHistory.isKnownRoot(0)
+      await merkleTreeWithHistory.insert(toFixedHex(42), { from: sender }).should.be.fulfilled
+      let isKnown = await merkleTreeWithHistory.isKnownRoot(toFixedHex(0))
       isKnown.should.be.equal(false)
     })
   })

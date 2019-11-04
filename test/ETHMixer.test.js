@@ -103,23 +103,23 @@ contract('ETHMixer', accounts => {
 
   describe('#deposit', () => {
     it('should emit event', async () => {
-      let commitment = 42
+      let commitment = toFixedHex(42)
       let { logs } = await mixer.deposit(commitment, { value, from: sender })
 
       logs[0].event.should.be.equal('Deposit')
-      logs[0].args.commitment.should.be.eq.BN(toBN(commitment))
-      logs[0].args.leafIndex.should.be.eq.BN(toBN(0))
+      logs[0].args.commitment.should.be.equal(commitment)
+      logs[0].args.leafIndex.should.be.eq.BN(0)
 
-      commitment = 12;
+      commitment = toFixedHex(12);
       ({ logs } = await mixer.deposit(commitment, { value, from: accounts[2] }))
 
       logs[0].event.should.be.equal('Deposit')
-      logs[0].args.commitment.should.be.eq.BN(toBN(commitment))
-      logs[0].args.leafIndex.should.be.eq.BN(toBN(1))
+      logs[0].args.commitment.should.be.equal(commitment)
+      logs[0].args.leafIndex.should.be.eq.BN(1)
     })
 
     it('should not deposit if disabled', async () => {
-      let commitment = 42;
+      let commitment = toFixedHex(42);
       (await mixer.isDepositsDisabled()).should.be.equal(false)
       const err = await mixer.toggleDeposits(true, { from: accounts[1] }).should.be.rejected
       err.reason.should.be.equal('Only operator can call this function.')
@@ -134,7 +134,7 @@ contract('ETHMixer', accounts => {
     })
 
     it('should throw if there is a such commitment', async () => {
-      const commitment = 42
+      const commitment = toFixedHex(42)
       await mixer.deposit(commitment, { value, from: sender }).should.be.fulfilled
       const error = await mixer.deposit(commitment, { value, from: sender }).should.be.rejected
       error.reason.should.be.equal('The commitment has been submitted')
@@ -196,7 +196,7 @@ contract('ETHMixer', accounts => {
       // Uncomment to measure gas usage
       // let gas = await mixer.deposit.estimateGas(toBN(deposit.commitment.toString()), { value, from: user, gasPrice: '0' })
       // console.log('deposit gas:', gas)
-      await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: user, gasPrice: '0' })
+      await mixer.deposit(toFixedHex(deposit.commitment), { value, from: user, gasPrice: '0' })
 
       const balanceUserAfter = await web3.eth.getBalance(user)
       balanceUserAfter.should.be.eq.BN(toBN(balanceUserBefore).sub(toBN(value)))
@@ -228,7 +228,7 @@ contract('ETHMixer', accounts => {
       const balanceRelayerBefore = await web3.eth.getBalance(relayer)
       const balanceOperatorBefore = await web3.eth.getBalance(operator)
       const balanceRecieverBefore = await web3.eth.getBalance(toHex(receiver.toString()))
-      let isSpent = await mixer.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
+      let isSpent = await mixer.isSpent(toFixedHex(input.nullifierHash))
       isSpent.should.be.equal(false)
 
       // Uncomment to measure gas usage
@@ -256,17 +256,17 @@ contract('ETHMixer', accounts => {
 
 
       logs[0].event.should.be.equal('Withdrawal')
-      logs[0].args.nullifierHash.should.be.eq.BN(toBN(input.nullifierHash.toString()))
+      logs[0].args.nullifierHash.should.be.equal(toFixedHex(input.nullifierHash))
       logs[0].args.relayer.should.be.eq.BN(operator)
       logs[0].args.fee.should.be.eq.BN(feeBN)
-      isSpent = await mixer.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
+      isSpent = await mixer.isSpent(toFixedHex(input.nullifierHash))
       isSpent.should.be.equal(true)
     })
 
     it('should prevent double spend', async () => {
       const deposit = generateDeposit()
       await tree.insert(deposit.commitment)
-      await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: sender })
+      await mixer.deposit(toFixedHex(deposit.commitment), { value, from: sender })
 
       const { root, path_elements, path_index } = await tree.path(0)
 
@@ -300,7 +300,7 @@ contract('ETHMixer', accounts => {
     it('should prevent double spend with overflow', async () => {
       const deposit = generateDeposit()
       await tree.insert(deposit.commitment)
-      await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: sender })
+      await mixer.deposit(toFixedHex(deposit.commitment), { value, from: sender })
 
       const { root, path_elements, path_index } = await tree.path(0)
 
@@ -333,7 +333,7 @@ contract('ETHMixer', accounts => {
     it('fee should be less or equal transfer value', async () => {
       const deposit = generateDeposit()
       await tree.insert(deposit.commitment)
-      await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: sender })
+      await mixer.deposit(toFixedHex(deposit.commitment), { value, from: sender })
 
       const { root, path_elements, path_index } = await tree.path(0)
       const oneEtherFee = bigInt(1e18) // 1 ether
@@ -367,7 +367,7 @@ contract('ETHMixer', accounts => {
     it('should throw for corrupted merkle tree root', async () => {
       const deposit = generateDeposit()
       await tree.insert(deposit.commitment)
-      await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: sender })
+      await mixer.deposit(toFixedHex(deposit.commitment), { value, from: sender })
 
       const { root, path_elements, path_index } = await tree.path(0)
 
@@ -402,7 +402,7 @@ contract('ETHMixer', accounts => {
     it('should reject with tampered public inputs', async () => {
       const deposit = generateDeposit()
       await tree.insert(deposit.commitment)
-      await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: sender })
+      await mixer.deposit(toFixedHex(deposit.commitment), { value, from: sender })
 
       let { root, path_elements, path_index } = await tree.path(0)
 
@@ -478,7 +478,7 @@ contract('ETHMixer', accounts => {
     it('should reject with non zero refund', async () => {
       const deposit = generateDeposit()
       await tree.insert(deposit.commitment)
-      await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: sender })
+      await mixer.deposit(toFixedHex(deposit.commitment), { value, from: sender })
 
       const { root, path_elements, path_index } = await tree.path(0)
 
