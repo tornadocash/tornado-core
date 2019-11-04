@@ -22,6 +22,10 @@ contract ETHMixer is Mixer {
   ) Mixer(_verifier, _denomination, _merkleTreeHeight, _operator) public {
   }
 
+  function _processDeposit() internal {
+    require(msg.value == denomination, "Please send `mixDenomination` ETH along with transaction");
+  }
+
   function _processWithdraw(address payable _receiver, address payable _relayer, uint256 _fee, uint256 _refund) internal {
     // sanity checks
     require(msg.value == 0, "Message value is supposed to be zero for ETH mixer");
@@ -31,9 +35,5 @@ contract ETHMixer is Mixer {
     if (_fee > 0) {
       _relayer.transfer(_fee);
     }
-  }
-
-  function _processDeposit() internal {
-    require(msg.value == denomination, "Please send `mixDenomination` ETH along with transaction");
   }
 }

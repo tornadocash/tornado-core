@@ -19,11 +19,13 @@ contract MerkleTreeWithHistory {
   uint256 public constant FIELD_SIZE = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
   uint256 public constant ZERO_VALUE = 5702960885942360421128284892092891246826997279710054143430547229469817701242; // = MiMC("tornado")
 
+  uint256 public levels;
+
+  // the following variables are made public for easier testing and debugging and
+  // are not supposed to be accessed in regular code
   uint256 public constant ROOT_HISTORY_SIZE = 100;
   uint256[ROOT_HISTORY_SIZE] public roots;
   uint256 public currentRootIndex = 0;
-
-  uint256 public levels;
   uint32 public nextIndex = 0;
   uint256[] public filledSubtrees;
   uint256[] public zeros;
@@ -45,9 +47,10 @@ contract MerkleTreeWithHistory {
     roots[0] = hashLeftRight(currentZero, currentZero);
   }
 
+  /**
+    @dev Hash 2 tree leaves, returns MiMC(_left, _right)
+  */
   function hashLeftRight(uint256 _left, uint256 _right) public pure returns (uint256 hash) {
-    // those checks should never trigger in practice, because they're already performed by the snark verifier
-    // added for convenience if someone decides to call this function directly
     require(_left < FIELD_SIZE, "_left should be inside the field");
     require(_right < FIELD_SIZE, "_right should be inside the field");
     uint256 R = _left;
@@ -90,6 +93,9 @@ contract MerkleTreeWithHistory {
     return nextIndex - 1;
   }
 
+  /**
+    @dev Whether the root is present in the root history
+  */
   function isKnownRoot(uint256 _root) public view returns(bool) {
     if (_root == 0) {
       return false;
@@ -123,6 +129,9 @@ contract MerkleTreeWithHistory {
     //   } while (i != currentRootIndex);
   }
 
+  /**
+    @dev Returns the last root
+  */
   function getLastRoot() public view returns(uint256) {
     return roots[currentRootIndex];
   }

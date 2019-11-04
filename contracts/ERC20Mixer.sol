@@ -47,7 +47,7 @@ contract ERC20Mixer is Mixer {
     (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0x23b872dd /* transferFrom */, _from, _to, _amount));
     require(success, "not enough allowed tokens");
 
-    // if contract returns some data let's make sure that is `true` according to standard
+    // if contract returns some data lets make sure that is `true` according to standard
     if (data.length > 0) {
       require(data.length == 32, "data length should be either 0 or 32 bytes");
       success = abi.decode(data, (bool));
@@ -59,7 +59,7 @@ contract ERC20Mixer is Mixer {
     (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0xa9059cbb /* transfer */, _to, _amount));
     require(success, "not enough tokens");
 
-    // if contract returns some data let's make sure that is `true` according to standard
+    // if contract returns some data lets make sure that is `true` according to standard
     if (data.length > 0) {
       require(data.length == 32, "data length should be either 0 or 32 bytes");
       success = abi.decode(data, (bool));

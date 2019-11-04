@@ -25,7 +25,6 @@ contract Mixer is MerkleTreeWithHistory {
   IVerifier public verifier;
 
   // operator can
-  //  - receive a relayer fee
   //  - disable new deposits in case of emergency
   //  - update snark verification key until this ability is permanently disabled
   address public operator;
@@ -42,8 +41,9 @@ contract Mixer is MerkleTreeWithHistory {
   /**
     @dev The constructor
     @param _verifier the address of SNARK verifier for this contract
+    @param _denomination transfer amount for each deposit
     @param _merkleTreeHeight the height of deposits' Merkle Tree
-    @param _operator operator address (see operator above)
+    @param _operator operator address (see operator comment above)
   */
   constructor(
     IVerifier _verifier,
@@ -75,7 +75,7 @@ contract Mixer is MerkleTreeWithHistory {
   function _processDeposit() internal;
 
   /**
-    @dev Withdraw deposit from the mixer. `proof` is a zkSNARK proof data, and input is an array of circuit public inputs
+    @dev Withdraw a deposit from the mixer. `proof` is a zkSNARK proof data, and input is an array of circuit public inputs
     `input` array consists of:
       - merkle root of all deposits in the mixer
       - hash of unique deposit nullifier to prevent double spends
