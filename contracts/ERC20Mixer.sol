@@ -44,45 +44,25 @@ contract ERC20Mixer is Mixer {
   }
 
   function _safeErc20TransferFrom(address _from, address _to, uint256 _amount) internal {
-    bool success;
-    bytes memory data;
-    bytes4 transferFromSelector = 0x23b872dd;
-    (success, data) = token.call(
-      abi.encodeWithSelector(
-        transferFromSelector,
-        _from, _to, _amount
-      )
-    );
+    (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0x23b872dd /* transferFrom */, _from, _to, _amount));
     require(success, "not enough allowed tokens");
 
     // if contract returns some data let's make sure that is `true` according to standard
     if (data.length > 0) {
       require(data.length == 32, "data length should be either 0 or 32 bytes");
-      assembly {
-        success := mload(add(data, 0x20))
-      }
+      success = abi.decode(data, (bool));
       require(success, "not enough allowed tokens");
     }
   }
 
   function _safeErc20Transfer(address _to, uint256 _amount) internal {
-    bool success;
-    bytes memory data;
-    bytes4 transferSelector = 0xa9059cbb;
-    (success, data) = token.call(
-        abi.encodeWithSelector(
-            transferSelector,
-        _to, _amount
-        )
-    );
+    (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0xa9059cbb /* transfer */, _to, _amount));
     require(success, "not enough tokens");
 
     // if contract returns some data let's make sure that is `true` according to standard
     if (data.length > 0) {
       require(data.length == 32, "data length should be either 0 or 32 bytes");
-      assembly {
-        success := mload(add(data, 0x20))
-      }
+      success = abi.decode(data, (bool));
       require(success, "not enough tokens");
     }
   }
