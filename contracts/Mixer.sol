@@ -14,7 +14,7 @@ pragma solidity ^0.5.8;
 import "./MerkleTreeWithHistory.sol";
 
 contract IVerifier {
-  function verifyProof(uint256[8] memory _proof, uint256[6] memory _input) public returns(bool);
+  function verifyProof(bytes memory _proof, uint256[6] memory _input) public returns(bool);
 }
 
 contract Mixer is MerkleTreeWithHistory {
@@ -64,6 +64,7 @@ contract Mixer is MerkleTreeWithHistory {
   function deposit(uint256 _commitment) public payable {
     require(!isDepositsDisabled, "deposits are disabled");
     require(!commitments[_commitment], "The commitment has been submitted");
+
     uint32 insertedIndex = _insert(_commitment);
     commitments[_commitment] = true;
     _processDeposit();
@@ -82,21 +83,15 @@ contract Mixer is MerkleTreeWithHistory {
       - the receiver of funds
       - optional fee that goes to the transaction sender (usually a relay)
   */
-  function withdraw(uint256[8] memory _proof, uint256[6] memory _input) public payable {
-    uint256 root = _input[0];
-    uint256 nullifierHash = _input[1];
-    address payable receiver = address(_input[2]);
-    address payable relayer = address(_input[3]);
-    uint256 fee = _input[4];
-    uint256 refund = _input[5];
-    require(fee <= denomination, "Fee exceeds transfer value");
-    require(!nullifierHashes[nullifierHash], "The note has been already spent");
+  function withdraw(bytes memory _proof, uint256 _root, uint256 _nullifierHash, address payable _receiver, address payable _relayer, uint256 _fee, uint256 _refund) public payable {
+    require(_fee <= denomination, "Fee exceeds transfer value");
+    require(!nullifierHashes[_nullifierHash], "The note has been already spent");
+    require(isKnownRoot(_root), "Cannot find your merkle root"); // Make sure to use a recent one
+    require(verifier.verifyProof(_proof, [_root, _nullifierHash, uint256(_receiver), uint256(_relayer), _fee, _refund]), "Invalid withdraw proof");
 
-    require(isKnownRoot(root), "Cannot find your merkle root"); // Make sure to use a recent one
-    require(verifier.verifyProof(_proof, _input), "Invalid withdraw proof");
-    nullifierHashes[nullifierHash] = true;
-    _processWithdraw(receiver, relayer, fee, refund);
-    emit Withdrawal(receiver, nullifierHash, relayer, fee);
+    nullifierHashes[_nullifierHash] = true;
+    _processWithdraw(_receiver, _relayer, _fee, _refund);
+    emit Withdrawal(_receiver, _nullifierHash, _relayer, _fee);
   }
 
   /** @dev this function is defined in a child contract */

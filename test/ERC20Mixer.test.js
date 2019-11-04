@@ -43,6 +43,13 @@ function getRandomReceiver() {
   return receiver
 }
 
+function toFixedHex(number, length = 32) {
+  let str = bigInt(number).toString(16)
+  while (str.length < length * 2) str = '0' + str
+  str = '0x' + str
+  return str
+}
+
 contract('ERC20Mixer', accounts => {
   let mixer
   let token
@@ -147,7 +154,7 @@ contract('ERC20Mixer', accounts => {
 
 
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-      const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
+      const { proof } = websnarkUtils.toSolidityInput(proofData)
 
       const balanceMixerBefore = await token.balanceOf(mixer.address)
       const balanceRelayerBefore = await token.balanceOf(relayer)
@@ -161,7 +168,15 @@ contract('ERC20Mixer', accounts => {
       // Uncomment to measure gas usage
       // gas = await mixer.withdraw.estimateGas(proof, publicSignals, { from: relayer, gasPrice: '0' })
       // console.log('withdraw gas:', gas)
-      const { logs } = await mixer.withdraw(proof, publicSignals, { value: refund, from: relayer, gasPrice: '0' })
+      const args = [
+        toFixedHex(input.root),
+        toFixedHex(input.nullifierHash),
+        toFixedHex(input.receiver, 20),
+        toFixedHex(input.relayer, 20),
+        toFixedHex(input.fee),
+        toFixedHex(input.refund)
+      ]
+      const { logs } = await mixer.withdraw(proof, ...args, { value: refund, from: relayer, gasPrice: '0' })
 
       const balanceMixerAfter = await token.balanceOf(mixer.address)
       const balanceRelayerAfter = await token.balanceOf(relayer)
@@ -215,13 +230,21 @@ contract('ERC20Mixer', accounts => {
 
 
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-      const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
+      const { proof } = websnarkUtils.toSolidityInput(proofData)
 
-      let { reason } = await mixer.withdraw(proof, publicSignals, { value: 1, from: relayer, gasPrice: '0' }).should.be.rejected
+      const args = [
+        toFixedHex(input.root),
+        toFixedHex(input.nullifierHash),
+        toFixedHex(input.receiver, 20),
+        toFixedHex(input.relayer, 20),
+        toFixedHex(input.fee),
+        toFixedHex(input.refund)
+      ]
+      let { reason } = await mixer.withdraw(proof, ...args, { value: 1, from: relayer, gasPrice: '0' }).should.be.rejected
       reason.should.be.equal('Incorrect refund amount received by the contract')
 
 
-      ;({ reason } = await mixer.withdraw(proof, publicSignals, { value: toBN(refund).mul(toBN(2)), from: relayer, gasPrice: '0' }).should.be.rejected)
+      ;({ reason } = await mixer.withdraw(proof, ...args, { value: toBN(refund).mul(toBN(2)), from: relayer, gasPrice: '0' }).should.be.rejected)
       reason.should.be.equal('Incorrect refund amount received by the contract')
     })
 
@@ -274,7 +297,7 @@ contract('ERC20Mixer', accounts => {
 
 
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-      const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
+      const { proof } = websnarkUtils.toSolidityInput(proofData)
 
       const balanceMixerBefore = await usdtToken.balanceOf(mixer.address)
       const balanceRelayerBefore = await usdtToken.balanceOf(relayer)
@@ -287,7 +310,15 @@ contract('ERC20Mixer', accounts => {
       // Uncomment to measure gas usage
       // gas = await mixer.withdraw.estimateGas(proof, publicSignals, { from: relayer, gasPrice: '0' })
       // console.log('withdraw gas:', gas)
-      const { logs } = await mixer.withdraw(proof, publicSignals, { value: refund, from: relayer, gasPrice: '0' })
+      const args = [
+        toFixedHex(input.root),
+        toFixedHex(input.nullifierHash),
+        toFixedHex(input.receiver, 20),
+        toFixedHex(input.relayer, 20),
+        toFixedHex(input.fee),
+        toFixedHex(input.refund)
+      ]
+      const { logs } = await mixer.withdraw(proof, ...args, { value: refund, from: relayer, gasPrice: '0' })
 
       const balanceMixerAfter = await usdtToken.balanceOf(mixer.address)
       const balanceRelayerAfter = await usdtToken.balanceOf(relayer)
@@ -355,7 +386,7 @@ contract('ERC20Mixer', accounts => {
 
 
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-      const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
+      const { proof } = websnarkUtils.toSolidityInput(proofData)
 
       const balanceMixerBefore = await token.balanceOf(mixer.address)
       const balanceRelayerBefore = await token.balanceOf(relayer)
@@ -368,7 +399,15 @@ contract('ERC20Mixer', accounts => {
       // Uncomment to measure gas usage
       // gas = await mixer.withdraw.estimateGas(proof, publicSignals, { from: relayer, gasPrice: '0' })
       // console.log('withdraw gas:', gas)
-      const { logs } = await mixer.withdraw(proof, publicSignals, { value: refund, from: relayer, gasPrice: '0' })
+      const args = [
+        toFixedHex(input.root),
+        toFixedHex(input.nullifierHash),
+        toFixedHex(input.receiver, 20),
+        toFixedHex(input.relayer, 20),
+        toFixedHex(input.fee),
+        toFixedHex(input.refund)
+      ]
+      const { logs } = await mixer.withdraw(proof, ...args, { value: refund, from: relayer, gasPrice: '0' })
       console.log('withdraw done')
 
       const balanceMixerAfter = await token.balanceOf(mixer.address)

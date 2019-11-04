@@ -113,11 +113,19 @@ async function withdrawErc20(note, receiver, relayer) {
   console.log('Generating SNARK proof')
   console.time('Proof time')
   const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-  const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
+  const { proof } = websnarkUtils.toSolidityInput(proofData)
   console.timeEnd('Proof time')
 
   console.log('Submitting withdraw transaction')
-  await erc20mixer.methods.withdraw(proof, publicSignals).send({ from: (await web3.eth.getAccounts())[0], gas: 1e6 })
+  const args = [
+    toHex(input.root),
+    toHex(input.nullifierHash),
+    toHex(input.receiver, 20),
+    toHex(input.relayer, 20),
+    toHex(input.fee),
+    toHex(input.refund)
+  ]
+  await erc20mixer.methods.withdraw(proof, ...args).send({ from: (await web3.eth.getAccounts())[0], gas: 1e6 })
   console.log('Done')
 }
 
@@ -136,6 +144,13 @@ async function getBalanceErc20(receiver, relayer) {
 
   console.log('Receiver token Balance is ', web3.utils.fromWei(tokenBalanceReceiver.toString()))
   console.log('Relayer token Balance is ', web3.utils.fromWei(tokenBalanceRelayer.toString()))
+}
+
+function toHex(number, length = 32) {
+  let str = bigInt(number).toString(16)
+  while (str.length < length * 2) str = '0' + str
+  str = '0x' + str
+  return str
 }
 
 async function withdraw(note, receiver) {
@@ -188,11 +203,19 @@ async function withdraw(note, receiver) {
   console.log('Generating SNARK proof')
   console.time('Proof time')
   const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-  const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
+  const { proof } = websnarkUtils.toSolidityInput(proofData)
   console.timeEnd('Proof time')
 
   console.log('Submitting withdraw transaction')
-  await mixer.methods.withdraw(proof, publicSignals).send({ from: (await web3.eth.getAccounts())[0], gas: 1e6 })
+  const args = [
+    toHex(input.root),
+    toHex(input.nullifierHash),
+    toHex(input.receiver, 20),
+    toHex(input.relayer, 20),
+    toHex(input.fee),
+    toHex(input.refund)
+  ]
+  await mixer.methods.withdraw(proof, ...args).send({ from: (await web3.eth.getAccounts())[0], gas: 1e6 })
   console.log('Done')
 }
 
