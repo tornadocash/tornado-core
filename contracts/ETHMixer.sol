@@ -15,11 +15,11 @@ import "./Mixer.sol";
 
 contract ETHMixer is Mixer {
   constructor(
-    address _verifier,
+    IVerifier _verifier,
     uint256 _denomination,
     uint8 _merkleTreeHeight,
     uint256 _emptyElement,
-    address payable _operator
+    address _operator
   ) Mixer(_verifier, _denomination, _merkleTreeHeight, _emptyElement, _operator) public {
   }
 

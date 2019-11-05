@@ -102,6 +102,14 @@ contract('ERC20Mixer', accounts => {
       logs[0].args.commitment.should.be.eq.BN(toBN(commitment))
       logs[0].args.leafIndex.should.be.eq.BN(toBN(0))
     })
+
+    it('should not allow to send ether on deposit', async () => {
+      const commitment = 43
+      await token.approve(mixer.address, tokenDenomination)
+
+      let error = await mixer.deposit(commitment, { from: sender, value: 1e6 }).should.be.rejected
+      error.reason.should.be.equal('ETH value is supposed to be 0 for ETH mixer')
+    })
   })
 
   describe('#withdraw', () => {

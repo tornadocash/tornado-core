@@ -18,9 +18,10 @@ library Hasher {
 contract MerkleTreeWithHistory {
   uint256 public levels;
 
-  uint8 constant ROOT_HISTORY_SIZE = 100;
-  uint256[] private _roots;
-  uint256 public current_root = 0;
+  uint256 constant FIELD_SIZE = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
+  uint256 constant ROOT_HISTORY_SIZE = 100;
+  uint256[ROOT_HISTORY_SIZE] public _roots;
+  uint256 public current_root_index = 0;
 
   uint256[] private _filled_subtrees;
   uint256[] private _zeros;
@@ -28,35 +29,35 @@ contract MerkleTreeWithHistory {
   uint32 public next_index = 0;
 
   constructor(uint256 tree_levels, uint256 zero_value) public {
+    require(tree_levels > 0, "tree_levels should be greater than zero");
     levels = tree_levels;
 
+    uint256 current_zero = zero_value;
     _zeros.push(zero_value);
-    _filled_subtrees.push(_zeros[0]);
+    _filled_subtrees.push(current_zero);
 
     for (uint8 i = 1; i < levels; i++) {
-      _zeros.push(hashLeftRight(_zeros[i-1], _zeros[i-1]));
-      _filled_subtrees.push(_zeros[i]);
+      current_zero = hashLeftRight(current_zero, current_zero);
+      _zeros.push(current_zero);
+      _filled_subtrees.push(current_zero);
     }
 
-    _roots = new uint256[](ROOT_HISTORY_SIZE);
-    _roots[0] = hashLeftRight(_zeros[levels - 1], _zeros[levels - 1]);
+    _roots[0] = hashLeftRight(current_zero, current_zero);
   }
 
   function hashLeftRight(uint256 left, uint256 right) public pure returns (uint256 hash) {
-    uint256 k = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
-    uint256 R = 0;
+    uint256 R = left; // left is already checked to be less than field_size by snark verifier
     uint256 C = 0;
 
-    R = addmod(R, left, k);
     (R, C) = Hasher.MiMCSponge(R, C, 0);
 
-    R = addmod(R, right, k);
+    R = addmod(R, right, FIELD_SIZE);
     (R, C) = Hasher.MiMCSponge(R, C, 0);
 
-    hash = R;
+    return R;
   }
 
-  function _insert(uint256 leaf) internal {
+  function _insert(uint256 leaf) internal returns(uint256 index) {
     uint32 current_index = next_index;
     require(current_index != 2**levels, "Merkle tree is full. No more leafs can be added");
     next_index += 1;
@@ -80,8 +81,9 @@ contract MerkleTreeWithHistory {
       current_index /= 2;
     }
 
-    current_root = (current_root + 1) % ROOT_HISTORY_SIZE;
-    _roots[current_root] = current_level_hash;
+    current_root_index = (current_root_index + 1) % ROOT_HISTORY_SIZE;
+    _roots[current_root_index] = current_level_hash;
+    return next_index - 1;
   }
 
   function isKnownRoot(uint256 root) public view returns(bool) {
@@ -90,14 +92,14 @@ contract MerkleTreeWithHistory {
     }
     // search most recent first
     uint256 i;
-    for(i = current_root; i < 2**256 - 1; i--) {
+    for(i = current_root_index; i < 2**256 - 1; i--) {
       if (root == _roots[i]) {
         return true;
       }
     }
 
     // process the rest of roots
-    for(i = ROOT_HISTORY_SIZE - 1; i > current_root; i--) {
+    for(i = ROOT_HISTORY_SIZE - 1; i > current_root_index; i--) {
       if (root == _roots[i]) {
         return true;
       }
@@ -118,10 +120,10 @@ contract MerkleTreeWithHistory {
   }
 
   function getLastRoot() public view returns(uint256) {
-    return _roots[current_root];
+    return _roots[current_root_index];
   }
 
-  function roots() public view returns(uint256[] memory) {
+  function roots() public view returns(uint256[ROOT_HISTORY_SIZE] memory) {
     return _roots;
   }
 

@@ -28,9 +28,9 @@ contract Mixer is MerkleTreeWithHistory {
   //  - receive a relayer fee
   //  - disable new deposits in case of emergency
   //  - update snark verification key until this ability is permanently disabled
-  address payable public operator;
-  bool public isDepositsEnabled = true;
-  bool public isVerifierUpdateAllowed = true;
+  address public operator;
+  bool public isDepositsDisabled;
+  bool public isVerifierUpdateDisabled;
   modifier onlyOperator {
     require(msg.sender == operator, "Only operator can call this function.");
     _;
@@ -47,13 +47,14 @@ contract Mixer is MerkleTreeWithHistory {
     @param _operator operator address (see operator above)
   */
   constructor(
-    address _verifier,
+    IVerifier _verifier,
     uint256 _denomination,
     uint8 _merkleTreeHeight,
     uint256 _emptyElement,
-    address payable _operator
+    address _operator
   ) MerkleTreeWithHistory(_merkleTreeHeight, _emptyElement) public {
-    verifier = IVerifier(_verifier);
+    require(_denomination > 0, "denomination should be greater than 0");
+    verifier = _verifier;
     operator = _operator;
     denomination = _denomination;
   }
@@ -63,17 +64,17 @@ contract Mixer is MerkleTreeWithHistory {
     @param commitment the note commitment, which is PedersenHash(nullifier + secret)
   */
   function deposit(uint256 commitment) public payable {
-    require(isDepositsEnabled, "deposits are disabled");
+    require(!isDepositsDisabled, "deposits are disabled");
     require(!commitments[commitment], "The commitment has been submitted");
-    _processDeposit();
-    _insert(commitment);
+    uint256 insertedIndex = _insert(commitment);
     commitments[commitment] = true;
+    _processDeposit();
 
-    emit Deposit(commitment, next_index - 1, block.timestamp);
+    emit Deposit(commitment, insertedIndex, block.timestamp);
   }
 
   /** @dev this function is defined in a child contract */
-  function _processDeposit() internal {}
+  function _processDeposit() internal;
 
   /**
     @dev Withdraw deposit from the mixer. `proof` is a zkSNARK proof data, and input is an array of circuit public inputs
@@ -90,7 +91,7 @@ contract Mixer is MerkleTreeWithHistory {
     address payable relayer = address(input[3]);
     uint256 fee = input[4];
     uint256 refund = input[5];
-    require(fee < denomination, "Fee exceeds transfer value");
+    require(fee <= denomination, "Fee exceeds transfer value");
     require(!nullifierHashes[nullifierHash], "The note has been already spent");
 
     require(isKnownRoot(root), "Cannot find your merkle root"); // Make sure to use a recent one
@@ -101,19 +102,19 @@ contract Mixer is MerkleTreeWithHistory {
   }
 
   /** @dev this function is defined in a child contract */
-  function _processWithdraw(address payable _receiver, address payable _relayer, uint256 _fee, uint256 _refund) internal {}
+  function _processWithdraw(address payable _receiver, address payable _relayer, uint256 _fee, uint256 _refund) internal;
 
   /** @dev whether a note is already spent */
-  function isSpent(uint256 nullifier) public view returns(bool) {
-    return nullifierHashes[nullifier];
+  function isSpent(uint256 nullifierHash) public view returns(bool) {
+    return nullifierHashes[nullifierHash];
   }
 
   /**
     @dev Allow operator to temporarily disable new deposits. This is needed to protect users funds in case a vulnerability is discovered.
     It does not affect existing deposits.
   */
-  function toggleDeposits() external onlyOperator {
-    isDepositsEnabled = !isDepositsEnabled;
+  function toggleDeposits(bool _state) external onlyOperator {
+    isDepositsDisabled = _state;
   }
 
   /**
@@ -121,7 +122,7 @@ contract Mixer is MerkleTreeWithHistory {
     After that operator is supposed to permanently disable this ability.
   */
   function updateVerifier(address newVerifier) external onlyOperator {
-    require(isVerifierUpdateAllowed, "Verifier updates have been disabled.");
+    require(!isVerifierUpdateDisabled, "Verifier updates have been disabled.");
     verifier = IVerifier(newVerifier);
   }
 
@@ -130,11 +131,11 @@ contract Mixer is MerkleTreeWithHistory {
     This is supposed to be called after the final trusted setup ceremony is held.
   */
   function disableVerifierUpdate() external onlyOperator {
-    isVerifierUpdateAllowed = false;
+    isVerifierUpdateDisabled = true;
   }
 
   /** @dev operator can change his address */
-  function changeOperator(address payable _newAccount) external onlyOperator {
-    operator = _newAccount;
+  function changeOperator(address _newOperator) external onlyOperator {
+    operator = _newOperator;
   }
 }
