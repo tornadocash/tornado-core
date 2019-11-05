@@ -50,7 +50,7 @@ contract MerkleTreeWithHistory {
   /**
     @dev Hash 2 tree leaves, returns MiMC(_left, _right)
   */
-  function hashLeftRight(uint256 _left, uint256 _right) public pure returns (uint256 hash) {
+  function hashLeftRight(uint256 _left, uint256 _right) public pure returns (uint256) {
     require(_left < FIELD_SIZE, "_left should be inside the field");
     require(_right < FIELD_SIZE, "_right should be inside the field");
     uint256 R = _left;
@@ -112,18 +112,6 @@ contract MerkleTreeWithHistory {
       }
     }
     return false;
-
-    // or we can do that in other way
-    //   uint256 i = currentRootIndex;
-    //   do {
-    //       if (root == roots[i]) {
-    //           return true;
-    //       }
-    //       if (i == 0) {
-    //           i = ROOT_HISTORY_SIZE;
-    //       }
-    //       i--;
-    //   } while (i != currentRootIndex);
   }
 
   /**
