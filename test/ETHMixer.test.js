@@ -150,7 +150,7 @@ contract('ETHMixer', accounts => {
         refund,
         secret: deposit.secret,
         pathElements: path_elements,
-        pathIndex: path_index,
+        pathIndices: path_index,
       })
 
       let proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
@@ -210,7 +210,7 @@ contract('ETHMixer', accounts => {
         nullifier: deposit.nullifier,
         secret: deposit.secret,
         pathElements: path_elements,
-        pathIndex: path_index,
+        pathIndices: path_index,
       })
 
 
@@ -265,7 +265,7 @@ contract('ETHMixer', accounts => {
         refund,
         secret: deposit.secret,
         pathElements: path_elements,
-        pathIndex: path_index,
+        pathIndices: path_index,
       })
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
       const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
@@ -291,7 +291,7 @@ contract('ETHMixer', accounts => {
         refund,
         secret: deposit.secret,
         pathElements: path_elements,
-        pathIndex: path_index,
+        pathIndices: path_index,
       })
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
       const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
@@ -317,7 +317,7 @@ contract('ETHMixer', accounts => {
         refund,
         secret: deposit.secret,
         pathElements: path_elements,
-        pathIndex: path_index,
+        pathIndices: path_index,
       })
 
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
@@ -343,7 +343,7 @@ contract('ETHMixer', accounts => {
         refund,
         secret: deposit.secret,
         pathElements: path_elements,
-        pathIndex: path_index,
+        pathIndices: path_index,
       })
 
       const dummyRoot = randomHex(32)
@@ -372,7 +372,7 @@ contract('ETHMixer', accounts => {
         refund,
         secret: deposit.secret,
         pathElements: path_elements,
-        pathIndex: path_index,
+        pathIndices: path_index,
       })
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
       let { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
@@ -424,7 +424,7 @@ contract('ETHMixer', accounts => {
         refund: bigInt(1),
         secret: deposit.secret,
         pathElements: path_elements,
-        pathIndex: path_index,
+        pathIndices: path_index,
       })
 
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)

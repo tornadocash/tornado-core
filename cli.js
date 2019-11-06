@@ -107,7 +107,7 @@ async function withdrawErc20(note, receiver, relayer) {
     nullifier: deposit.nullifier,
     secret: deposit.secret,
     pathElements: path_elements,
-    pathIndex: path_index,
+    pathIndices: path_index,
   }
 
   console.log('Generating SNARK proof')
@@ -182,7 +182,7 @@ async function withdraw(note, receiver) {
     nullifier: deposit.nullifier,
     secret: deposit.secret,
     pathElements: path_elements,
-    pathIndex: path_index,
+    pathIndices: path_index,
   }
 
   console.log('Generating SNARK proof')
