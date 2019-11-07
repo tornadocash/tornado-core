@@ -80,22 +80,22 @@ contract Mixer is MerkleTreeWithHistory {
     `input` array consists of:
       - merkle root of all deposits in the mixer
       - hash of unique deposit nullifier to prevent double spends
-      - the receiver of funds
+      - the recipient of funds
       - optional fee that goes to the transaction sender (usually a relay)
   */
-  function withdraw(bytes calldata _proof, bytes32 _root, bytes32 _nullifierHash, address payable _receiver, address payable _relayer, uint256 _fee, uint256 _refund) external payable {
+  function withdraw(bytes calldata _proof, bytes32 _root, bytes32 _nullifierHash, address payable _recipient, address payable _relayer, uint256 _fee, uint256 _refund) external payable {
     require(_fee <= denomination, "Fee exceeds transfer value");
     require(!nullifierHashes[_nullifierHash], "The note has been already spent");
     require(isKnownRoot(_root), "Cannot find your merkle root"); // Make sure to use a recent one
-    require(verifier.verifyProof(_proof, [uint256(_root), uint256(_nullifierHash), uint256(_receiver), uint256(_relayer), _fee, _refund]), "Invalid withdraw proof");
+    require(verifier.verifyProof(_proof, [uint256(_root), uint256(_nullifierHash), uint256(_recipient), uint256(_relayer), _fee, _refund]), "Invalid withdraw proof");
 
     nullifierHashes[_nullifierHash] = true;
-    _processWithdraw(_receiver, _relayer, _fee, _refund);
-    emit Withdrawal(_receiver, _nullifierHash, _relayer, _fee);
+    _processWithdraw(_recipient, _relayer, _fee, _refund);
+    emit Withdrawal(_recipient, _nullifierHash, _relayer, _fee);
   }
 
   /** @dev this function is defined in a child contract */
-  function _processWithdraw(address payable _receiver, address payable _relayer, uint256 _fee, uint256 _refund) internal;
+  function _processWithdraw(address payable _recipient, address payable _relayer, uint256 _fee, uint256 _refund) internal;
 
   /** @dev whether a note is already spent */
   function isSpent(bytes32 _nullifierHash) external view returns(bool) {

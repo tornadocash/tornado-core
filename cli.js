@@ -66,7 +66,7 @@ async function depositErc20() {
   return note
 }
 
-async function withdrawErc20(note, receiver, relayer) {
+async function withdrawErc20(note, recipient, relayer) {
   let buf = Buffer.from(note.slice(2), 'hex')
   let deposit = createDeposit(bigInt.leBuff2int(buf.slice(0, 31)), bigInt.leBuff2int(buf.slice(31, 62)))
 
@@ -98,7 +98,7 @@ async function withdrawErc20(note, receiver, relayer) {
     // public
     root: root,
     nullifierHash,
-    receiver: bigInt(receiver),
+    recipient: bigInt(recipient),
     relayer: bigInt(relayer),
     fee: bigInt(web3.utils.toWei('0.01')),
     refund: bigInt(0),
@@ -120,7 +120,7 @@ async function withdrawErc20(note, receiver, relayer) {
   const args = [
     toHex(input.root),
     toHex(input.nullifierHash),
-    toHex(input.receiver, 20),
+    toHex(input.recipient, 20),
     toHex(input.relayer, 20),
     toHex(input.fee),
     toHex(input.refund)
@@ -129,20 +129,20 @@ async function withdrawErc20(note, receiver, relayer) {
   console.log('Done')
 }
 
-async function getBalance(receiver) {
-  const balance = await web3.eth.getBalance(receiver)
+async function getBalance(recipient) {
+  const balance = await web3.eth.getBalance(recipient)
   console.log('Balance is ', web3.utils.fromWei(balance))
 }
 
-async function getBalanceErc20(receiver, relayer) {
-  const balanceReceiver = await web3.eth.getBalance(receiver)
+async function getBalanceErc20(recipient, relayer) {
+  const balanceRecipient = await web3.eth.getBalance(recipient)
   const balanceRelayer = await web3.eth.getBalance(relayer)
-  const tokenBalanceReceiver = await erc20.methods.balanceOf(receiver).call()
+  const tokenBalanceRecipient = await erc20.methods.balanceOf(recipient).call()
   const tokenBalanceRelayer = await erc20.methods.balanceOf(relayer).call()
-  console.log('Receiver eth Balance is ', web3.utils.fromWei(balanceReceiver))
+  console.log('Recipient eth Balance is ', web3.utils.fromWei(balanceRecipient))
   console.log('Relayer eth Balance is ', web3.utils.fromWei(balanceRelayer))
 
-  console.log('Receiver token Balance is ', web3.utils.fromWei(tokenBalanceReceiver.toString()))
+  console.log('Recipient token Balance is ', web3.utils.fromWei(tokenBalanceRecipient.toString()))
   console.log('Relayer token Balance is ', web3.utils.fromWei(tokenBalanceRelayer.toString()))
 }
 
@@ -153,7 +153,7 @@ function toHex(number, length = 32) {
   return str
 }
 
-async function withdraw(note, receiver) {
+async function withdraw(note, recipient) {
   // Decode hex string and restore the deposit object
   let buf = Buffer.from(note.slice(2), 'hex')
   let deposit = createDeposit(bigInt.leBuff2int(buf.slice(0, 31)), bigInt.leBuff2int(buf.slice(31, 62)))
@@ -188,7 +188,7 @@ async function withdraw(note, receiver) {
     // Public snark inputs
     root: root,
     nullifierHash,
-    receiver: bigInt(receiver),
+    recipient: bigInt(recipient),
     relayer: bigInt(0),
     fee: bigInt(0),
     refund: bigInt(0),
@@ -210,7 +210,7 @@ async function withdraw(note, receiver) {
   const args = [
     toHex(input.root),
     toHex(input.nullifierHash),
-    toHex(input.receiver, 20),
+    toHex(input.recipient, 20),
     toHex(input.relayer, 20),
     toHex(input.fee),
     toHex(input.refund)
@@ -273,8 +273,8 @@ function printHelp(code = 0) {
   Submit a deposit from default eth account and return the resulting note
   $ ./cli.js deposit
 
-  Withdraw a note to 'receiver' account
-  $ ./cli.js withdraw <note> <receiver>
+  Withdraw a note to 'recipient' account
+  $ ./cli.js withdraw <note> <recipient>
 
   Check address balance
   $ ./cli.js balance <address>
@@ -293,8 +293,8 @@ if (inBrowser) {
   window.deposit = deposit
   window.withdraw = async () => {
     const note = prompt('Enter the note to withdraw')
-    const receiver = (await web3.eth.getAccounts())[0]
-    await withdraw(note, receiver)
+    const recipient = (await web3.eth.getAccounts())[0]
+    await withdraw(note, recipient)
   }
   init()
 } else {

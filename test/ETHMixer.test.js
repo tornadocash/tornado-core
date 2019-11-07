@@ -43,12 +43,12 @@ function BNArrayToStringArray(array) {
   return arrayToPrint
 }
 
-function getRandomReceiver() {
-  let receiver = rbigint(20)
-  while (toHex(receiver.toString()).length !== 42) {
-    receiver = rbigint(20)
+function getRandomRecipient() {
+  let recipient = rbigint(20)
+  while (toHex(recipient.toString()).length !== 42) {
+    recipient = rbigint(20)
   }
-  return receiver
+  return recipient
 }
 
 function snarkVerify(proof) {
@@ -75,7 +75,7 @@ contract('ETHMixer', accounts => {
   let tree
   const fee = bigInt(ETH_AMOUNT).shr(1) || bigInt(1e17)
   const refund = bigInt(0)
-  const receiver = getRandomReceiver()
+  const recipient = getRandomRecipient()
   const relayer = accounts[1]
   let groth16
   let circuit
@@ -152,7 +152,7 @@ contract('ETHMixer', accounts => {
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         nullifier: deposit.nullifier,
         relayer: operator,
-        receiver,
+        recipient,
         fee,
         refund,
         secret: deposit.secret,
@@ -209,7 +209,7 @@ contract('ETHMixer', accounts => {
         root,
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         relayer: operator,
-        receiver,
+        recipient,
         fee,
         refund,
 
@@ -227,7 +227,7 @@ contract('ETHMixer', accounts => {
       const balanceMixerBefore = await web3.eth.getBalance(mixer.address)
       const balanceRelayerBefore = await web3.eth.getBalance(relayer)
       const balanceOperatorBefore = await web3.eth.getBalance(operator)
-      const balanceRecieverBefore = await web3.eth.getBalance(toHex(receiver.toString()))
+      const balanceRecieverBefore = await web3.eth.getBalance(toHex(recipient.toString()))
       let isSpent = await mixer.isSpent(toFixedHex(input.nullifierHash))
       isSpent.should.be.equal(false)
 
@@ -237,7 +237,7 @@ contract('ETHMixer', accounts => {
       const args = [
         toFixedHex(input.root),
         toFixedHex(input.nullifierHash),
-        toFixedHex(input.receiver, 20),
+        toFixedHex(input.recipient, 20),
         toFixedHex(input.relayer, 20),
         toFixedHex(input.fee),
         toFixedHex(input.refund)
@@ -247,7 +247,7 @@ contract('ETHMixer', accounts => {
       const balanceMixerAfter = await web3.eth.getBalance(mixer.address)
       const balanceRelayerAfter = await web3.eth.getBalance(relayer)
       const balanceOperatorAfter = await web3.eth.getBalance(operator)
-      const balanceRecieverAfter = await web3.eth.getBalance(toHex(receiver.toString()))
+      const balanceRecieverAfter = await web3.eth.getBalance(toHex(recipient.toString()))
       const feeBN = toBN(fee.toString())
       balanceMixerAfter.should.be.eq.BN(toBN(balanceMixerBefore).sub(toBN(value)))
       balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore))
@@ -275,7 +275,7 @@ contract('ETHMixer', accounts => {
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         nullifier: deposit.nullifier,
         relayer: operator,
-        receiver,
+        recipient,
         fee,
         refund,
         secret: deposit.secret,
@@ -287,7 +287,7 @@ contract('ETHMixer', accounts => {
       const args = [
         toFixedHex(input.root),
         toFixedHex(input.nullifierHash),
-        toFixedHex(input.receiver, 20),
+        toFixedHex(input.recipient, 20),
         toFixedHex(input.relayer, 20),
         toFixedHex(input.fee),
         toFixedHex(input.refund)
@@ -309,7 +309,7 @@ contract('ETHMixer', accounts => {
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         nullifier: deposit.nullifier,
         relayer: operator,
-        receiver,
+        recipient,
         fee,
         refund,
         secret: deposit.secret,
@@ -321,7 +321,7 @@ contract('ETHMixer', accounts => {
       const args = [
         toFixedHex(input.root),
         toFixedHex(toBN(input.nullifierHash).add(toBN('21888242871839275222246405745257275088548364400416034343698204186575808495617'))),
-        toFixedHex(input.receiver, 20),
+        toFixedHex(input.recipient, 20),
         toFixedHex(input.relayer, 20),
         toFixedHex(input.fee),
         toFixedHex(input.refund)
@@ -342,7 +342,7 @@ contract('ETHMixer', accounts => {
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         nullifier: deposit.nullifier,
         relayer: operator,
-        receiver,
+        recipient,
         fee: oneEtherFee,
         refund,
         secret: deposit.secret,
@@ -355,7 +355,7 @@ contract('ETHMixer', accounts => {
       const args = [
         toFixedHex(input.root),
         toFixedHex(input.nullifierHash),
-        toFixedHex(input.receiver, 20),
+        toFixedHex(input.recipient, 20),
         toFixedHex(input.relayer, 20),
         toFixedHex(input.fee),
         toFixedHex(input.refund)
@@ -376,7 +376,7 @@ contract('ETHMixer', accounts => {
         root,
         nullifier: deposit.nullifier,
         relayer: operator,
-        receiver,
+        recipient,
         fee,
         refund,
         secret: deposit.secret,
@@ -390,7 +390,7 @@ contract('ETHMixer', accounts => {
       const args = [
         toFixedHex(randomHex(32)),
         toFixedHex(input.nullifierHash),
-        toFixedHex(input.receiver, 20),
+        toFixedHex(input.recipient, 20),
         toFixedHex(input.relayer, 20),
         toFixedHex(input.fee),
         toFixedHex(input.refund)
@@ -411,7 +411,7 @@ contract('ETHMixer', accounts => {
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         nullifier: deposit.nullifier,
         relayer: operator,
-        receiver,
+        recipient,
         fee,
         refund,
         secret: deposit.secret,
@@ -423,7 +423,7 @@ contract('ETHMixer', accounts => {
       const args = [
         toFixedHex(input.root),
         toFixedHex(input.nullifierHash),
-        toFixedHex(input.receiver, 20),
+        toFixedHex(input.recipient, 20),
         toFixedHex(input.relayer, 20),
         toFixedHex(input.fee),
         toFixedHex(input.refund)
@@ -431,7 +431,7 @@ contract('ETHMixer', accounts => {
       let incorrectArgs
       const originalProof = proof.slice()
 
-      // receiver
+      // recipient
       incorrectArgs = [
         toFixedHex(input.root),
         toFixedHex(input.nullifierHash),
@@ -447,7 +447,7 @@ contract('ETHMixer', accounts => {
       incorrectArgs = [
         toFixedHex(input.root),
         toFixedHex(input.nullifierHash),
-        toFixedHex(input.receiver, 20),
+        toFixedHex(input.recipient, 20),
         toFixedHex(input.relayer, 20),
         toFixedHex('0x000000000000000000000000000000000000000000000000015345785d8a0000'),
         toFixedHex(input.refund)
@@ -459,7 +459,7 @@ contract('ETHMixer', accounts => {
       incorrectArgs = [
         toFixedHex(input.root),
         toFixedHex('0x00abdfc78211f8807b9c6504a6e537e71b8788b2f529a95f1399ce124a8642ad'),
-        toFixedHex(input.receiver, 20),
+        toFixedHex(input.recipient, 20),
         toFixedHex(input.relayer, 20),
         toFixedHex(input.fee),
         toFixedHex(input.refund)
@@ -487,7 +487,7 @@ contract('ETHMixer', accounts => {
         root,
         nullifier: deposit.nullifier,
         relayer: operator,
-        receiver,
+        recipient,
         fee,
         refund: bigInt(1),
         secret: deposit.secret,
@@ -501,7 +501,7 @@ contract('ETHMixer', accounts => {
       const args = [
         toFixedHex(input.root),
         toFixedHex(input.nullifierHash),
-        toFixedHex(input.receiver, 20),
+        toFixedHex(input.recipient, 20),
         toFixedHex(input.relayer, 20),
         toFixedHex(input.fee),
         toFixedHex(input.refund)

@@ -26,12 +26,12 @@ contract ETHMixer is Mixer {
     require(msg.value == denomination, "Please send `mixDenomination` ETH along with transaction");
   }
 
-  function _processWithdraw(address payable _receiver, address payable _relayer, uint256 _fee, uint256 _refund) internal {
+  function _processWithdraw(address payable _recipient, address payable _relayer, uint256 _fee, uint256 _refund) internal {
     // sanity checks
     require(msg.value == 0, "Message value is supposed to be zero for ETH mixer");
     require(_refund == 0, "Refund value is supposed to be zero for ETH mixer");
 
-    _receiver.transfer(denomination - _fee);
+    _recipient.transfer(denomination - _fee);
     if (_fee > 0) {
       _relayer.transfer(_fee);
     }

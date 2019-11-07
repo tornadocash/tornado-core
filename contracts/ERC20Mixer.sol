@@ -31,15 +31,15 @@ contract ERC20Mixer is Mixer {
     _safeErc20TransferFrom(msg.sender, address(this), denomination);
   }
 
-  function _processWithdraw(address payable _receiver, address payable _relayer, uint256 _fee, uint256 _refund) internal {
+  function _processWithdraw(address payable _recipient, address payable _relayer, uint256 _fee, uint256 _refund) internal {
     require(msg.value == _refund, "Incorrect refund amount received by the contract");
 
-    _safeErc20Transfer(_receiver, denomination - _fee);
+    _safeErc20Transfer(_recipient, denomination - _fee);
     if (_fee > 0) {
       _safeErc20Transfer(_relayer, _fee);
     }
     if (_refund > 0) {
-      _receiver.transfer(_refund);
+      _recipient.transfer(_refund);
     }
   }
 

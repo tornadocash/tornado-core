@@ -35,12 +35,12 @@ function generateDeposit() {
   return deposit
 }
 
-function getRandomReceiver() {
-  let receiver = rbigint(20)
-  while (toHex(receiver.toString()).length !== 42) {
-    receiver = rbigint(20)
+function getRandomRecipient() {
+  let recipient = rbigint(20)
+  while (toHex(recipient.toString()).length !== 42) {
+    recipient = rbigint(20)
   }
-  return receiver
+  return recipient
 }
 
 function toFixedHex(number, length = 32) {
@@ -63,7 +63,7 @@ contract('ERC20Mixer', accounts => {
   let tree
   const fee = bigInt(ETH_AMOUNT).shr(1) || bigInt(1e17)
   const refund = ETH_AMOUNT || '1000000000000000000' // 1 ether
-  const receiver = getRandomReceiver()
+  const recipient = getRandomRecipient()
   const relayer = accounts[1]
   let groth16
   let circuit
@@ -141,7 +141,7 @@ contract('ERC20Mixer', accounts => {
         root,
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         relayer,
-        receiver,
+        recipient,
         fee,
         refund,
 
@@ -158,10 +158,10 @@ contract('ERC20Mixer', accounts => {
 
       const balanceMixerBefore = await token.balanceOf(mixer.address)
       const balanceRelayerBefore = await token.balanceOf(relayer)
-      const balanceRecieverBefore = await token.balanceOf(toHex(receiver.toString()))
+      const balanceRecieverBefore = await token.balanceOf(toHex(recipient.toString()))
 
       const ethBalanceOperatorBefore = await web3.eth.getBalance(operator)
-      const ethBalanceRecieverBefore = await web3.eth.getBalance(toHex(receiver.toString()))
+      const ethBalanceRecieverBefore = await web3.eth.getBalance(toHex(recipient.toString()))
       const ethBalanceRelayerBefore = await web3.eth.getBalance(relayer)
       let isSpent = await mixer.isSpent(toFixedHex(input.nullifierHash))
       isSpent.should.be.equal(false)
@@ -171,7 +171,7 @@ contract('ERC20Mixer', accounts => {
       const args = [
         toFixedHex(input.root),
         toFixedHex(input.nullifierHash),
-        toFixedHex(input.receiver, 20),
+        toFixedHex(input.recipient, 20),
         toFixedHex(input.relayer, 20),
         toFixedHex(input.fee),
         toFixedHex(input.refund)
@@ -181,8 +181,8 @@ contract('ERC20Mixer', accounts => {
       const balanceMixerAfter = await token.balanceOf(mixer.address)
       const balanceRelayerAfter = await token.balanceOf(relayer)
       const ethBalanceOperatorAfter = await web3.eth.getBalance(operator)
-      const balanceRecieverAfter = await token.balanceOf(toHex(receiver.toString()))
-      const ethBalanceRecieverAfter = await web3.eth.getBalance(toHex(receiver.toString()))
+      const balanceRecieverAfter = await token.balanceOf(toHex(recipient.toString()))
+      const ethBalanceRecieverAfter = await web3.eth.getBalance(toHex(recipient.toString()))
       const ethBalanceRelayerAfter = await web3.eth.getBalance(relayer)
       const feeBN = toBN(fee.toString())
       balanceMixerAfter.should.be.eq.BN(toBN(balanceMixerBefore).sub(toBN(tokenDenomination)))
@@ -217,7 +217,7 @@ contract('ERC20Mixer', accounts => {
         root,
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         relayer,
-        receiver,
+        recipient,
         fee,
         refund,
 
@@ -235,7 +235,7 @@ contract('ERC20Mixer', accounts => {
       const args = [
         toFixedHex(input.root),
         toFixedHex(input.nullifierHash),
-        toFixedHex(input.receiver, 20),
+        toFixedHex(input.recipient, 20),
         toFixedHex(input.relayer, 20),
         toFixedHex(input.fee),
         toFixedHex(input.refund)
@@ -284,7 +284,7 @@ contract('ERC20Mixer', accounts => {
         root,
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         relayer: operator,
-        receiver,
+        recipient,
         fee,
         refund,
 
@@ -302,8 +302,8 @@ contract('ERC20Mixer', accounts => {
       const balanceMixerBefore = await usdtToken.balanceOf(mixer.address)
       const balanceRelayerBefore = await usdtToken.balanceOf(relayer)
       const ethBalanceOperatorBefore = await web3.eth.getBalance(operator)
-      const balanceRecieverBefore = await usdtToken.balanceOf(toHex(receiver.toString()))
-      const ethBalanceRecieverBefore = await web3.eth.getBalance(toHex(receiver.toString()))
+      const balanceRecieverBefore = await usdtToken.balanceOf(toHex(recipient.toString()))
+      const ethBalanceRecieverBefore = await web3.eth.getBalance(toHex(recipient.toString()))
       let isSpent = await mixer.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
       isSpent.should.be.equal(false)
 
@@ -313,7 +313,7 @@ contract('ERC20Mixer', accounts => {
       const args = [
         toFixedHex(input.root),
         toFixedHex(input.nullifierHash),
-        toFixedHex(input.receiver, 20),
+        toFixedHex(input.recipient, 20),
         toFixedHex(input.relayer, 20),
         toFixedHex(input.fee),
         toFixedHex(input.refund)
@@ -323,8 +323,8 @@ contract('ERC20Mixer', accounts => {
       const balanceMixerAfter = await usdtToken.balanceOf(mixer.address)
       const balanceRelayerAfter = await usdtToken.balanceOf(relayer)
       const ethBalanceOperatorAfter = await web3.eth.getBalance(operator)
-      const balanceRecieverAfter = await usdtToken.balanceOf(toHex(receiver.toString()))
-      const ethBalanceRecieverAfter = await web3.eth.getBalance(toHex(receiver.toString()))
+      const balanceRecieverAfter = await usdtToken.balanceOf(toHex(recipient.toString()))
+      const ethBalanceRecieverAfter = await web3.eth.getBalance(toHex(recipient.toString()))
       const feeBN = toBN(fee.toString())
       balanceMixerAfter.should.be.eq.BN(toBN(balanceMixerBefore).sub(toBN(tokenDenomination)))
       balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore))
@@ -373,7 +373,7 @@ contract('ERC20Mixer', accounts => {
         root,
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         relayer: operator,
-        receiver,
+        recipient,
         fee,
         refund,
 
@@ -391,8 +391,8 @@ contract('ERC20Mixer', accounts => {
       const balanceMixerBefore = await token.balanceOf(mixer.address)
       const balanceRelayerBefore = await token.balanceOf(relayer)
       const ethBalanceOperatorBefore = await web3.eth.getBalance(operator)
-      const balanceRecieverBefore = await token.balanceOf(toHex(receiver.toString()))
-      const ethBalanceRecieverBefore = await web3.eth.getBalance(toHex(receiver.toString()))
+      const balanceRecieverBefore = await token.balanceOf(toHex(recipient.toString()))
+      const ethBalanceRecieverBefore = await web3.eth.getBalance(toHex(recipient.toString()))
       let isSpent = await mixer.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
       isSpent.should.be.equal(false)
 
@@ -402,7 +402,7 @@ contract('ERC20Mixer', accounts => {
       const args = [
         toFixedHex(input.root),
         toFixedHex(input.nullifierHash),
-        toFixedHex(input.receiver, 20),
+        toFixedHex(input.recipient, 20),
         toFixedHex(input.relayer, 20),
         toFixedHex(input.fee),
         toFixedHex(input.refund)
@@ -413,8 +413,8 @@ contract('ERC20Mixer', accounts => {
       const balanceMixerAfter = await token.balanceOf(mixer.address)
       const balanceRelayerAfter = await token.balanceOf(relayer)
       const ethBalanceOperatorAfter = await web3.eth.getBalance(operator)
-      const balanceRecieverAfter = await token.balanceOf(toHex(receiver.toString()))
-      const ethBalanceRecieverAfter = await web3.eth.getBalance(toHex(receiver.toString()))
+      const balanceRecieverAfter = await token.balanceOf(toHex(recipient.toString()))
+      const ethBalanceRecieverAfter = await web3.eth.getBalance(toHex(recipient.toString()))
       const feeBN = toBN(fee.toString())
       balanceMixerAfter.should.be.eq.BN(toBN(balanceMixerBefore).sub(toBN(tokenDenomination)))
       balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore))
