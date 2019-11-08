@@ -31,9 +31,11 @@ contract ETHMixer is Mixer {
     require(msg.value == 0, "Message value is supposed to be zero for ETH mixer");
     require(_refund == 0, "Refund value is supposed to be zero for ETH mixer");
 
-    _recipient.transfer(denomination - _fee);
+    (bool success, ) = _recipient.call.value(denomination - _fee)("");
+    require(success, "payment to _recipient did not go thru");
     if (_fee > 0) {
-      _relayer.transfer(_fee);
+      (success, ) = _relayer.call.value(_fee)("");
+      require(success, "payment to _relayer did not go thru");
     }
   }
 }
