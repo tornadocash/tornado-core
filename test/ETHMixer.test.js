@@ -43,18 +43,25 @@ function BNArrayToStringArray(array) {
   return arrayToPrint
 }
 
-function getRandomReceiver() {
-  let receiver = rbigint(20)
-  while (toHex(receiver.toString()).length !== 42) {
-    receiver = rbigint(20)
+function getRandomRecipient() {
+  let recipient = rbigint(20)
+  while (toHex(recipient.toString()).length !== 42) {
+    recipient = rbigint(20)
   }
-  return receiver
+  return recipient
 }
 
 function snarkVerify(proof) {
   proof = unstringifyBigInts2(proof)
   const verification_key = unstringifyBigInts2(require('../build/circuits/withdraw_verification_key.json'))
   return snarkjs['groth'].isValid(verification_key, proof, proof.publicSignals)
+}
+
+function toFixedHex(number, length = 32) {
+  let str = bigInt(number).toString(16)
+  while (str.length < length * 2) str = '0' + str
+  str = '0x' + str
+  return str
 }
 
 contract('ETHMixer', accounts => {
@@ -68,7 +75,7 @@ contract('ETHMixer', accounts => {
   let tree
   const fee = bigInt(ETH_AMOUNT).shr(1) || bigInt(1e17)
   const refund = bigInt(0)
-  const receiver = getRandomReceiver()
+  const recipient = getRandomRecipient()
   const relayer = accounts[1]
   let groth16
   let circuit
@@ -96,23 +103,23 @@ contract('ETHMixer', accounts => {
 
   describe('#deposit', () => {
     it('should emit event', async () => {
-      let commitment = 42
+      let commitment = toFixedHex(42)
       let { logs } = await mixer.deposit(commitment, { value, from: sender })
 
       logs[0].event.should.be.equal('Deposit')
-      logs[0].args.commitment.should.be.eq.BN(toBN(commitment))
-      logs[0].args.leafIndex.should.be.eq.BN(toBN(0))
+      logs[0].args.commitment.should.be.equal(commitment)
+      logs[0].args.leafIndex.should.be.eq.BN(0)
 
-      commitment = 12;
+      commitment = toFixedHex(12);
       ({ logs } = await mixer.deposit(commitment, { value, from: accounts[2] }))
 
       logs[0].event.should.be.equal('Deposit')
-      logs[0].args.commitment.should.be.eq.BN(toBN(commitment))
-      logs[0].args.leafIndex.should.be.eq.BN(toBN(1))
+      logs[0].args.commitment.should.be.equal(commitment)
+      logs[0].args.leafIndex.should.be.eq.BN(1)
     })
 
     it('should not deposit if disabled', async () => {
-      let commitment = 42;
+      let commitment = toFixedHex(42);
       (await mixer.isDepositsDisabled()).should.be.equal(false)
       const err = await mixer.toggleDeposits(true, { from: accounts[1] }).should.be.rejected
       err.reason.should.be.equal('Only operator can call this function.')
@@ -127,7 +134,7 @@ contract('ETHMixer', accounts => {
     })
 
     it('should throw if there is a such commitment', async () => {
-      const commitment = 42
+      const commitment = toFixedHex(42)
       await mixer.deposit(commitment, { value, from: sender }).should.be.fulfilled
       const error = await mixer.deposit(commitment, { value, from: sender }).should.be.rejected
       error.reason.should.be.equal('The commitment has been submitted')
@@ -145,7 +152,7 @@ contract('ETHMixer', accounts => {
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         nullifier: deposit.nullifier,
         relayer: operator,
-        receiver,
+        recipient,
         fee,
         refund,
         secret: deposit.secret,
@@ -189,7 +196,7 @@ contract('ETHMixer', accounts => {
       // Uncomment to measure gas usage
       // let gas = await mixer.deposit.estimateGas(toBN(deposit.commitment.toString()), { value, from: user, gasPrice: '0' })
       // console.log('deposit gas:', gas)
-      await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: user, gasPrice: '0' })
+      await mixer.deposit(toFixedHex(deposit.commitment), { value, from: user, gasPrice: '0' })
 
       const balanceUserAfter = await web3.eth.getBalance(user)
       balanceUserAfter.should.be.eq.BN(toBN(balanceUserBefore).sub(toBN(value)))
@@ -202,7 +209,7 @@ contract('ETHMixer', accounts => {
         root,
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         relayer: operator,
-        receiver,
+        recipient,
         fee,
         refund,
 
@@ -215,24 +222,32 @@ contract('ETHMixer', accounts => {
 
 
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-      const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
+      const { proof } = websnarkUtils.toSolidityInput(proofData)
 
       const balanceMixerBefore = await web3.eth.getBalance(mixer.address)
       const balanceRelayerBefore = await web3.eth.getBalance(relayer)
       const balanceOperatorBefore = await web3.eth.getBalance(operator)
-      const balanceRecieverBefore = await web3.eth.getBalance(toHex(receiver.toString()))
-      let isSpent = await mixer.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
+      const balanceRecieverBefore = await web3.eth.getBalance(toHex(recipient.toString()))
+      let isSpent = await mixer.isSpent(toFixedHex(input.nullifierHash))
       isSpent.should.be.equal(false)
 
       // Uncomment to measure gas usage
       // gas = await mixer.withdraw.estimateGas(proof, publicSignals, { from: relayer, gasPrice: '0' })
       // console.log('withdraw gas:', gas)
-      const { logs } = await mixer.withdraw(proof, publicSignals, { from: relayer, gasPrice: '0' })
+      const args = [
+        toFixedHex(input.root),
+        toFixedHex(input.nullifierHash),
+        toFixedHex(input.recipient, 20),
+        toFixedHex(input.relayer, 20),
+        toFixedHex(input.fee),
+        toFixedHex(input.refund)
+      ]
+      const { logs } = await mixer.withdraw(proof, ...args, { from: relayer, gasPrice: '0' })
 
       const balanceMixerAfter = await web3.eth.getBalance(mixer.address)
       const balanceRelayerAfter = await web3.eth.getBalance(relayer)
       const balanceOperatorAfter = await web3.eth.getBalance(operator)
-      const balanceRecieverAfter = await web3.eth.getBalance(toHex(receiver.toString()))
+      const balanceRecieverAfter = await web3.eth.getBalance(toHex(recipient.toString()))
       const feeBN = toBN(fee.toString())
       balanceMixerAfter.should.be.eq.BN(toBN(balanceMixerBefore).sub(toBN(value)))
       balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore))
@@ -241,17 +256,17 @@ contract('ETHMixer', accounts => {
 
 
       logs[0].event.should.be.equal('Withdrawal')
-      logs[0].args.nullifierHash.should.be.eq.BN(toBN(input.nullifierHash.toString()))
+      logs[0].args.nullifierHash.should.be.equal(toFixedHex(input.nullifierHash))
       logs[0].args.relayer.should.be.eq.BN(operator)
       logs[0].args.fee.should.be.eq.BN(feeBN)
-      isSpent = await mixer.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
+      isSpent = await mixer.isSpent(toFixedHex(input.nullifierHash))
       isSpent.should.be.equal(true)
     })
 
     it('should prevent double spend', async () => {
       const deposit = generateDeposit()
       await tree.insert(deposit.commitment)
-      await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: sender })
+      await mixer.deposit(toFixedHex(deposit.commitment), { value, from: sender })
 
       const { root, path_elements, path_index } = await tree.path(0)
 
@@ -260,7 +275,7 @@ contract('ETHMixer', accounts => {
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         nullifier: deposit.nullifier,
         relayer: operator,
-        receiver,
+        recipient,
         fee,
         refund,
         secret: deposit.secret,
@@ -268,16 +283,24 @@ contract('ETHMixer', accounts => {
         pathIndices: path_index,
       })
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-      const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
-      await mixer.withdraw(proof, publicSignals, { from: relayer }).should.be.fulfilled
-      const error = await mixer.withdraw(proof, publicSignals, { from: relayer }).should.be.rejected
+      const { proof } = websnarkUtils.toSolidityInput(proofData)
+      const args = [
+        toFixedHex(input.root),
+        toFixedHex(input.nullifierHash),
+        toFixedHex(input.recipient, 20),
+        toFixedHex(input.relayer, 20),
+        toFixedHex(input.fee),
+        toFixedHex(input.refund)
+      ]
+      await mixer.withdraw(proof, ...args, { from: relayer }).should.be.fulfilled
+      const error = await mixer.withdraw(proof, ...args, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('The note has been already spent')
     })
 
     it('should prevent double spend with overflow', async () => {
       const deposit = generateDeposit()
       await tree.insert(deposit.commitment)
-      await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: sender })
+      await mixer.deposit(toFixedHex(deposit.commitment), { value, from: sender })
 
       const { root, path_elements, path_index } = await tree.path(0)
 
@@ -286,7 +309,7 @@ contract('ETHMixer', accounts => {
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         nullifier: deposit.nullifier,
         relayer: operator,
-        receiver,
+        recipient,
         fee,
         refund,
         secret: deposit.secret,
@@ -294,16 +317,23 @@ contract('ETHMixer', accounts => {
         pathIndices: path_index,
       })
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-      const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
-      publicSignals[1] ='0x' + toBN(publicSignals[1]).add(toBN('21888242871839275222246405745257275088548364400416034343698204186575808495617')).toString('hex')
-      const error = await mixer.withdraw(proof, publicSignals, { from: relayer }).should.be.rejected
+      const { proof } = websnarkUtils.toSolidityInput(proofData)
+      const args = [
+        toFixedHex(input.root),
+        toFixedHex(toBN(input.nullifierHash).add(toBN('21888242871839275222246405745257275088548364400416034343698204186575808495617'))),
+        toFixedHex(input.recipient, 20),
+        toFixedHex(input.relayer, 20),
+        toFixedHex(input.fee),
+        toFixedHex(input.refund)
+      ]
+      const error = await mixer.withdraw(proof, ...args, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('verifier-gte-snark-scalar-field')
     })
 
     it('fee should be less or equal transfer value', async () => {
       const deposit = generateDeposit()
       await tree.insert(deposit.commitment)
-      await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: sender })
+      await mixer.deposit(toFixedHex(deposit.commitment), { value, from: sender })
 
       const { root, path_elements, path_index } = await tree.path(0)
       const oneEtherFee = bigInt(1e18) // 1 ether
@@ -312,7 +342,7 @@ contract('ETHMixer', accounts => {
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         nullifier: deposit.nullifier,
         relayer: operator,
-        receiver,
+        recipient,
         fee: oneEtherFee,
         refund,
         secret: deposit.secret,
@@ -321,15 +351,23 @@ contract('ETHMixer', accounts => {
       })
 
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-      const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
-      const error = await mixer.withdraw(proof, publicSignals, { from: relayer }).should.be.rejected
+      const { proof } = websnarkUtils.toSolidityInput(proofData)
+      const args = [
+        toFixedHex(input.root),
+        toFixedHex(input.nullifierHash),
+        toFixedHex(input.recipient, 20),
+        toFixedHex(input.relayer, 20),
+        toFixedHex(input.fee),
+        toFixedHex(input.refund)
+      ]
+      const error = await mixer.withdraw(proof, ...args, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('Fee exceeds transfer value')
     })
 
     it('should throw for corrupted merkle tree root', async () => {
       const deposit = generateDeposit()
       await tree.insert(deposit.commitment)
-      await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: sender })
+      await mixer.deposit(toFixedHex(deposit.commitment), { value, from: sender })
 
       const { root, path_elements, path_index } = await tree.path(0)
 
@@ -338,7 +376,7 @@ contract('ETHMixer', accounts => {
         root,
         nullifier: deposit.nullifier,
         relayer: operator,
-        receiver,
+        recipient,
         fee,
         refund,
         secret: deposit.secret,
@@ -346,19 +384,25 @@ contract('ETHMixer', accounts => {
         pathIndices: path_index,
       })
 
-      const dummyRoot = randomHex(32)
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-      const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
-      publicSignals[0] = dummyRoot
+      const { proof } = websnarkUtils.toSolidityInput(proofData)
 
-      const error = await mixer.withdraw(proof, publicSignals, { from: relayer }).should.be.rejected
+      const args = [
+        toFixedHex(randomHex(32)),
+        toFixedHex(input.nullifierHash),
+        toFixedHex(input.recipient, 20),
+        toFixedHex(input.relayer, 20),
+        toFixedHex(input.fee),
+        toFixedHex(input.refund)
+      ]
+      const error = await mixer.withdraw(proof, ...args, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('Cannot find your merkle root')
     })
 
     it('should reject with tampered public inputs', async () => {
       const deposit = generateDeposit()
       await tree.insert(deposit.commitment)
-      await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: sender })
+      await mixer.deposit(toFixedHex(deposit.commitment), { value, from: sender })
 
       let { root, path_elements, path_index } = await tree.path(0)
 
@@ -367,7 +411,7 @@ contract('ETHMixer', accounts => {
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         nullifier: deposit.nullifier,
         relayer: operator,
-        receiver,
+        recipient,
         fee,
         refund,
         secret: deposit.secret,
@@ -375,42 +419,66 @@ contract('ETHMixer', accounts => {
         pathIndices: path_index,
       })
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-      let { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
-      const originalPublicSignals = publicSignals.slice()
+      let { proof } = websnarkUtils.toSolidityInput(proofData)
+      const args = [
+        toFixedHex(input.root),
+        toFixedHex(input.nullifierHash),
+        toFixedHex(input.recipient, 20),
+        toFixedHex(input.relayer, 20),
+        toFixedHex(input.fee),
+        toFixedHex(input.refund)
+      ]
+      let incorrectArgs
       const originalProof = proof.slice()
 
-      // receiver
-      publicSignals[2] = '0x0000000000000000000000007a1f9131357404ef86d7c38dbffed2da70321337'
-
-      let error = await mixer.withdraw(proof, publicSignals, { from: relayer }).should.be.rejected
+      // recipient
+      incorrectArgs = [
+        toFixedHex(input.root),
+        toFixedHex(input.nullifierHash),
+        toFixedHex('0x0000000000000000000000007a1f9131357404ef86d7c38dbffed2da70321337', 20),
+        toFixedHex(input.relayer, 20),
+        toFixedHex(input.fee),
+        toFixedHex(input.refund)
+      ]
+      let error = await mixer.withdraw(proof, ...incorrectArgs, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('Invalid withdraw proof')
 
       // fee
-      publicSignals = originalPublicSignals.slice()
-      publicSignals[3] = '0x000000000000000000000000000000000000000000000000015345785d8a0000'
-
-      error = await mixer.withdraw(proof, publicSignals, { from: relayer }).should.be.rejected
+      incorrectArgs = [
+        toFixedHex(input.root),
+        toFixedHex(input.nullifierHash),
+        toFixedHex(input.recipient, 20),
+        toFixedHex(input.relayer, 20),
+        toFixedHex('0x000000000000000000000000000000000000000000000000015345785d8a0000'),
+        toFixedHex(input.refund)
+      ]
+      error = await mixer.withdraw(proof, ...incorrectArgs, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('Invalid withdraw proof')
 
       // nullifier
-      publicSignals = originalPublicSignals.slice()
-      publicSignals[1] = '0x00abdfc78211f8807b9c6504a6e537e71b8788b2f529a95f1399ce124a8642ad'
-
-      error = await mixer.withdraw(proof, publicSignals, { from: relayer }).should.be.rejected
+      incorrectArgs = [
+        toFixedHex(input.root),
+        toFixedHex('0x00abdfc78211f8807b9c6504a6e537e71b8788b2f529a95f1399ce124a8642ad'),
+        toFixedHex(input.recipient, 20),
+        toFixedHex(input.relayer, 20),
+        toFixedHex(input.fee),
+        toFixedHex(input.refund)
+      ]
+      error = await mixer.withdraw(proof, ...incorrectArgs, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('Invalid withdraw proof')
 
       // proof itself
-      proof[0] = '0x261d81d8203437f29b38a88c4263476d858e6d9645cf21740461684412b31337'
-      await mixer.withdraw(proof, originalPublicSignals, { from: relayer }).should.be.rejected
+      proof = '0xbeef' + proof.substr(6)
+      await mixer.withdraw(proof, ...args, { from: relayer }).should.be.rejected
 
       // should work with original values
-      await mixer.withdraw(originalProof, originalPublicSignals, { from: relayer }).should.be.fulfilled
+      await mixer.withdraw(originalProof, ...args, { from: relayer }).should.be.fulfilled
     })
 
     it('should reject with non zero refund', async () => {
       const deposit = generateDeposit()
       await tree.insert(deposit.commitment)
-      await mixer.deposit(toBN(deposit.commitment.toString()), { value, from: sender })
+      await mixer.deposit(toFixedHex(deposit.commitment), { value, from: sender })
 
       const { root, path_elements, path_index } = await tree.path(0)
 
@@ -419,7 +487,7 @@ contract('ETHMixer', accounts => {
         root,
         nullifier: deposit.nullifier,
         relayer: operator,
-        receiver,
+        recipient,
         fee,
         refund: bigInt(1),
         secret: deposit.secret,
@@ -428,9 +496,17 @@ contract('ETHMixer', accounts => {
       })
 
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-      const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
+      const { proof } = websnarkUtils.toSolidityInput(proofData)
 
-      const error = await mixer.withdraw(proof, publicSignals, { from: relayer }).should.be.rejected
+      const args = [
+        toFixedHex(input.root),
+        toFixedHex(input.nullifierHash),
+        toFixedHex(input.recipient, 20),
+        toFixedHex(input.relayer, 20),
+        toFixedHex(input.fee),
+        toFixedHex(input.refund)
+      ]
+      const error = await mixer.withdraw(proof, ...args, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('Refund value is supposed to be zero for ETH mixer')
     })
   })

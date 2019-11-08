@@ -29,7 +29,7 @@ template CommitmentHasher() {
 template Withdraw(levels) {
     signal input root;
     signal input nullifierHash;
-    signal input receiver; // not taking part in any computations
+    signal input recipient; // not taking part in any computations
     signal input relayer;  // not taking part in any computations
     signal input fee;      // not taking part in any computations
     signal input refund;   // not taking part in any computations

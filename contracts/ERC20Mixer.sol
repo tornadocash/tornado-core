@@ -19,7 +19,7 @@ contract ERC20Mixer is Mixer {
   constructor(
     IVerifier _verifier,
     uint256 _denomination,
-    uint8 _merkleTreeHeight,
+    uint32 _merkleTreeHeight,
     address _operator,
     address _token
   ) Mixer(_verifier, _denomination, _merkleTreeHeight, _operator) public {
@@ -31,15 +31,15 @@ contract ERC20Mixer is Mixer {
     _safeErc20TransferFrom(msg.sender, address(this), denomination);
   }
 
-  function _processWithdraw(address payable _receiver, address payable _relayer, uint256 _fee, uint256 _refund) internal {
+  function _processWithdraw(address payable _recipient, address payable _relayer, uint256 _fee, uint256 _refund) internal {
     require(msg.value == _refund, "Incorrect refund amount received by the contract");
 
-    _safeErc20Transfer(_receiver, denomination - _fee);
+    _safeErc20Transfer(_recipient, denomination - _fee);
     if (_fee > 0) {
       _safeErc20Transfer(_relayer, _fee);
     }
     if (_refund > 0) {
-      _receiver.transfer(_refund);
+      _recipient.transfer(_refund);
     }
   }
 
@@ -51,7 +51,7 @@ contract ERC20Mixer is Mixer {
     if (data.length > 0) {
       require(data.length == 32, "data length should be either 0 or 32 bytes");
       success = abi.decode(data, (bool));
-      require(success, "not enough allowed tokens");
+      require(success, "not enough allowed tokens. Token returns false.");
     }
   }
 
@@ -63,7 +63,7 @@ contract ERC20Mixer is Mixer {
     if (data.length > 0) {
       require(data.length == 32, "data length should be either 0 or 32 bytes");
       success = abi.decode(data, (bool));
-      require(success, "not enough tokens");
+      require(success, "not enough tokens. Token returns false.");
     }
   }
 }

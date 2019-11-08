@@ -35,12 +35,19 @@ function generateDeposit() {
   return deposit
 }
 
-function getRandomReceiver() {
-  let receiver = rbigint(20)
-  while (toHex(receiver.toString()).length !== 42) {
-    receiver = rbigint(20)
+function getRandomRecipient() {
+  let recipient = rbigint(20)
+  while (toHex(recipient.toString()).length !== 42) {
+    recipient = rbigint(20)
   }
-  return receiver
+  return recipient
+}
+
+function toFixedHex(number, length = 32) {
+  let str = bigInt(number).toString(16)
+  while (str.length < length * 2) str = '0' + str
+  str = '0x' + str
+  return str
 }
 
 contract('ERC20Mixer', accounts => {
@@ -56,7 +63,7 @@ contract('ERC20Mixer', accounts => {
   let tree
   const fee = bigInt(ETH_AMOUNT).shr(1) || bigInt(1e17)
   const refund = ETH_AMOUNT || '1000000000000000000' // 1 ether
-  const receiver = getRandomReceiver()
+  const recipient = getRandomRecipient()
   const relayer = accounts[1]
   let groth16
   let circuit
@@ -91,18 +98,18 @@ contract('ERC20Mixer', accounts => {
 
   describe('#deposit', () => {
     it('should work', async () => {
-      const commitment = 43
+      const commitment = toFixedHex(43)
       await token.approve(mixer.address, tokenDenomination)
 
       let { logs } = await mixer.deposit(commitment, { from: sender })
 
       logs[0].event.should.be.equal('Deposit')
-      logs[0].args.commitment.should.be.eq.BN(toBN(commitment))
-      logs[0].args.leafIndex.should.be.eq.BN(toBN(0))
+      logs[0].args.commitment.should.be.equal(commitment)
+      logs[0].args.leafIndex.should.be.eq.BN(0)
     })
 
     it('should not allow to send ether on deposit', async () => {
-      const commitment = 43
+      const commitment = toFixedHex(43)
       await token.approve(mixer.address, tokenDenomination)
 
       let error = await mixer.deposit(commitment, { from: sender, value: 1e6 }).should.be.rejected
@@ -122,7 +129,7 @@ contract('ERC20Mixer', accounts => {
       // Uncomment to measure gas usage
       // let gas = await mixer.deposit.estimateGas(toBN(deposit.commitment.toString()), { from: user, gasPrice: '0' })
       // console.log('deposit gas:', gas)
-      await mixer.deposit(toBN(deposit.commitment.toString()), { from: user, gasPrice: '0' })
+      await mixer.deposit(toFixedHex(deposit.commitment), { from: user, gasPrice: '0' })
 
       const balanceUserAfter = await token.balanceOf(user)
       balanceUserAfter.should.be.eq.BN(toBN(balanceUserBefore).sub(toBN(tokenDenomination)))
@@ -134,7 +141,7 @@ contract('ERC20Mixer', accounts => {
         root,
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         relayer,
-        receiver,
+        recipient,
         fee,
         refund,
 
@@ -147,27 +154,35 @@ contract('ERC20Mixer', accounts => {
 
 
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-      const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
+      const { proof } = websnarkUtils.toSolidityInput(proofData)
 
       const balanceMixerBefore = await token.balanceOf(mixer.address)
       const balanceRelayerBefore = await token.balanceOf(relayer)
-      const balanceRecieverBefore = await token.balanceOf(toHex(receiver.toString()))
+      const balanceRecieverBefore = await token.balanceOf(toHex(recipient.toString()))
 
       const ethBalanceOperatorBefore = await web3.eth.getBalance(operator)
-      const ethBalanceRecieverBefore = await web3.eth.getBalance(toHex(receiver.toString()))
+      const ethBalanceRecieverBefore = await web3.eth.getBalance(toHex(recipient.toString()))
       const ethBalanceRelayerBefore = await web3.eth.getBalance(relayer)
-      let isSpent = await mixer.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
+      let isSpent = await mixer.isSpent(toFixedHex(input.nullifierHash))
       isSpent.should.be.equal(false)
       // Uncomment to measure gas usage
       // gas = await mixer.withdraw.estimateGas(proof, publicSignals, { from: relayer, gasPrice: '0' })
       // console.log('withdraw gas:', gas)
-      const { logs } = await mixer.withdraw(proof, publicSignals, { value: refund, from: relayer, gasPrice: '0' })
+      const args = [
+        toFixedHex(input.root),
+        toFixedHex(input.nullifierHash),
+        toFixedHex(input.recipient, 20),
+        toFixedHex(input.relayer, 20),
+        toFixedHex(input.fee),
+        toFixedHex(input.refund)
+      ]
+      const { logs } = await mixer.withdraw(proof, ...args, { value: refund, from: relayer, gasPrice: '0' })
 
       const balanceMixerAfter = await token.balanceOf(mixer.address)
       const balanceRelayerAfter = await token.balanceOf(relayer)
       const ethBalanceOperatorAfter = await web3.eth.getBalance(operator)
-      const balanceRecieverAfter = await token.balanceOf(toHex(receiver.toString()))
-      const ethBalanceRecieverAfter = await web3.eth.getBalance(toHex(receiver.toString()))
+      const balanceRecieverAfter = await token.balanceOf(toHex(recipient.toString()))
+      const ethBalanceRecieverAfter = await web3.eth.getBalance(toHex(recipient.toString()))
       const ethBalanceRelayerAfter = await web3.eth.getBalance(relayer)
       const feeBN = toBN(fee.toString())
       balanceMixerAfter.should.be.eq.BN(toBN(balanceMixerBefore).sub(toBN(tokenDenomination)))
@@ -179,10 +194,10 @@ contract('ERC20Mixer', accounts => {
       ethBalanceRelayerAfter.should.be.eq.BN(toBN(ethBalanceRelayerBefore).sub(toBN(refund)))
 
       logs[0].event.should.be.equal('Withdrawal')
-      logs[0].args.nullifierHash.should.be.eq.BN(toBN(input.nullifierHash.toString()))
+      logs[0].args.nullifierHash.should.be.equal(toFixedHex(input.nullifierHash))
       logs[0].args.relayer.should.be.eq.BN(relayer)
       logs[0].args.fee.should.be.eq.BN(feeBN)
-      isSpent = await mixer.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
+      isSpent = await mixer.isSpent(toFixedHex(input.nullifierHash))
       isSpent.should.be.equal(true)
     })
 
@@ -192,7 +207,7 @@ contract('ERC20Mixer', accounts => {
       await tree.insert(deposit.commitment)
       await token.mint(user, tokenDenomination)
       await token.approve(mixer.address, tokenDenomination, { from: user })
-      await mixer.deposit(toBN(deposit.commitment.toString()), { from: user, gasPrice: '0' })
+      await mixer.deposit(toFixedHex(deposit.commitment), { from: user, gasPrice: '0' })
 
 
       const { root, path_elements, path_index } = await tree.path(0)
@@ -202,7 +217,7 @@ contract('ERC20Mixer', accounts => {
         root,
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         relayer,
-        receiver,
+        recipient,
         fee,
         refund,
 
@@ -215,13 +230,21 @@ contract('ERC20Mixer', accounts => {
 
 
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-      const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
+      const { proof } = websnarkUtils.toSolidityInput(proofData)
 
-      let { reason } = await mixer.withdraw(proof, publicSignals, { value: 1, from: relayer, gasPrice: '0' }).should.be.rejected
+      const args = [
+        toFixedHex(input.root),
+        toFixedHex(input.nullifierHash),
+        toFixedHex(input.recipient, 20),
+        toFixedHex(input.relayer, 20),
+        toFixedHex(input.fee),
+        toFixedHex(input.refund)
+      ]
+      let { reason } = await mixer.withdraw(proof, ...args, { value: 1, from: relayer, gasPrice: '0' }).should.be.rejected
       reason.should.be.equal('Incorrect refund amount received by the contract')
 
 
-      ;({ reason } = await mixer.withdraw(proof, publicSignals, { value: toBN(refund).mul(toBN(2)), from: relayer, gasPrice: '0' }).should.be.rejected)
+      ;({ reason } = await mixer.withdraw(proof, ...args, { value: toBN(refund).mul(toBN(2)), from: relayer, gasPrice: '0' }).should.be.rejected)
       reason.should.be.equal('Incorrect refund amount received by the contract')
     })
 
@@ -247,7 +270,7 @@ contract('ERC20Mixer', accounts => {
       console.log('approve done')
       const allowanceUser = await usdtToken.allowance(user, mixer.address)
       console.log('allowanceUser', allowanceUser.toString())
-      await mixer.deposit(toBN(deposit.commitment.toString()), { from: user, gasPrice: '0' })
+      await mixer.deposit(toFixedHex(deposit.commitment), { from: user, gasPrice: '0' })
       console.log('deposit done')
 
       const balanceUserAfter = await usdtToken.balanceOf(user)
@@ -261,7 +284,7 @@ contract('ERC20Mixer', accounts => {
         root,
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         relayer: operator,
-        receiver,
+        recipient,
         fee,
         refund,
 
@@ -274,26 +297,34 @@ contract('ERC20Mixer', accounts => {
 
 
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-      const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
+      const { proof } = websnarkUtils.toSolidityInput(proofData)
 
       const balanceMixerBefore = await usdtToken.balanceOf(mixer.address)
       const balanceRelayerBefore = await usdtToken.balanceOf(relayer)
       const ethBalanceOperatorBefore = await web3.eth.getBalance(operator)
-      const balanceRecieverBefore = await usdtToken.balanceOf(toHex(receiver.toString()))
-      const ethBalanceRecieverBefore = await web3.eth.getBalance(toHex(receiver.toString()))
+      const balanceRecieverBefore = await usdtToken.balanceOf(toHex(recipient.toString()))
+      const ethBalanceRecieverBefore = await web3.eth.getBalance(toHex(recipient.toString()))
       let isSpent = await mixer.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
       isSpent.should.be.equal(false)
 
       // Uncomment to measure gas usage
       // gas = await mixer.withdraw.estimateGas(proof, publicSignals, { from: relayer, gasPrice: '0' })
       // console.log('withdraw gas:', gas)
-      const { logs } = await mixer.withdraw(proof, publicSignals, { value: refund, from: relayer, gasPrice: '0' })
+      const args = [
+        toFixedHex(input.root),
+        toFixedHex(input.nullifierHash),
+        toFixedHex(input.recipient, 20),
+        toFixedHex(input.relayer, 20),
+        toFixedHex(input.fee),
+        toFixedHex(input.refund)
+      ]
+      const { logs } = await mixer.withdraw(proof, ...args, { value: refund, from: relayer, gasPrice: '0' })
 
       const balanceMixerAfter = await usdtToken.balanceOf(mixer.address)
       const balanceRelayerAfter = await usdtToken.balanceOf(relayer)
       const ethBalanceOperatorAfter = await web3.eth.getBalance(operator)
-      const balanceRecieverAfter = await usdtToken.balanceOf(toHex(receiver.toString()))
-      const ethBalanceRecieverAfter = await web3.eth.getBalance(toHex(receiver.toString()))
+      const balanceRecieverAfter = await usdtToken.balanceOf(toHex(recipient.toString()))
+      const ethBalanceRecieverAfter = await web3.eth.getBalance(toHex(recipient.toString()))
       const feeBN = toBN(fee.toString())
       balanceMixerAfter.should.be.eq.BN(toBN(balanceMixerBefore).sub(toBN(tokenDenomination)))
       balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore))
@@ -328,7 +359,7 @@ contract('ERC20Mixer', accounts => {
       console.log('balanceUserBefore', balanceUserBefore.toString())
       await token.approve(mixer.address, tokenDenomination, { from: user })
       console.log('approve done')
-      await mixer.deposit(toBN(deposit.commitment.toString()), { from: user, gasPrice: '0' })
+      await mixer.deposit(toFixedHex(deposit.commitment), { from: user, gasPrice: '0' })
       console.log('deposit done')
 
       const balanceUserAfter = await token.balanceOf(user)
@@ -342,7 +373,7 @@ contract('ERC20Mixer', accounts => {
         root,
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         relayer: operator,
-        receiver,
+        recipient,
         fee,
         refund,
 
@@ -355,27 +386,35 @@ contract('ERC20Mixer', accounts => {
 
 
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-      const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
+      const { proof } = websnarkUtils.toSolidityInput(proofData)
 
       const balanceMixerBefore = await token.balanceOf(mixer.address)
       const balanceRelayerBefore = await token.balanceOf(relayer)
       const ethBalanceOperatorBefore = await web3.eth.getBalance(operator)
-      const balanceRecieverBefore = await token.balanceOf(toHex(receiver.toString()))
-      const ethBalanceRecieverBefore = await web3.eth.getBalance(toHex(receiver.toString()))
+      const balanceRecieverBefore = await token.balanceOf(toHex(recipient.toString()))
+      const ethBalanceRecieverBefore = await web3.eth.getBalance(toHex(recipient.toString()))
       let isSpent = await mixer.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
       isSpent.should.be.equal(false)
 
       // Uncomment to measure gas usage
       // gas = await mixer.withdraw.estimateGas(proof, publicSignals, { from: relayer, gasPrice: '0' })
       // console.log('withdraw gas:', gas)
-      const { logs } = await mixer.withdraw(proof, publicSignals, { value: refund, from: relayer, gasPrice: '0' })
+      const args = [
+        toFixedHex(input.root),
+        toFixedHex(input.nullifierHash),
+        toFixedHex(input.recipient, 20),
+        toFixedHex(input.relayer, 20),
+        toFixedHex(input.fee),
+        toFixedHex(input.refund)
+      ]
+      const { logs } = await mixer.withdraw(proof, ...args, { value: refund, from: relayer, gasPrice: '0' })
       console.log('withdraw done')
 
       const balanceMixerAfter = await token.balanceOf(mixer.address)
       const balanceRelayerAfter = await token.balanceOf(relayer)
       const ethBalanceOperatorAfter = await web3.eth.getBalance(operator)
-      const balanceRecieverAfter = await token.balanceOf(toHex(receiver.toString()))
-      const ethBalanceRecieverAfter = await web3.eth.getBalance(toHex(receiver.toString()))
+      const balanceRecieverAfter = await token.balanceOf(toHex(recipient.toString()))
+      const ethBalanceRecieverAfter = await web3.eth.getBalance(toHex(recipient.toString()))
       const feeBN = toBN(fee.toString())
       balanceMixerAfter.should.be.eq.BN(toBN(balanceMixerBefore).sub(toBN(tokenDenomination)))
       balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore))

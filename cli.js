@@ -66,7 +66,7 @@ async function depositErc20() {
   return note
 }
 
-async function withdrawErc20(note, receiver, relayer) {
+async function withdrawErc20(note, recipient, relayer) {
   let buf = Buffer.from(note.slice(2), 'hex')
   let deposit = createDeposit(bigInt.leBuff2int(buf.slice(0, 31)), bigInt.leBuff2int(buf.slice(31, 62)))
 
@@ -98,7 +98,7 @@ async function withdrawErc20(note, receiver, relayer) {
     // public
     root: root,
     nullifierHash,
-    receiver: bigInt(receiver),
+    recipient: bigInt(recipient),
     relayer: bigInt(relayer),
     fee: bigInt(web3.utils.toWei('0.01')),
     refund: bigInt(0),
@@ -113,32 +113,47 @@ async function withdrawErc20(note, receiver, relayer) {
   console.log('Generating SNARK proof')
   console.time('Proof time')
   const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-  const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
+  const { proof } = websnarkUtils.toSolidityInput(proofData)
   console.timeEnd('Proof time')
 
   console.log('Submitting withdraw transaction')
-  await erc20mixer.methods.withdraw(proof, publicSignals).send({ from: (await web3.eth.getAccounts())[0], gas: 1e6 })
+  const args = [
+    toHex(input.root),
+    toHex(input.nullifierHash),
+    toHex(input.recipient, 20),
+    toHex(input.relayer, 20),
+    toHex(input.fee),
+    toHex(input.refund)
+  ]
+  await erc20mixer.methods.withdraw(proof, ...args).send({ from: (await web3.eth.getAccounts())[0], gas: 1e6 })
   console.log('Done')
 }
 
-async function getBalance(receiver) {
-  const balance = await web3.eth.getBalance(receiver)
+async function getBalance(recipient) {
+  const balance = await web3.eth.getBalance(recipient)
   console.log('Balance is ', web3.utils.fromWei(balance))
 }
 
-async function getBalanceErc20(receiver, relayer) {
-  const balanceReceiver = await web3.eth.getBalance(receiver)
+async function getBalanceErc20(recipient, relayer) {
+  const balanceRecipient = await web3.eth.getBalance(recipient)
   const balanceRelayer = await web3.eth.getBalance(relayer)
-  const tokenBalanceReceiver = await erc20.methods.balanceOf(receiver).call()
+  const tokenBalanceRecipient = await erc20.methods.balanceOf(recipient).call()
   const tokenBalanceRelayer = await erc20.methods.balanceOf(relayer).call()
-  console.log('Receiver eth Balance is ', web3.utils.fromWei(balanceReceiver))
+  console.log('Recipient eth Balance is ', web3.utils.fromWei(balanceRecipient))
   console.log('Relayer eth Balance is ', web3.utils.fromWei(balanceRelayer))
 
-  console.log('Receiver token Balance is ', web3.utils.fromWei(tokenBalanceReceiver.toString()))
+  console.log('Recipient token Balance is ', web3.utils.fromWei(tokenBalanceRecipient.toString()))
   console.log('Relayer token Balance is ', web3.utils.fromWei(tokenBalanceRelayer.toString()))
 }
 
-async function withdraw(note, receiver) {
+function toHex(number, length = 32) {
+  let str = bigInt(number).toString(16)
+  while (str.length < length * 2) str = '0' + str
+  str = '0x' + str
+  return str
+}
+
+async function withdraw(note, recipient) {
   // Decode hex string and restore the deposit object
   let buf = Buffer.from(note.slice(2), 'hex')
   let deposit = createDeposit(bigInt.leBuff2int(buf.slice(0, 31)), bigInt.leBuff2int(buf.slice(31, 62)))
@@ -150,16 +165,16 @@ async function withdraw(note, receiver) {
   console.log('Getting current state from mixer contract')
   const events = await mixer.getPastEvents('Deposit', { fromBlock: mixer.deployedBlock, toBlock: 'latest' })
   const leaves = events
-    .sort((a, b) => a.returnValues.leafIndex.sub(b.returnValues.leafIndex)) // Sort events in chronological order
+    .sort((a, b) => a.returnValues.leafIndex - b.returnValues.leafIndex) // Sort events in chronological order
     .map(e => e.returnValues.commitment)
   const tree = new merkleTree(MERKLE_TREE_HEIGHT, leaves)
 
   // Find current commitment in the tree
-  let depositEvent = events.find(e => e.returnValues.commitment.eq(paddedCommitment))
-  let leafIndex = depositEvent ? depositEvent.returnValues.leafIndex.toNumber() : -1
+  let depositEvent = events.find(e => e.returnValues.commitment === paddedCommitment)
+  let leafIndex = depositEvent ? depositEvent.returnValues.leafIndex : -1
 
   // Validate that our data is correct
-  const isValidRoot = await mixer.methods.isKnownRoot(await tree.root()).call()
+  const isValidRoot = await mixer.methods.isKnownRoot(toHex(await tree.root())).call()
   const isSpent = await mixer.methods.isSpent(paddedNullifierHash).call()
   assert(isValidRoot === true) // Merkle tree assembled correctly
   assert(isSpent === false)    // The note is not spent
@@ -173,7 +188,7 @@ async function withdraw(note, receiver) {
     // Public snark inputs
     root: root,
     nullifierHash,
-    receiver: bigInt(receiver),
+    recipient: bigInt(recipient),
     relayer: bigInt(0),
     fee: bigInt(0),
     refund: bigInt(0),
@@ -188,11 +203,19 @@ async function withdraw(note, receiver) {
   console.log('Generating SNARK proof')
   console.time('Proof time')
   const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-  const { proof, publicSignals } = websnarkUtils.toSolidityInput(proofData)
+  const { proof } = websnarkUtils.toSolidityInput(proofData)
   console.timeEnd('Proof time')
 
   console.log('Submitting withdraw transaction')
-  await mixer.methods.withdraw(proof, publicSignals).send({ from: (await web3.eth.getAccounts())[0], gas: 1e6 })
+  const args = [
+    toHex(input.root),
+    toHex(input.nullifierHash),
+    toHex(input.recipient, 20),
+    toHex(input.relayer, 20),
+    toHex(input.fee),
+    toHex(input.refund)
+  ]
+  await mixer.methods.withdraw(proof, ...args).send({ from: (await web3.eth.getAccounts())[0], gas: 1e6 })
   console.log('Done')
 }
 
@@ -250,8 +273,8 @@ function printHelp(code = 0) {
   Submit a deposit from default eth account and return the resulting note
   $ ./cli.js deposit
 
-  Withdraw a note to 'receiver' account
-  $ ./cli.js withdraw <note> <receiver>
+  Withdraw a note to 'recipient' account
+  $ ./cli.js withdraw <note> <recipient>
 
   Check address balance
   $ ./cli.js balance <address>
@@ -270,8 +293,8 @@ if (inBrowser) {
   window.deposit = deposit
   window.withdraw = async () => {
     const note = prompt('Enter the note to withdraw')
-    const receiver = (await web3.eth.getAccounts())[0]
-    await withdraw(note, receiver)
+    const recipient = (await web3.eth.getAccounts())[0]
+    await withdraw(note, recipient)
   }
   init()
 } else {

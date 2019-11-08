@@ -14,14 +14,14 @@ pragma solidity ^0.5.8;
 import "./MerkleTreeWithHistory.sol";
 
 contract IVerifier {
-  function verifyProof(uint256[8] memory _proof, uint256[6] memory _input) public returns(bool);
+  function verifyProof(bytes memory _proof, uint256[6] memory _input) public returns(bool);
 }
 
 contract Mixer is MerkleTreeWithHistory {
   uint256 public denomination;
-  mapping(uint256 => bool) public nullifierHashes;
+  mapping(bytes32 => bool) public nullifierHashes;
   // we store all commitments just to prevent accidental deposits with the same commitment
-  mapping(uint256 => bool) public commitments;
+  mapping(bytes32 => bool) public commitments;
   IVerifier public verifier;
 
   // operator can
@@ -35,8 +35,8 @@ contract Mixer is MerkleTreeWithHistory {
     _;
   }
 
-  event Deposit(uint256 indexed commitment, uint256 leafIndex, uint256 timestamp);
-  event Withdrawal(address to, uint256 nullifierHash, address indexed relayer, uint256 fee);
+  event Deposit(bytes32 indexed commitment, uint32 leafIndex, uint256 timestamp);
+  event Withdrawal(address to, bytes32 nullifierHash, address indexed relayer, uint256 fee);
 
   /**
     @dev The constructor
@@ -48,7 +48,7 @@ contract Mixer is MerkleTreeWithHistory {
   constructor(
     IVerifier _verifier,
     uint256 _denomination,
-    uint8 _merkleTreeHeight,
+    uint32 _merkleTreeHeight,
     address _operator
   ) MerkleTreeWithHistory(_merkleTreeHeight) public {
     require(_denomination > 0, "denomination should be greater than 0");
@@ -61,10 +61,11 @@ contract Mixer is MerkleTreeWithHistory {
     @dev Deposit funds into mixer. The caller must send (for ETH) or approve (for ERC20) value equal to or `denomination` of this mixer.
     @param _commitment the note commitment, which is PedersenHash(nullifier + secret)
   */
-  function deposit(uint256 _commitment) public payable {
+  function deposit(bytes32 _commitment) external payable {
     require(!isDepositsDisabled, "deposits are disabled");
     require(!commitments[_commitment], "The commitment has been submitted");
-    uint256 insertedIndex = _insert(_commitment);
+
+    uint32 insertedIndex = _insert(_commitment);
     commitments[_commitment] = true;
     _processDeposit();
 
@@ -79,31 +80,25 @@ contract Mixer is MerkleTreeWithHistory {
     `input` array consists of:
       - merkle root of all deposits in the mixer
       - hash of unique deposit nullifier to prevent double spends
-      - the receiver of funds
+      - the recipient of funds
       - optional fee that goes to the transaction sender (usually a relay)
   */
-  function withdraw(uint256[8] memory _proof, uint256[6] memory _input) public payable {
-    uint256 root = _input[0];
-    uint256 nullifierHash = _input[1];
-    address payable receiver = address(_input[2]);
-    address payable relayer = address(_input[3]);
-    uint256 fee = _input[4];
-    uint256 refund = _input[5];
-    require(fee <= denomination, "Fee exceeds transfer value");
-    require(!nullifierHashes[nullifierHash], "The note has been already spent");
+  function withdraw(bytes calldata _proof, bytes32 _root, bytes32 _nullifierHash, address payable _recipient, address payable _relayer, uint256 _fee, uint256 _refund) external payable {
+    require(_fee <= denomination, "Fee exceeds transfer value");
+    require(!nullifierHashes[_nullifierHash], "The note has been already spent");
+    require(isKnownRoot(_root), "Cannot find your merkle root"); // Make sure to use a recent one
+    require(verifier.verifyProof(_proof, [uint256(_root), uint256(_nullifierHash), uint256(_recipient), uint256(_relayer), _fee, _refund]), "Invalid withdraw proof");
 
-    require(isKnownRoot(root), "Cannot find your merkle root"); // Make sure to use a recent one
-    require(verifier.verifyProof(_proof, _input), "Invalid withdraw proof");
-    nullifierHashes[nullifierHash] = true;
-    _processWithdraw(receiver, relayer, fee, refund);
-    emit Withdrawal(receiver, nullifierHash, relayer, fee);
+    nullifierHashes[_nullifierHash] = true;
+    _processWithdraw(_recipient, _relayer, _fee, _refund);
+    emit Withdrawal(_recipient, _nullifierHash, _relayer, _fee);
   }
 
   /** @dev this function is defined in a child contract */
-  function _processWithdraw(address payable _receiver, address payable _relayer, uint256 _fee, uint256 _refund) internal;
+  function _processWithdraw(address payable _recipient, address payable _relayer, uint256 _fee, uint256 _refund) internal;
 
   /** @dev whether a note is already spent */
-  function isSpent(uint256 _nullifierHash) public view returns(bool) {
+  function isSpent(bytes32 _nullifierHash) external view returns(bool) {
     return nullifierHashes[_nullifierHash];
   }
 
