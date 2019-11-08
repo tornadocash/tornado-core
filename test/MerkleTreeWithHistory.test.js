@@ -181,7 +181,7 @@ contract('MerkleTreeWithHistory', accounts => {
     })
 
     it('should reject if tree is full', async () => {
-      levels = 6
+      const levels = 6
       const merkleTreeWithHistory = await MerkleTreeWithHistory.new(levels)
 
       for (let i = 0; i < 2**levels; i++) {
@@ -196,7 +196,7 @@ contract('MerkleTreeWithHistory', accounts => {
     })
 
     it.skip('hasher gas', async () => {
-      levels = 6
+      const levels = 6
       const merkleTreeWithHistory = await MerkleTreeWithHistory.new(levels)
       const zeroValue = await merkleTreeWithHistory.zeroValue()
 
