@@ -24,12 +24,9 @@ contract Mixer is MerkleTreeWithHistory {
   mapping(bytes32 => bool) public commitments;
   IVerifier public verifier;
 
-  // operator can
-  //  - disable new deposits in case of emergency
-  //  - update snark verification key until this ability is permanently disabled
+  // operator can update snark verification key
+  // after the final trusted setup ceremony operator rights are supposed to be transferred to zero address
   address public operator;
-  bool public isDepositsDisabled;
-  bool public isVerifierUpdateDisabled;
   modifier onlyOperator {
     require(msg.sender == operator, "Only operator can call this function.");
     _;
@@ -62,7 +59,6 @@ contract Mixer is MerkleTreeWithHistory {
     @param _commitment the note commitment, which is PedersenHash(nullifier + secret)
   */
   function deposit(bytes32 _commitment) external payable {
-    require(!isDepositsDisabled, "deposits are disabled");
     require(!commitments[_commitment], "The commitment has been submitted");
 
     uint32 insertedIndex = _insert(_commitment);
@@ -103,28 +99,11 @@ contract Mixer is MerkleTreeWithHistory {
   }
 
   /**
-    @dev Allow operator to temporarily disable new deposits. This is needed to protect users funds in case a vulnerability is discovered.
-    It does not affect existing deposits.
-  */
-  function toggleDeposits(bool _state) external onlyOperator {
-    isDepositsDisabled = _state;
-  }
-
-  /**
     @dev allow operator to update SNARK verification keys. This is needed to update keys after the final trusted setup ceremony is held.
-    After that operator is supposed to permanently disable this ability.
+    After that operator rights are supposed to be transferred to zero address
   */
   function updateVerifier(address _newVerifier) external onlyOperator {
-    require(!isVerifierUpdateDisabled, "Verifier updates have been disabled.");
     verifier = IVerifier(_newVerifier);
-  }
-
-  /**
-    @dev an option for operator to permanently disable verification keys update ability.
-    This is supposed to be called after the final trusted setup ceremony is held.
-  */
-  function disableVerifierUpdate() external onlyOperator {
-    isVerifierUpdateDisabled = true;
   }
 
   /** @dev operator can change his address */

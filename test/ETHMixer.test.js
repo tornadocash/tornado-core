@@ -118,21 +118,6 @@ contract('ETHMixer', accounts => {
       logs[0].args.leafIndex.should.be.eq.BN(1)
     })
 
-    it('should not deposit if disabled', async () => {
-      let commitment = toFixedHex(42);
-      (await mixer.isDepositsDisabled()).should.be.equal(false)
-      const err = await mixer.toggleDeposits(true, { from: accounts[1] }).should.be.rejected
-      err.reason.should.be.equal('Only operator can call this function.')
-      await mixer.toggleDeposits(false, { from: sender });
-      (await mixer.isDepositsDisabled()).should.be.equal(false)
-      await mixer.toggleDeposits(true, { from: sender });
-      (await mixer.isDepositsDisabled()).should.be.equal(true)
-      await mixer.toggleDeposits(true, { from: sender });
-      (await mixer.isDepositsDisabled()).should.be.equal(true)
-      let error = await mixer.deposit(commitment, { value, from: sender }).should.be.rejected
-      error.reason.should.be.equal('deposits are disabled')
-    })
-
     it('should throw if there is a such commitment', async () => {
       const commitment = toFixedHex(42)
       await mixer.deposit(commitment, { value, from: sender }).should.be.fulfilled
@@ -554,38 +539,6 @@ contract('ETHMixer', accounts => {
       const error = await mixer.updateVerifier(newVerifier, { from:  accounts[7] }).should.be.rejected
       error.reason.should.be.equal('Only operator can call this function.')
 
-    })
-  })
-
-  describe('#disableVerifierUpdate', () => {
-    it('should work', async () => {
-      let operator = await mixer.operator()
-      operator.should.be.equal(sender)
-
-      let isVerifierUpdateDisabled = await mixer.isVerifierUpdateDisabled()
-      isVerifierUpdateDisabled.should.be.equal(false)
-
-      await mixer.disableVerifierUpdate().should.be.fulfilled
-
-      const newValue = await mixer.isVerifierUpdateDisabled()
-      newValue.should.be.equal(true)
-    })
-
-    it('cannot update verifier after this function is called', async () => {
-      let operator = await mixer.operator()
-      operator.should.be.equal(sender)
-
-      let isVerifierUpdateDisabled = await mixer.isVerifierUpdateDisabled()
-      isVerifierUpdateDisabled.should.be.equal(false)
-
-      await mixer.disableVerifierUpdate().should.be.fulfilled
-
-      const newValue = await mixer.isVerifierUpdateDisabled()
-      newValue.should.be.equal(true)
-
-      const newVerifier = accounts[7]
-      const error = await mixer.updateVerifier(newVerifier).should.be.rejected
-      error.reason.should.be.equal('Verifier updates have been disabled.')
     })
   })
 
