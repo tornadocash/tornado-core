@@ -2,7 +2,7 @@
 const path = require('path')
 
 const genContract = require('circomlib/src/mimcsponge_gencontract.js')
-const Artifactor = require('truffle-artifactor')
+const Artifactor = require('@truffle/artifactor')
 
 module.exports = function(deployer) {
   return deployer.then( async () =>  {
