@@ -12,12 +12,13 @@
 pragma solidity ^0.5.8;
 
 import "./MerkleTreeWithHistory.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 contract IVerifier {
   function verifyProof(bytes memory _proof, uint256[6] memory _input) public returns(bool);
 }
 
-contract Mixer is MerkleTreeWithHistory {
+contract Mixer is MerkleTreeWithHistory, ReentrancyGuard {
   uint256 public denomination;
   mapping(bytes32 => bool) public nullifierHashes;
   // we store all commitments just to prevent accidental deposits with the same commitment
