@@ -26,12 +26,12 @@ contract ERC20Mixer is Mixer {
     token = _token;
   }
 
-  function _processDeposit() internal {
+  function _processDeposit() internal nonReentrant {
     require(msg.value == 0, "ETH value is supposed to be 0 for ETH mixer");
     _safeErc20TransferFrom(msg.sender, address(this), denomination);
   }
 
-  function _processWithdraw(address payable _recipient, address payable _relayer, uint256 _fee, uint256 _refund) internal {
+  function _processWithdraw(address payable _recipient, address payable _relayer, uint256 _fee, uint256 _refund) internal nonReentrant {
     require(msg.value == _refund, "Incorrect refund amount received by the contract");
 
     _safeErc20Transfer(_recipient, denomination - _fee);
@@ -39,7 +39,7 @@ contract ERC20Mixer is Mixer {
       _safeErc20Transfer(_relayer, _fee);
     }
     if (_refund > 0) {
-      _recipient.transfer(_refund);
+      _recipient.call.value(_refund)("");
     }
   }
 
