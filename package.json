@@ -30,6 +30,7 @@
     "@truffle/artifactor": "^4.0.38",
     "@truffle/contract": "^4.0.39",
     "@truffle/hdwallet-provider": "^1.0.24",
+    "axios": "^0.19.0",
     "bn-chai": "^1.0.1",
     "browserify": "^16.5.0",
     "chai": "^4.2.0",
