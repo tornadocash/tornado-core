@@ -22,11 +22,11 @@ contract ETHMixer is Mixer {
   ) Mixer(_verifier, _denomination, _merkleTreeHeight, _operator) public {
   }
 
-  function _processDeposit() internal nonReentrant {
+  function _processDeposit() internal {
     require(msg.value == denomination, "Please send `mixDenomination` ETH along with transaction");
   }
 
-  function _processWithdraw(address payable _recipient, address payable _relayer, uint256 _fee, uint256 _refund) internal nonReentrant {
+  function _processWithdraw(address payable _recipient, address payable _relayer, uint256 _fee, uint256 _refund) internal {
     // sanity checks
     require(msg.value == 0, "Message value is supposed to be zero for ETH mixer");
     require(_refund == 0, "Refund value is supposed to be zero for ETH mixer");
