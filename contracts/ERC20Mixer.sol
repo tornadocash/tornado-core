@@ -27,7 +27,7 @@ contract ERC20Mixer is Mixer {
   }
 
   function _processDeposit() internal nonReentrant {
-    require(msg.value == 0, "ETH value is supposed to be 0 for ETH mixer");
+    require(msg.value == 0, "ETH value is supposed to be 0 for ERC20 mixer");
     _safeErc20TransferFrom(msg.sender, address(this), denomination);
   }
 
