@@ -113,7 +113,7 @@ contract('ERC20Mixer', accounts => {
       await token.approve(mixer.address, tokenDenomination)
 
       let error = await mixer.deposit(commitment, { from: sender, value: 1e6 }).should.be.rejected
-      error.reason.should.be.equal('ETH value is supposed to be 0 for ETH mixer')
+      error.reason.should.be.equal('ETH value is supposed to be 0 for ERC20 mixer')
     })
   })
 
