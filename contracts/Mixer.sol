@@ -59,7 +59,7 @@ contract Mixer is MerkleTreeWithHistory, ReentrancyGuard {
     @dev Deposit funds into mixer. The caller must send (for ETH) or approve (for ERC20) value equal to or `denomination` of this mixer.
     @param _commitment the note commitment, which is PedersenHash(nullifier + secret)
   */
-  function deposit(bytes32 _commitment) external payable {
+  function deposit(bytes32 _commitment) external payable nonReentrant {
     require(!commitments[_commitment], "The commitment has been submitted");
 
     uint32 insertedIndex = _insert(_commitment);
@@ -80,7 +80,7 @@ contract Mixer is MerkleTreeWithHistory, ReentrancyGuard {
       - the recipient of funds
       - optional fee that goes to the transaction sender (usually a relay)
   */
-  function withdraw(bytes calldata _proof, bytes32 _root, bytes32 _nullifierHash, address payable _recipient, address payable _relayer, uint256 _fee, uint256 _refund) external payable {
+  function withdraw(bytes calldata _proof, bytes32 _root, bytes32 _nullifierHash, address payable _recipient, address payable _relayer, uint256 _fee, uint256 _refund) external payable nonReentrant {
     require(_fee <= denomination, "Fee exceeds transfer value");
     require(!nullifierHashes[_nullifierHash], "The note has been already spent");
     require(isKnownRoot(_root), "Cannot find your merkle root"); // Make sure to use a recent one
