@@ -321,14 +321,14 @@ contract('ETHMixer', accounts => {
       await mixer.deposit(toFixedHex(deposit.commitment), { value, from: sender })
 
       const { root, path_elements, path_index } = await tree.path(0)
-      const oneEtherFee = bigInt(1e18) // 1 ether
+      const largeFee = bigInt(value).add(bigInt(1))
       const input = stringifyBigInts({
         root,
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         nullifier: deposit.nullifier,
         relayer: operator,
         recipient,
-        fee: oneEtherFee,
+        fee: largeFee,
         refund,
         secret: deposit.secret,
         pathElements: path_elements,

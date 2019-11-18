@@ -15,7 +15,7 @@ template HashLeftRight() {
 
 // if s == 0 returns [in[0], in[1]]
 // if s == 1 returns [in[1], in[0]]
-template Mux() {
+template DualMux() {
     signal input in[2];
     signal input s;
     signal output out[2];
@@ -36,7 +36,7 @@ template MerkleTree(levels) {
     component hashers[levels];
 
     for (var i = 0; i < levels; i++) {
-        selectors[i] = Mux();
+        selectors[i] = DualMux();
         selectors[i].in[0] <== i == 0 ? leaf : hashers[i - 1].hash;
         selectors[i].in[1] <== pathElements[i];
         selectors[i].s <== pathIndices[i];
