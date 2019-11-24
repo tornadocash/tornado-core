@@ -4,8 +4,8 @@ include "merkleTree.circom";
 
 // computes Pedersen(nullifier + secret)
 template CommitmentHasher() {
-    signal private input nullifier;
-    signal private input secret;
+    signal input nullifier;
+    signal input secret;
     signal output commitment;
     signal output nullifierHash;
 

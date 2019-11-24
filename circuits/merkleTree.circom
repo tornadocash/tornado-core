@@ -29,8 +29,8 @@ template DualMux() {
 template MerkleTree(levels) {
     signal input leaf;
     signal input root;
-    signal private input pathElements[levels];
-    signal private input pathIndices[levels];
+    signal input pathElements[levels];
+    signal input pathIndices[levels];
 
     component selectors[levels];
     component hashers[levels];
