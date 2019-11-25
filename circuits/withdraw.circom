@@ -4,8 +4,8 @@ include "merkleTree.circom";
 
 // computes Pedersen(nullifier + secret)
 template CommitmentHasher() {
-    signal private input nullifier;
-    signal private input secret;
+    signal input nullifier;
+    signal input secret;
     signal output commitment;
     signal output nullifierHash;
 
@@ -43,7 +43,7 @@ template Withdraw(levels) {
     hasher.secret <== secret;
     hasher.nullifierHash === nullifierHash;
 
-    component tree = MerkleTree(levels);
+    component tree = MerkleTreeChecker(levels);
     tree.leaf <== hasher.commitment;
     tree.root <== root;
     for (var i = 0; i < levels; i++) {
