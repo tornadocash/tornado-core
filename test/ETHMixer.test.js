@@ -5,7 +5,7 @@ require('chai')
   .should()
 const fs = require('fs')
 
-const { toBN, toHex, randomHex } = require('web3-utils')
+const { toBN, randomHex } = require('web3-utils')
 const { takeSnapshot, revertSnapshot } = require('../lib/ganacheHelper')
 
 const Mixer = artifacts.require('./ETHMixer.sol')
