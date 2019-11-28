@@ -95,8 +95,18 @@ contract Mixer is MerkleTreeWithHistory, ReentrancyGuard {
   function _processWithdraw(address payable _recipient, address payable _relayer, uint256 _fee, uint256 _refund) internal;
 
   /** @dev whether a note is already spent */
-  function isSpent(bytes32 _nullifierHash) external view returns(bool) {
+  function isSpent(bytes32 _nullifierHash) public view returns(bool) {
     return nullifierHashes[_nullifierHash];
+  }
+
+  /** @dev whether an array of notes is already spent */
+  function isSpentArray(bytes32[] calldata _nullifierHashes) external view returns(bool[] memory spent) {
+    spent = new bool[](_nullifierHashes.length);
+    for(uint i = 0; i < _nullifierHashes.length; i++) {
+      if (isSpent(_nullifierHashes[i])) {
+        spent[i] = true;
+      }
+    }
   }
 
   /**

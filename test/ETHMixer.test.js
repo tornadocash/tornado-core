@@ -542,6 +542,56 @@ contract('ETHMixer', accounts => {
     })
   })
 
+  describe('#isSpent', () => {
+    it('should work', async () => {
+      const deposit1 = generateDeposit()
+      const deposit2 = generateDeposit()
+      await tree.insert(deposit1.commitment)
+      await tree.insert(deposit2.commitment)
+      await mixer.deposit(toFixedHex(deposit1.commitment), { value, gasPrice: '0' })
+      await mixer.deposit(toFixedHex(deposit2.commitment), { value, gasPrice: '0' })
+
+      const { root, path_elements, path_index } = await tree.path(1)
+
+      // Circuit input
+      const input = stringifyBigInts({
+        // public
+        root,
+        nullifierHash: pedersenHash(deposit2.nullifier.leInt2Buff(31)),
+        relayer: operator,
+        recipient,
+        fee,
+        refund,
+
+        // private
+        nullifier: deposit2.nullifier,
+        secret: deposit2.secret,
+        pathElements: path_elements,
+        pathIndices: path_index,
+      })
+
+
+      const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
+      const { proof } = websnarkUtils.toSolidityInput(proofData)
+
+      const args = [
+        toFixedHex(input.root),
+        toFixedHex(input.nullifierHash),
+        toFixedHex(input.recipient, 20),
+        toFixedHex(input.relayer, 20),
+        toFixedHex(input.fee),
+        toFixedHex(input.refund)
+      ]
+
+      await mixer.withdraw(proof, ...args, { from: relayer, gasPrice: '0' })
+
+      const nullifierHash1 = toFixedHex(pedersenHash(deposit1.nullifier.leInt2Buff(31)))
+      const nullifierHash2 = toFixedHex(pedersenHash(deposit2.nullifier.leInt2Buff(31)))
+      const spentArray = await mixer.isSpentArray([nullifierHash1, nullifierHash2])
+      spentArray.should.be.deep.equal([false, true])
+    })
+  })
+
   afterEach(async () => {
     await revertSnapshot(snapshotId.result)
     // eslint-disable-next-line require-atomic-updates
