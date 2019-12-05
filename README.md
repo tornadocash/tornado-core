@@ -1,4 +1,4 @@
-# Tornado mixer [![Build Status](https://travis-ci.org/peppersec/tornado-mixer.svg?branch=master)](https://travis-ci.org/peppersec/tornado-mixer)
+# Tornado mixer [![Build Status](https://travis-ci.org/tornadocash/tornado-core.svg?branch=master)](https://travis-ci.org/tornadocash/tornado-core)
 
 Tornado is a non-custodial Ethereum and ERC20 mixer based on zkSNARKs. It improves transaction privacy by breaking the on-chain link between recipient and destination addresses. It uses a smart contract that accepts ETH deposits that can be withdrawn by a different address. Whenever ETH is withdrawn by the new address, there is no way to link the withdrawal to the deposit, ensuring complete privacy.
 
