@@ -24,6 +24,7 @@ contract Mixer is MerkleTreeWithHistory, ReentrancyGuard {
   // we store all commitments just to prevent accidental deposits with the same commitment
   mapping(bytes32 => bool) public commitments;
   IVerifier public verifier;
+  uint256 public activeDeposits;
 
   // operator can update snark verification key
   // after the final trusted setup ceremony operator rights are supposed to be transferred to zero address
@@ -35,6 +36,7 @@ contract Mixer is MerkleTreeWithHistory, ReentrancyGuard {
 
   event Deposit(bytes32 indexed commitment, uint32 leafIndex, uint256 timestamp);
   event Withdrawal(address to, bytes32 nullifierHash, address indexed relayer, uint256 fee);
+  event AnonimitySetCollapse(uint withdrawIndex);
 
   /**
     @dev The constructor
@@ -65,6 +67,7 @@ contract Mixer is MerkleTreeWithHistory, ReentrancyGuard {
     uint32 insertedIndex = _insert(_commitment);
     commitments[_commitment] = true;
     _processDeposit();
+    activeDeposits++;
 
     emit Deposit(_commitment, insertedIndex, block.timestamp);
   }
@@ -89,6 +92,7 @@ contract Mixer is MerkleTreeWithHistory, ReentrancyGuard {
     nullifierHashes[_nullifierHash] = true;
     _processWithdraw(_recipient, _relayer, _fee, _refund);
     emit Withdrawal(_recipient, _nullifierHash, _relayer, _fee);
+    _decrementActiveDeposits();
   }
 
   /** @dev this function is defined in a child contract */
@@ -120,5 +124,12 @@ contract Mixer is MerkleTreeWithHistory, ReentrancyGuard {
   /** @dev operator can change his address */
   function changeOperator(address _newOperator) external onlyOperator {
     operator = _newOperator;
+  }
+
+  function _decrementActiveDeposits() internal {
+    activeDeposits--;
+    if (activeDeposits == 0) {
+      emit AnonimitySetCollapse(nextIndex);
+    }
   }
 }
