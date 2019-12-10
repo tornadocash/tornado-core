@@ -1,7 +1,7 @@
 require('dotenv').config()
 const Web3 = require('web3')
-const web3 = new Web3('https://mainnet.infura.io', null, { transactionConfirmationBlocks: 1 })
-const web3Kovan = new Web3('https://kovan.infura.io', null, { transactionConfirmationBlocks: 1 })
+const web3 = new Web3('https://ethereum-rpc.trustwalletapp.com', null, { transactionConfirmationBlocks: 1 })
+const web3Kovan = new Web3('http://kovanrpc.stormdapps.com:8545', null, { transactionConfirmationBlocks: 1 })
 const account = web3.eth.accounts.privateKeyToAccount('0x' + process.env.PRIVATE_KEY)
 web3.eth.accounts.wallet.add('0x' + process.env.PRIVATE_KEY)
 web3.eth.defaultAccount = account.address
@@ -22,9 +22,9 @@ previousMixer.deployedBlock = 8720524
 
 async function loadDeposits() {
   const depositEvents = await previousMixer.getPastEvents('Deposit', { fromBlock: previousMixer.deployedBlock, toBlock: 'latest' })
-
+  console.log('deposits length', depositEvents.length)
   const withdrawEvents = await previousMixer.getPastEvents('Withdraw', { fromBlock: previousMixer.deployedBlock, toBlock: 'latest' })
-
+  console.log('withdrawEvents length', withdrawEvents.length)
   const commitments = depositEvents
     .sort((a, b) => a.returnValues.leafIndex.sub(b.returnValues.leafIndex))
     .map(e => toHex(e.returnValues.commitment))
@@ -62,14 +62,26 @@ async function migrateState({ subtrees, lastRoot, commitments, nullifiers, newMi
     })
     console.log('Gas used:', tx.gasUsed)
   }
+  const balance = await web3.eth.getBalance(PREVIOUS_MIXER)
+  console.log('balance to send in wei', balance)
+
+  const finish = await newMixer.methods.finishMigration().send({
+    gas: numberToHex(1500000),
+    gasPrice: toHex(toWei('10', 'gwei')),
+    from: account.address,
+    value: balance
+  })
+  console.log('migration completed', finish.transactionHash)
+
 }
 async function main() {
   const { subtrees, lastRoot, commitments, nullifiers } = await loadDeposits()
-
-  const newContractAddress = '0xE89f4Ca5242C28D3D9565cd12499C1A53A9B76AD'
+  const newContractAddress = '0x9715fC42892A8cE94e7ae58E332Cc4cDa102FfDF'
   const newMixer = new web3Kovan.eth.Contract(ABIv2, newContractAddress)
   web3Kovan.eth.accounts.wallet.add('0x' + process.env.PRIVATE_KEY)
   web3Kovan.eth.defaultAccount = account.address
+  console.log('commitments length ', commitments.length)
+  console.log('nullifiers length ', nullifiers.length)
   await migrateState({ subtrees, lastRoot, commitments, nullifiers, newMixer })
 
 }

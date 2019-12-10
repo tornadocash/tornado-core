@@ -65,7 +65,7 @@ contract ETHMixer is Mixer {
     roots[0] = _root;
   }
 
-  function finishMigration() external onlyOperator {
+  function finishMigration() external payable onlyOperator {
     isMigrated = true;
   }
 }
