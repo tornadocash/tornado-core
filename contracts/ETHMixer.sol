@@ -38,4 +38,34 @@ contract ETHMixer is Mixer {
       require(success, "payment to _relayer did not go thru");
     }
   }
+    /**
+    @dev Migrate state from old mixer to this one.
+    @param _commitments deposited commitments from previous contract
+    @param _nullifierHashes spent nullifiers from previous contract
+  */
+  bool public isMigrated = false;
+  function migrateState(bytes32[] calldata _commitments, bytes32[] calldata _nullifierHashes) external onlyOperator {
+    require(!isMigrated, "Migration is disabled");
+    for (uint32 i = 0; i < _commitments.length; i++) {
+      commitments[_commitments[i]] = true;
+      emit Deposit(_commitments[i], nextIndex + i, block.timestamp);
+    }
+
+    nextIndex += uint32(_commitments.length);
+
+    for (uint256 i = 0; i < _nullifierHashes.length; i++) {
+      nullifierHashes[_nullifierHashes[i]] = true;
+      emit Withdrawal(address(0), _nullifierHashes[i], address(0), 0);
+    }
+  }
+
+  function initializeTreeForMigration(bytes32[] calldata _filledSubtrees, bytes32 _root) external {
+    require(!isMigrated, "already migrated");
+    filledSubtrees = _filledSubtrees;
+    roots[0] = _root;
+  }
+
+  function finishMigration() external onlyOperator {
+    isMigrated = true;
+  }
 }
