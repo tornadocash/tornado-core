@@ -1,7 +1,7 @@
 require('dotenv').config()
 const Web3 = require('web3')
-const web3 = new Web3('https://ethereum-rpc.trustwalletapp.com', null, { transactionConfirmationBlocks: 1 })
-const web3Kovan = new Web3('http://kovanrpc.stormdapps.com:8545', null, { transactionConfirmationBlocks: 1 })
+const web3 = new Web3('https://mainnet.infura.io', null, { transactionConfirmationBlocks: 1 })
+const web3Kovan = new Web3('https://kovan.infura.io/v3/c7463beadf2144e68646ff049917b716', null, { transactionConfirmationBlocks: 1 })
 const account = web3.eth.accounts.privateKeyToAccount('0x' + process.env.PRIVATE_KEY)
 web3.eth.accounts.wallet.add('0x' + process.env.PRIVATE_KEY)
 web3.eth.defaultAccount = account.address
@@ -17,8 +17,8 @@ function toHex(number, length = 32) {
   let str = number instanceof Buffer ? number.toString('hex') : bigInt(number).toString(16)
   return '0x' + str.padStart(length * 2, '0')
 }
-const previousMixer = new web3.eth.Contract(ABI, PREVIOUS_MIXER)
-previousMixer.deployedBlock = 8720524
+const previousMixer = new web3Kovan.eth.Contract(ABI, PREVIOUS_MIXER)
+previousMixer.deployedBlock = 14070053
 
 async function loadDeposits() {
   const depositEvents = await previousMixer.getPastEvents('Deposit', { fromBlock: previousMixer.deployedBlock, toBlock: 'latest' })
@@ -30,10 +30,30 @@ async function loadDeposits() {
     .map(e => toHex(e.returnValues.commitment))
   const nullifiers = withdrawEvents
     .map(e => toHex(e.returnValues.nullifierHash))
-  const subtrees = (await previousMixer.methods.filled_subtrees().call()).map(x => toHex(x))
-  const lastRoot = await previousMixer.methods.getLastRoot().call()
+
+  const { root, subtrees } = await getSubtrees({ commitments })
+  console.log(root, subtrees)
+
   // console.log(JSON.stringify({ subtrees, lastRoot, commitments, nullifiers }, null, 2))
-  return { subtrees, lastRoot: toHex(lastRoot), commitments, nullifiers }
+  return { subtrees, lastRoot: toHex(root), commitments, nullifiers }
+}
+
+async function getSubtrees({ commitments }) {
+  const ganache = new Web3('http://localhost:8545', null, { transactionConfirmationBlocks: 1 })
+  const newContractAddress = '0x1D340b022c7d83608F247a7f6fb5d96FE3450DA3'
+  const tempMixer = new ganache.eth.Contract(ABIv2, newContractAddress)
+  for(let commitment of commitments) {
+    await tempMixer.methods.deposit(commitment).send({ value: toWei('0.1'), from: (await ganache.eth.getAccounts())[0], gas:5e6 })
+    process.stdout.write('.')
+  }
+  process.stdout.write('\n')
+  let subtrees = []
+  for (let i = 0; i < process.env.MERKLE_TREE_HEIGHT; i++) {
+    subtrees.push(await tempMixer.methods.filledSubtrees(i).call())
+  }
+  subtrees = subtrees.map(x => toHex(x))
+  const lastRoot = await tempMixer.methods.getLastRoot().call()
+  return { subtrees, root: toHex(lastRoot) }
 }
 
 async function migrateState({ subtrees, lastRoot, commitments, nullifiers, newMixer }) {
