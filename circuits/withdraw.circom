@@ -52,4 +52,4 @@ template Withdraw(levels) {
     }
 }
 
-component main = Withdraw(16);
+component main = Withdraw(20);
