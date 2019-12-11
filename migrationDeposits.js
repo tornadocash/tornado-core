@@ -45,8 +45,73 @@ async function loadDeposits() {
   return { subtrees, lastRoot: toHex(root), commitments, nullifiers }
 }
 
+function waitForTxReceipt(web3, txHash, attempts = 60, delay = 4000) {
+  return new Promise((resolve, reject) => {
+    const checkForTx = async (txHash, retryAttempt = 0) => {
+      const result = await web3.eth.getTransactionReceipt(txHash)
+      if (!result || !result.blockNumber) {
+        if (retryAttempt <= attempts) {
+          setTimeout(() => checkForTx(txHash, retryAttempt + 1), delay)
+        } else {
+          reject(new Error('tx was not mined'))
+        }
+      } else {
+        if (!result.status) {
+          reject(new Error(`The tx failed! https://kovan.etherscan.io/tx/${txHash}`))
+        } else {
+          console.log(`A new successfuly mined tx https://kovan.etherscan.io/tx/${txHash}`)
+          resolve(result)
+        }
+      }
+    }
+    checkForTx(txHash)
+  })
+}
+
+async function makeDeposit({ web3, privKey, mixer, nonce, commitment }) {
+  const data = mixer.methods.deposit(commitment).encodeABI()
+  const tx = {
+    from: (await web3Ganache.eth.getAccounts())[0],
+    value: toWei('0.1'),
+    gas: 5e6,
+    gasPrice: toHex(toWei(20, 'gwei')),
+    to: mixer._address,
+    netId: config.netId,
+    data,
+    nonce: nonce
+  }
+  let signedTx = await web3.eth.accounts.signTransaction(tx, privKey)
+  return web3.eth.sendSignedTransaction(signedTx.rawTransaction)
+}
+
+async function getNonce(address) {
+  const response = await axios.post(RPC_URL, {
+    jsonrpc:"2.0",
+    method:"eth_getTransactionCount",
+    params:[address, "latest"],
+    "id":1
+  })
+  return response.data.result
+}
+
 async function getSubtrees({ commitments }) {
   const tempMixer = new web3Ganache.eth.Contract(ABIv2, GANACHE_MIXER)
+
+  let nonce = await getNonce((await web3Ganache.eth.getAccounts())[0])
+  const chunkSize = 30
+  let chunks = Math.ceil(commitments.length / chunkSize)
+  for(let c = 0; c < chunks; c++) {
+    const promises = []
+    for(let i = c * chunkSize; i < Math.min(commitments.length, (c + 1) * chunkSize); i++) {
+      const n = toHex(nonce)
+      promises.push(makeDeposit({ web3: web3Ganache, privKey: process.env.PRIVATE_KEY, mixer: tempMixer, nonce: n, commitment: commitments[i] }))
+      nonce = bigInt(nonce).add(bigInt('1'))
+    }
+    let transactions = await Promise.all(promises)
+    console.log('Waiting for all deposits mined')
+    await waitForTxReceipt(web3Ganache, transactions.slice(-1).pop().txHash)
+  }
+
   for(let commitment of commitments) {
     await tempMixer.methods.deposit(commitment).send({ value: toWei('0.1'), from: (await web3Ganache.eth.getAccounts())[0], gas:5e6 })
     process.stdout.write('.')
