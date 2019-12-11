@@ -2,9 +2,12 @@ require('dotenv').config()
 const Web3 = require('web3')
 
 // 1. edit here
-const web3Source = new Web3('https://mainnet.infura.io/v3/c7463beadf2144e68646ff049917b716', null, { transactionConfirmationBlocks: 1 })
-const web3Target = new Web3('https://kovan.infura.io/v3/c7463beadf2144e68646ff049917b716', null, { transactionConfirmationBlocks: 1 })
-const web3Ganache = new Web3('http://localhost:8545', null, { transactionConfirmationBlocks: 1 })
+const SOURCE_RPC = 'https://mainnet.infura.io/v3/c7463beadf2144e68646ff049917b716'
+const TARGET_RPC = 'https://kovan.poa.network'
+const HELPER_RPC = 'https://kovan.poa.network'
+const web3Source = new Web3(SOURCE_RPC, null, { transactionConfirmationBlocks: 1 })
+const web3Target = new Web3(TARGET_RPC, null, { transactionConfirmationBlocks: 1 })
+const web3Helper = new Web3(HELPER_RPC, null, { transactionConfirmationBlocks: 1 })
 
 const ABI = [{ 'constant':false,'inputs':[{ 'name':'_newAccount','type':'address' }],'name':'changeOperator','outputs':[],'payable':false,'stateMutability':'nonpayable','type':'function' },{ 'constant':true,'inputs':[],'name':'filled_subtrees','outputs':[{ 'name':'','type':'uint256[]' }],'payable':false,'stateMutability':'view','type':'function' },{ 'constant':true,'inputs':[{ 'name':'','type':'uint256' }],'name':'nullifierHashes','outputs':[{ 'name':'','type':'bool' }],'payable':false,'stateMutability':'view','type':'function' },{ 'constant':true,'inputs':[],'name':'verifier','outputs':[{ 'name':'','type':'address' }],'payable':false,'stateMutability':'view','type':'function' },{ 'constant':true,'inputs':[],'name':'transferValue','outputs':[{ 'name':'','type':'uint256' }],'payable':false,'stateMutability':'view','type':'function' },{ 'constant':false,'inputs':[{ 'name':'_commitments','type':'uint256[]' },{ 'name':'_nullifierHashes','type':'uint256[]' }],'name':'migrateState','outputs':[],'payable':false,'stateMutability':'nonpayable','type':'function' },{ 'constant':true,'inputs':[],'name':'roots','outputs':[{ 'name':'','type':'uint256[]' }],'payable':false,'stateMutability':'view','type':'function' },{ 'constant':false,'inputs':[{ 'name':'_verifier','type':'address' },{ 'name':'_transferValue','type':'uint256' },{ 'name':'_merkleTreeHeight','type':'uint8' },{ 'name':'_emptyElement','type':'uint256' },{ 'name':'_operator','type':'address' },{ 'name':'_filled_subtrees','type':'uint256[]' },{ 'name':'_lastRoot','type':'uint256' }],'name':'initialize','outputs':[],'payable':false,'stateMutability':'nonpayable','type':'function' },{ 'constant':true,'inputs':[{ 'name':'','type':'uint256' }],'name':'commitments','outputs':[{ 'name':'','type':'bool' }],'payable':false,'stateMutability':'view','type':'function' },{ 'constant':true,'inputs':[],'name':'zeros','outputs':[{ 'name':'','type':'uint256[]' }],'payable':false,'stateMutability':'view','type':'function' },{ 'constant':true,'inputs':[],'name':'levels','outputs':[{ 'name':'','type':'uint256' }],'payable':false,'stateMutability':'view','type':'function' },{ 'constant':false,'inputs':[{ 'name':'a','type':'uint256[2]' },{ 'name':'b','type':'uint256[2][2]' },{ 'name':'c','type':'uint256[2]' },{ 'name':'input','type':'uint256[4]' }],'name':'withdraw','outputs':[],'payable':false,'stateMutability':'nonpayable','type':'function' },{ 'constant':true,'inputs':[],'name':'operator','outputs':[{ 'name':'','type':'address' }],'payable':false,'stateMutability':'view','type':'function' },{ 'constant':true,'inputs':[],'name':'isDepositsEnabled','outputs':[{ 'name':'','type':'bool' }],'payable':false,'stateMutability':'view','type':'function' },{ 'constant':true,'inputs':[{ 'name':'nullifier','type':'uint256' }],'name':'isSpent','outputs':[{ 'name':'','type':'bool' }],'payable':false,'stateMutability':'view','type':'function' },{ 'constant':true,'inputs':[{ 'name':'left','type':'uint256' },{ 'name':'right','type':'uint256' }],'name':'hashLeftRight','outputs':[{ 'name':'mimc_hash','type':'uint256' }],'payable':false,'stateMutability':'pure','type':'function' },{ 'constant':true,'inputs':[],'name':'next_index','outputs':[{ 'name':'','type':'uint32' }],'payable':false,'stateMutability':'view','type':'function' },{ 'constant':true,'inputs':[],'name':'current_root','outputs':[{ 'name':'','type':'uint256' }],'payable':false,'stateMutability':'view','type':'function' },{ 'constant':false,'inputs':[{ 'name':'tree_levels','type':'uint256' },{ 'name':'zero_value','type':'uint256' },{ 'name':'filled_subtrees','type':'uint256[]' },{ 'name':'lastRoot','type':'uint256' }],'name':'initialize','outputs':[],'payable':false,'stateMutability':'nonpayable','type':'function' },{ 'constant':true,'inputs':[{ 'name':'root','type':'uint256' }],'name':'isKnownRoot','outputs':[{ 'name':'','type':'bool' }],'payable':false,'stateMutability':'view','type':'function' },{ 'constant':false,'inputs':[{ 'name':'commitment','type':'uint256' }],'name':'deposit','outputs':[],'payable':true,'stateMutability':'payable','type':'function' },{ 'constant':true,'inputs':[],'name':'getLastRoot','outputs':[{ 'name':'','type':'uint256' }],'payable':false,'stateMutability':'view','type':'function' },{ 'constant':false,'inputs':[],'name':'toggleDeposits','outputs':[],'payable':false,'stateMutability':'nonpayable','type':'function' },{ 'constant':false,'inputs':[],'name':'stopMigration','outputs':[],'payable':false,'stateMutability':'nonpayable','type':'function' },{ 'constant':true,'inputs':[],'name':'isMigrating','outputs':[{ 'name':'','type':'bool' }],'payable':false,'stateMutability':'view','type':'function' },{ 'payable':true,'stateMutability':'payable','type':'fallback' },{ 'anonymous':false,'inputs':[{ 'indexed':true,'name':'commitment','type':'uint256' },{ 'indexed':false,'name':'leafIndex','type':'uint256' },{ 'indexed':false,'name':'timestamp','type':'uint256' }],'name':'Deposit','type':'event' },{ 'anonymous':false,'inputs':[{ 'indexed':false,'name':'to','type':'address' },{ 'indexed':false,'name':'nullifierHash','type':'uint256' },{ 'indexed':false,'name':'fee','type':'uint256' }],'name':'Withdraw','type':'event' }]
 const ABIv2 = require('./build/contracts/ETHMixer.json').abi
@@ -14,8 +17,8 @@ const { numberToHex, toWei } = require('web3-utils')
 
 // 2. edit here
 const PREVIOUS_MIXER = '0xb541fc07bC7619fD4062A54d96268525cBC6FfEF'
-const GANACHE_MIXER = '0x38e6292EAB2fD2a70A81C87a194d921988d859aB'
-const NEW_MIXER = '0xF7b4Ec760d9B13A3c1a934Eb3486C2eCB1E62784'
+const HELPER_MIXER = ''
+const NEW_MIXER = ''
 
 function toHex(number, length = 32) {
   let str = number instanceof Buffer ? number.toString('hex') : bigInt(number).toString(16)
@@ -42,13 +45,39 @@ async function loadDeposits() {
   return { subtrees, lastRoot: toHex(root), commitments, nullifiers }
 }
 
-async function getSubtrees({ commitments }) {
-  const tempMixer = new web3Ganache.eth.Contract(ABIv2, GANACHE_MIXER)
-  for(let commitment of commitments) {
-    await tempMixer.methods.deposit(commitment).send({ value: toWei('0.1'), from: (await web3Ganache.eth.getAccounts())[0], gas:5e6 })
-    process.stdout.write('.')
+async function makeDeposit({ web3, privKey, mixer, nonce, commitment }) {
+  const data = mixer.methods.deposit(commitment).encodeABI()
+  const tx = {
+    from: web3Helper.eth.defaultAccount,
+    value: toWei('0.1'),
+    gas: 2e6,
+    gasPrice: toHex(toWei('2', 'gwei')),
+    to: mixer._address,
+    netId: await web3.eth.net.getId(),
+    data,
+    nonce
   }
-  process.stdout.write('\n')
+  let signedTx = await web3.eth.accounts.signTransaction(tx, privKey)
+  return web3.eth.sendSignedTransaction(signedTx.rawTransaction)
+}
+
+async function getSubtrees({ commitments }) {
+  const tempMixer = new web3Helper.eth.Contract(ABIv2, HELPER_MIXER)
+
+  let nonce = await web3Helper.eth.getTransactionCount(web3Helper.eth.defaultAccount)
+  const chunkSize = 80
+  let chunks = Math.ceil(commitments.length / chunkSize)
+  for(let c = 0; c < chunks; c++) {
+    let lastTransaction
+    for(let i = c * chunkSize; i < Math.min(commitments.length, (c + 1) * chunkSize); i++) {
+      const n = toHex(nonce)
+      lastTransaction = makeDeposit({ web3: web3Helper, privKey: process.env.PRIVATE_KEY, mixer: tempMixer, nonce: n, commitment: commitments[i] })
+      nonce = bigInt(nonce).add(bigInt('1'))
+    }
+    console.log(`Waiting for the ${c}th chunk`)
+    await lastTransaction
+  }
+
   let subtrees = []
   for (let i = 0; i < process.env.MERKLE_TREE_HEIGHT; i++) {
     subtrees.push(await tempMixer.methods.filledSubtrees(i).call())
@@ -87,22 +116,26 @@ async function migrateState({ subtrees, lastRoot, commitments, nullifiers, newMi
   const balance = await web3Source.eth.getBalance(PREVIOUS_MIXER)
   console.log('balance to send in wei', balance)
 
+  // 3. Decide should we uncomment here
   // const finish = await newMixer.methods.finishMigration().send({
   //   gas: numberToHex(1500000),
   //   gasPrice: toHex(toWei('10', 'gwei')),
-  //   from: account.address,
+  //   from: web3Target.eth.defaultAccount,
   //   value: balance
   // })
   // console.log('migration completed', finish.transactionHash)
-
 }
 async function main() {
+  const helperAccount = web3Helper.eth.accounts.privateKeyToAccount('0x' + process.env.PRIVATE_KEY)
+  web3Helper.eth.accounts.wallet.add('0x' + process.env.PRIVATE_KEY)
+  web3Helper.eth.defaultAccount = helperAccount.address
+
+  const targetAccount = web3Target.eth.accounts.privateKeyToAccount('0x' + process.env.PRIVATE_KEY)
+  web3Target.eth.accounts.wallet.add('0x' + process.env.PRIVATE_KEY)
+  web3Target.eth.defaultAccount = targetAccount.address
+
   const { subtrees, lastRoot, commitments, nullifiers } = await loadDeposits()
   const newMixer = new web3Target.eth.Contract(ABIv2, NEW_MIXER)
-
-  const account = web3Target.eth.accounts.privateKeyToAccount('0x' + process.env.PRIVATE_KEY)
-  web3Target.eth.accounts.wallet.add('0x' + process.env.PRIVATE_KEY)
-  web3Target.eth.defaultAccount = account.address
 
   console.log('commitments length ', commitments.length)
   console.log('nullifiers length ', nullifiers.length)
