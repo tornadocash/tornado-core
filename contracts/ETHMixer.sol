@@ -59,7 +59,7 @@ contract ETHMixer is Mixer {
     }
   }
 
-  function initializeTreeForMigration(bytes32[] calldata _filledSubtrees, bytes32 _root) external {
+  function initializeTreeForMigration(bytes32[] calldata _filledSubtrees, bytes32 _root) external onlyOperator {
     require(!isMigrated, "already migrated");
     filledSubtrees = _filledSubtrees;
     roots[0] = _root;
