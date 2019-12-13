@@ -56,7 +56,7 @@ async function deposit() {
   const deposit = createDeposit(rbigint(31), rbigint(31))
 
   console.log('Submitting deposit transaction')
-  await mixer.methods.deposit(toHex(deposit.commitment)).send({ value: ETH_AMOUNT, from: senderAccount, gas:1e6 })
+  await mixer.methods.deposit(toHex(deposit.commitment)).send({ value: ETH_AMOUNT, from: senderAccount, gas:2e6 })
 
   const note = toHex(deposit.preimage, 62)
   console.log('Your note:', note)
@@ -71,14 +71,14 @@ async function depositErc20() {
 
   if(ERC20_TOKEN === '') {
     console.log('Minting some test tokens to deposit')
-    await erc20.methods.mint(senderAccount, TOKEN_AMOUNT).send({ from: senderAccount, gas: 1e6 })
+    await erc20.methods.mint(senderAccount, TOKEN_AMOUNT).send({ from: senderAccount, gas: 2e6 })
   }
 
   console.log('Approving tokens for deposit')
   await erc20.methods.approve(erc20mixer._address, TOKEN_AMOUNT).send({ from: senderAccount, gas:1e6 })
 
   console.log('Submitting deposit transaction')
-  await erc20mixer.methods.deposit(toHex(deposit.commitment)).send({ from: senderAccount, gas:1e6 })
+  await erc20mixer.methods.deposit(toHex(deposit.commitment)).send({ from: senderAccount, gas:2e6 })
 
   const note = toHex(deposit.preimage, 62)
   console.log('Your note:', note)
@@ -333,7 +333,7 @@ function printHelp(code = 0) {
 
   Check address balance
   $ ./cli.js balance <address>
-  
+
   Perform an automated test
   $ ./cli.js test
   $ ./cli.js testRelay
