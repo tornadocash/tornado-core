@@ -1,6 +1,6 @@
-# Tornado mixer [![Build Status](https://travis-ci.org/tornadocash/tornado-core.svg?branch=master)](https://travis-ci.org/tornadocash/tornado-core)
+# Tornado Privacy Solution [![Build Status](https://travis-ci.org/tornadocash/tornado-core.svg?branch=master)](https://travis-ci.org/tornadocash/tornado-core)
 
-Tornado is a non-custodial Ethereum and ERC20 mixer based on zkSNARKs. It improves transaction privacy by breaking the on-chain link between recipient and destination addresses. It uses a smart contract that accepts ETH deposits that can be withdrawn by a different address. Whenever ETH is withdrawn by the new address, there is no way to link the withdrawal to the deposit, ensuring complete privacy.
+Tornado is a non-custodial Ethereum and ERC20 privacy solution based on zkSNARKs. It improves transaction privacy by breaking the on-chain link between recipient and destination addresses. It uses a smart contract that accepts ETH deposits that can be withdrawn by a different address. Whenever ETH is withdrawn by the new address, there is no way to link the withdrawal to the deposit, ensuring complete privacy.
 
 To make a deposit user generates a secret and sends its hash (called a commitment) along with the deposit amount to the Tornado smart contract. The contract accepts the deposit and adds the commitment to its list of deposits.
 
@@ -15,12 +15,12 @@ You can read more about it in [this medium article](https://medium.com/@tornado.
 - Circuit Proof time = 6116ms (1071 + 347 * tree_depth)
 - Serverless
 
-![mixer image](./mixer.png)
+![image](diagram.png)
 
 ## Security risks
-* Cryptographic tools used by mixer (zkSNARKS, Pedersen commitment, MiMC hash) are yet NOT extensively audited by cryptographic experts and may be vulnerable
+* Cryptographic tools used by Tornado (zkSNARKS, Pedersen commitment, MiMC hash) are yet NOT extensively audited by cryptographic experts and may be vulnerable
  * Note: we use MiMC hash only for merkle tree, so even if a preimage attack on MiMC is discovered, it will not allow to deanonymize users. To drain funds attacker needs to be able to generate arbitrary hash collisions, which is a pretty strong assumption.
-* Bugs in contract. Even though we have an extensive experience in smart contract security audits, we can still make mistakes. An external audit is needed to reduce probablility of bugs. Our mixer is currently being audited, stay tuned.
+* Bugs in contract. Even though we have an extensive experience in smart contract security audits, we can still make mistakes. An external audit is needed to reduce probablility of bugs. Our code is currently being audited, stay tuned.
 * Relayer is frontrunnable. When relayer submits a transaction someone can see it in tx pool and frontrun it with higher gas price to get the fee and drain relayer funds.
 	* Workaround: we can set high gas price so that (almost) all fee is used on gas
 	* Second workaround: allow only single hardcoded relayer, we use this approach for now
@@ -51,13 +51,13 @@ Use browser version on Kovan:
 1. Open `localhost:8080`
 
 Use with command line version with Ganache:
-### ETHMixer
+### ETHTornado
 1. `npm run migrate:dev`
 1. `./cli.js deposit`
 1. `./cli.js withdraw <note from previous step> <destination eth address>`
 1. `./cli.js balance <destination eth address>`
 
-### ERC20Mixer
+### ERC20Tornado
 1. `npm run migrate:dev`
 1. `./cli.js depositErc20`
 1. `./cli.js withdrawErc20 <note from previous step> <destination eth address> <relayer eth address>`
@@ -76,7 +76,7 @@ If you want, you can point the app to existing tornado contracts on Mainnet or K
 1. `npx truffle migrate --network kovan --reset --f 2 --to 3`
 1. `npx truffle migrate --network kovan --reset --f 5`
 
-**Note**. If you want to reuse the same verifier for all the mixers, then after you deployed one of the mixers you should only run 4th or 5th migration for ETH or ERC20 mixers respectively (`--f 4 --to 4` or `--f 5`).
+**Note**. If you want to reuse the same verifier for all the instances, then after you deployed one of the instances you should only run 4th or 5th migration for ETH or ERC20 contracts respectively (`--f 4 --to 4` or `--f 5`).
 
 ## Credits
 
