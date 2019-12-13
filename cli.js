@@ -56,7 +56,7 @@ async function deposit() {
   const deposit = createDeposit(rbigint(31), rbigint(31))
 
   console.log('Submitting deposit transaction')
-  await tornado.methods.deposit(toHex(deposit.commitment)).send({ value: ETH_AMOUNT, from: senderAccount, gas:1e6 })
+  await tornado.methods.deposit(toHex(deposit.commitment)).send({ value: ETH_AMOUNT, from: senderAccount, gas:2e6 })
 
   const note = toHex(deposit.preimage, 62)
   console.log('Your note:', note)
@@ -71,14 +71,14 @@ async function depositErc20() {
 
   if(ERC20_TOKEN === '') {
     console.log('Minting some test tokens to deposit')
-    await erc20.methods.mint(senderAccount, TOKEN_AMOUNT).send({ from: senderAccount, gas: 1e6 })
+    await erc20.methods.mint(senderAccount, TOKEN_AMOUNT).send({ from: senderAccount, gas: 2e6 })
   }
 
   console.log('Approving tokens for deposit')
   await erc20.methods.approve(erc20tornado._address, TOKEN_AMOUNT).send({ from: senderAccount, gas:1e6 })
 
   console.log('Submitting deposit transaction')
-  await erc20tornado.methods.deposit(toHex(deposit.commitment)).send({ from: senderAccount, gas:1e6 })
+  await erc20tornado.methods.deposit(toHex(deposit.commitment)).send({ from: senderAccount, gas:2e6 })
 
   const note = toHex(deposit.preimage, 62)
   console.log('Your note:', note)
