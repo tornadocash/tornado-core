@@ -1,6 +1,6 @@
 /* global artifacts */
 require('dotenv').config({ path: '../.env' })
-const ETHMixer = artifacts.require('ETHMixer')
+const ETHTornado = artifacts.require('ETHTornado')
 const Verifier = artifacts.require('Verifier')
 const hasherContract = artifacts.require('Hasher')
 
@@ -10,8 +10,8 @@ module.exports = function(deployer, network, accounts) {
     const { MERKLE_TREE_HEIGHT, ETH_AMOUNT } = process.env
     const verifier = await Verifier.deployed()
     const hasherInstance = await hasherContract.deployed()
-    await ETHMixer.link(hasherContract, hasherInstance.address)
-    const mixer = await deployer.deploy(ETHMixer, verifier.address, ETH_AMOUNT, MERKLE_TREE_HEIGHT, accounts[0])
-    console.log('ETHMixer\'s address ', mixer.address)
+    await ETHTornado.link(hasherContract, hasherInstance.address)
+    const tornado = await deployer.deploy(ETHTornado, verifier.address, ETH_AMOUNT, MERKLE_TREE_HEIGHT, accounts[0])
+    console.log('ETHTornado\'s address ', tornado.address)
   })
 }
