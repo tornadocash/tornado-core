@@ -8,7 +8,7 @@ const fs = require('fs')
 const { toBN } = require('web3-utils')
 const { takeSnapshot, revertSnapshot } = require('../lib/ganacheHelper')
 
-const Mixer = artifacts.require('./ERC20Mixer.sol')
+const Tornado = artifacts.require('./ERC20Tornado.sol')
 const BadRecipient = artifacts.require('./BadRecipient.sol')
 const Token = artifacts.require('./ERC20Mock.sol')
 const USDTToken = artifacts.require('./IUSDT.sol')
@@ -38,8 +38,8 @@ function generateDeposit() {
   return deposit
 }
 
-contract('ERC20Mixer', accounts => {
-  let mixer
+contract('ERC20Tornado', accounts => {
+  let tornado
   let token
   let usdtToken
   let badRecipient
@@ -64,7 +64,7 @@ contract('ERC20Mixer', accounts => {
       null,
       prefix,
     )
-    mixer = await Mixer.deployed()
+    tornado = await Tornado.deployed()
     if (ERC20_TOKEN) {
       token = await Token.at(ERC20_TOKEN)
       usdtToken = await USDTToken.at(ERC20_TOKEN)
@@ -81,7 +81,7 @@ contract('ERC20Mixer', accounts => {
 
   describe('#constructor', () => {
     it('should initialize', async () => {
-      const tokenFromContract = await mixer.token()
+      const tokenFromContract = await tornado.token()
       tokenFromContract.should.be.equal(token.address)
     })
   })
@@ -89,9 +89,9 @@ contract('ERC20Mixer', accounts => {
   describe('#deposit', () => {
     it('should work', async () => {
       const commitment = toFixedHex(43)
-      await token.approve(mixer.address, tokenDenomination)
+      await token.approve(tornado.address, tokenDenomination)
 
-      let { logs } = await mixer.deposit(commitment, { from: sender })
+      let { logs } = await tornado.deposit(commitment, { from: sender })
 
       logs[0].event.should.be.equal('Deposit')
       logs[0].args.commitment.should.be.equal(commitment)
@@ -100,10 +100,10 @@ contract('ERC20Mixer', accounts => {
 
     it('should not allow to send ether on deposit', async () => {
       const commitment = toFixedHex(43)
-      await token.approve(mixer.address, tokenDenomination)
+      await token.approve(tornado.address, tokenDenomination)
 
-      let error = await mixer.deposit(commitment, { from: sender, value: 1e6 }).should.be.rejected
-      error.reason.should.be.equal('ETH value is supposed to be 0 for ERC20 mixer')
+      let error = await tornado.deposit(commitment, { from: sender, value: 1e6 }).should.be.rejected
+      error.reason.should.be.equal('ETH value is supposed to be 0 for ERC20 instance')
     })
   })
 
@@ -115,11 +115,11 @@ contract('ERC20Mixer', accounts => {
       await token.mint(user, tokenDenomination)
 
       const balanceUserBefore = await token.balanceOf(user)
-      await token.approve(mixer.address, tokenDenomination, { from: user })
+      await token.approve(tornado.address, tokenDenomination, { from: user })
       // Uncomment to measure gas usage
-      // let gas = await mixer.deposit.estimateGas(toBN(deposit.commitment.toString()), { from: user, gasPrice: '0' })
+      // let gas = await tornado.deposit.estimateGas(toBN(deposit.commitment.toString()), { from: user, gasPrice: '0' })
       // console.log('deposit gas:', gas)
-      await mixer.deposit(toFixedHex(deposit.commitment), { from: user, gasPrice: '0' })
+      await tornado.deposit(toFixedHex(deposit.commitment), { from: user, gasPrice: '0' })
 
       const balanceUserAfter = await token.balanceOf(user)
       balanceUserAfter.should.be.eq.BN(toBN(balanceUserBefore).sub(toBN(tokenDenomination)))
@@ -146,17 +146,17 @@ contract('ERC20Mixer', accounts => {
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
       const { proof } = websnarkUtils.toSolidityInput(proofData)
 
-      const balanceMixerBefore = await token.balanceOf(mixer.address)
+      const balanceTornadoBefore = await token.balanceOf(tornado.address)
       const balanceRelayerBefore = await token.balanceOf(relayer)
       const balanceRecieverBefore = await token.balanceOf(toFixedHex(recipient, 20))
 
       const ethBalanceOperatorBefore = await web3.eth.getBalance(operator)
       const ethBalanceRecieverBefore = await web3.eth.getBalance(toFixedHex(recipient, 20))
       const ethBalanceRelayerBefore = await web3.eth.getBalance(relayer)
-      let isSpent = await mixer.isSpent(toFixedHex(input.nullifierHash))
+      let isSpent = await tornado.isSpent(toFixedHex(input.nullifierHash))
       isSpent.should.be.equal(false)
       // Uncomment to measure gas usage
-      // gas = await mixer.withdraw.estimateGas(proof, publicSignals, { from: relayer, gasPrice: '0' })
+      // gas = await tornado.withdraw.estimateGas(proof, publicSignals, { from: relayer, gasPrice: '0' })
       // console.log('withdraw gas:', gas)
       const args = [
         toFixedHex(input.root),
@@ -166,16 +166,16 @@ contract('ERC20Mixer', accounts => {
         toFixedHex(input.fee),
         toFixedHex(input.refund)
       ]
-      const { logs } = await mixer.withdraw(proof, ...args, { value: refund, from: relayer, gasPrice: '0' })
+      const { logs } = await tornado.withdraw(proof, ...args, { value: refund, from: relayer, gasPrice: '0' })
 
-      const balanceMixerAfter = await token.balanceOf(mixer.address)
+      const balanceTornadoAfter = await token.balanceOf(tornado.address)
       const balanceRelayerAfter = await token.balanceOf(relayer)
       const ethBalanceOperatorAfter = await web3.eth.getBalance(operator)
       const balanceRecieverAfter = await token.balanceOf(toFixedHex(recipient, 20))
       const ethBalanceRecieverAfter = await web3.eth.getBalance(toFixedHex(recipient, 20))
       const ethBalanceRelayerAfter = await web3.eth.getBalance(relayer)
       const feeBN = toBN(fee.toString())
-      balanceMixerAfter.should.be.eq.BN(toBN(balanceMixerBefore).sub(toBN(tokenDenomination)))
+      balanceTornadoAfter.should.be.eq.BN(toBN(balanceTornadoBefore).sub(toBN(tokenDenomination)))
       balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore).add(feeBN))
       balanceRecieverAfter.should.be.eq.BN(toBN(balanceRecieverBefore).add(toBN(tokenDenomination).sub(feeBN)))
 
@@ -187,7 +187,7 @@ contract('ERC20Mixer', accounts => {
       logs[0].args.nullifierHash.should.be.equal(toFixedHex(input.nullifierHash))
       logs[0].args.relayer.should.be.eq.BN(relayer)
       logs[0].args.fee.should.be.eq.BN(feeBN)
-      isSpent = await mixer.isSpent(toFixedHex(input.nullifierHash))
+      isSpent = await tornado.isSpent(toFixedHex(input.nullifierHash))
       isSpent.should.be.equal(true)
     })
 
@@ -199,8 +199,8 @@ contract('ERC20Mixer', accounts => {
       await token.mint(user, tokenDenomination)
 
       const balanceUserBefore = await token.balanceOf(user)
-      await token.approve(mixer.address, tokenDenomination, { from: user })
-      await mixer.deposit(toFixedHex(deposit.commitment), { from: user, gasPrice: '0' })
+      await token.approve(tornado.address, tokenDenomination, { from: user })
+      await tornado.deposit(toFixedHex(deposit.commitment), { from: user, gasPrice: '0' })
 
       const balanceUserAfter = await token.balanceOf(user)
       balanceUserAfter.should.be.eq.BN(toBN(balanceUserBefore).sub(toBN(tokenDenomination)))
@@ -227,14 +227,14 @@ contract('ERC20Mixer', accounts => {
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
       const { proof } = websnarkUtils.toSolidityInput(proofData)
 
-      const balanceMixerBefore = await token.balanceOf(mixer.address)
+      const balanceTornadoBefore = await token.balanceOf(tornado.address)
       const balanceRelayerBefore = await token.balanceOf(relayer)
       const balanceRecieverBefore = await token.balanceOf(toFixedHex(recipient, 20))
 
       const ethBalanceOperatorBefore = await web3.eth.getBalance(operator)
       const ethBalanceRecieverBefore = await web3.eth.getBalance(toFixedHex(recipient, 20))
       const ethBalanceRelayerBefore = await web3.eth.getBalance(relayer)
-      let isSpent = await mixer.isSpent(toFixedHex(input.nullifierHash))
+      let isSpent = await tornado.isSpent(toFixedHex(input.nullifierHash))
       isSpent.should.be.equal(false)
 
       const args = [
@@ -245,16 +245,16 @@ contract('ERC20Mixer', accounts => {
         toFixedHex(input.fee),
         toFixedHex(input.refund)
       ]
-      const { logs } = await mixer.withdraw(proof, ...args, { value: refund, from: relayer, gasPrice: '0' })
+      const { logs } = await tornado.withdraw(proof, ...args, { value: refund, from: relayer, gasPrice: '0' })
 
-      const balanceMixerAfter = await token.balanceOf(mixer.address)
+      const balanceTornadoAfter = await token.balanceOf(tornado.address)
       const balanceRelayerAfter = await token.balanceOf(relayer)
       const ethBalanceOperatorAfter = await web3.eth.getBalance(operator)
       const balanceRecieverAfter = await token.balanceOf(toFixedHex(recipient, 20))
       const ethBalanceRecieverAfter = await web3.eth.getBalance(toFixedHex(recipient, 20))
       const ethBalanceRelayerAfter = await web3.eth.getBalance(relayer)
       const feeBN = toBN(fee.toString())
-      balanceMixerAfter.should.be.eq.BN(toBN(balanceMixerBefore).sub(toBN(tokenDenomination)))
+      balanceTornadoAfter.should.be.eq.BN(toBN(balanceTornadoBefore).sub(toBN(tokenDenomination)))
       balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore).add(feeBN))
       balanceRecieverAfter.should.be.eq.BN(toBN(balanceRecieverBefore).add(toBN(tokenDenomination).sub(feeBN)))
 
@@ -266,7 +266,7 @@ contract('ERC20Mixer', accounts => {
       logs[0].args.nullifierHash.should.be.equal(toFixedHex(input.nullifierHash))
       logs[0].args.relayer.should.be.eq.BN(relayer)
       logs[0].args.fee.should.be.eq.BN(feeBN)
-      isSpent = await mixer.isSpent(toFixedHex(input.nullifierHash))
+      isSpent = await tornado.isSpent(toFixedHex(input.nullifierHash))
       isSpent.should.be.equal(true)
     })
 
@@ -275,8 +275,8 @@ contract('ERC20Mixer', accounts => {
       const user = accounts[4]
       await tree.insert(deposit.commitment)
       await token.mint(user, tokenDenomination)
-      await token.approve(mixer.address, tokenDenomination, { from: user })
-      await mixer.deposit(toFixedHex(deposit.commitment), { from: user, gasPrice: '0' })
+      await token.approve(tornado.address, tokenDenomination, { from: user })
+      await tornado.deposit(toFixedHex(deposit.commitment), { from: user, gasPrice: '0' })
 
 
       const { root, path_elements, path_index } = await tree.path(0)
@@ -309,11 +309,11 @@ contract('ERC20Mixer', accounts => {
         toFixedHex(input.fee),
         toFixedHex(input.refund)
       ]
-      let { reason } = await mixer.withdraw(proof, ...args, { value: 1, from: relayer, gasPrice: '0' }).should.be.rejected
+      let { reason } = await tornado.withdraw(proof, ...args, { value: 1, from: relayer, gasPrice: '0' }).should.be.rejected
       reason.should.be.equal('Incorrect refund amount received by the contract')
 
 
-      ;({ reason } = await mixer.withdraw(proof, ...args, { value: toBN(refund).mul(toBN(2)), from: relayer, gasPrice: '0' }).should.be.rejected)
+      ;({ reason } = await tornado.withdraw(proof, ...args, { value: toBN(refund).mul(toBN(2)), from: relayer, gasPrice: '0' }).should.be.rejected)
       reason.should.be.equal('Incorrect refund amount received by the contract')
     })
 
@@ -335,11 +335,11 @@ contract('ERC20Mixer', accounts => {
 
       const balanceUserBefore = await usdtToken.balanceOf(user)
       console.log('balanceUserBefore', balanceUserBefore.toString())
-      await usdtToken.approve(mixer.address, tokenDenomination, { from: user })
+      await usdtToken.approve(tornado.address, tokenDenomination, { from: user })
       console.log('approve done')
-      const allowanceUser = await usdtToken.allowance(user, mixer.address)
+      const allowanceUser = await usdtToken.allowance(user, tornado.address)
       console.log('allowanceUser', allowanceUser.toString())
-      await mixer.deposit(toFixedHex(deposit.commitment), { from: user, gasPrice: '0' })
+      await tornado.deposit(toFixedHex(deposit.commitment), { from: user, gasPrice: '0' })
       console.log('deposit done')
 
       const balanceUserAfter = await usdtToken.balanceOf(user)
@@ -368,16 +368,16 @@ contract('ERC20Mixer', accounts => {
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
       const { proof } = websnarkUtils.toSolidityInput(proofData)
 
-      const balanceMixerBefore = await usdtToken.balanceOf(mixer.address)
+      const balanceTornadoBefore = await usdtToken.balanceOf(tornado.address)
       const balanceRelayerBefore = await usdtToken.balanceOf(relayer)
       const ethBalanceOperatorBefore = await web3.eth.getBalance(operator)
       const balanceRecieverBefore = await usdtToken.balanceOf(toFixedHex(recipient, 20))
       const ethBalanceRecieverBefore = await web3.eth.getBalance(toFixedHex(recipient, 20))
-      let isSpent = await mixer.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
+      let isSpent = await tornado.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
       isSpent.should.be.equal(false)
 
       // Uncomment to measure gas usage
-      // gas = await mixer.withdraw.estimateGas(proof, publicSignals, { from: relayer, gasPrice: '0' })
+      // gas = await tornado.withdraw.estimateGas(proof, publicSignals, { from: relayer, gasPrice: '0' })
       // console.log('withdraw gas:', gas)
       const args = [
         toFixedHex(input.root),
@@ -387,15 +387,15 @@ contract('ERC20Mixer', accounts => {
         toFixedHex(input.fee),
         toFixedHex(input.refund)
       ]
-      const { logs } = await mixer.withdraw(proof, ...args, { value: refund, from: relayer, gasPrice: '0' })
+      const { logs } = await tornado.withdraw(proof, ...args, { value: refund, from: relayer, gasPrice: '0' })
 
-      const balanceMixerAfter = await usdtToken.balanceOf(mixer.address)
+      const balanceTornadoAfter = await usdtToken.balanceOf(tornado.address)
       const balanceRelayerAfter = await usdtToken.balanceOf(relayer)
       const ethBalanceOperatorAfter = await web3.eth.getBalance(operator)
       const balanceRecieverAfter = await usdtToken.balanceOf(toFixedHex(recipient, 20))
       const ethBalanceRecieverAfter = await web3.eth.getBalance(toFixedHex(recipient, 20))
       const feeBN = toBN(fee.toString())
-      balanceMixerAfter.should.be.eq.BN(toBN(balanceMixerBefore).sub(toBN(tokenDenomination)))
+      balanceTornadoAfter.should.be.eq.BN(toBN(balanceTornadoBefore).sub(toBN(tokenDenomination)))
       balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore))
       ethBalanceOperatorAfter.should.be.eq.BN(toBN(ethBalanceOperatorBefore).add(feeBN))
       balanceRecieverAfter.should.be.eq.BN(toBN(balanceRecieverBefore).add(toBN(tokenDenomination)))
@@ -406,7 +406,7 @@ contract('ERC20Mixer', accounts => {
       logs[0].args.nullifierHash.should.be.eq.BN(toBN(input.nullifierHash.toString()))
       logs[0].args.relayer.should.be.eq.BN(operator)
       logs[0].args.fee.should.be.eq.BN(feeBN)
-      isSpent = await mixer.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
+      isSpent = await tornado.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
       isSpent.should.be.equal(true)
     })
     it.skip('should work with REAL DAI', async () => {
@@ -426,9 +426,9 @@ contract('ERC20Mixer', accounts => {
 
       const balanceUserBefore = await token.balanceOf(user)
       console.log('balanceUserBefore', balanceUserBefore.toString())
-      await token.approve(mixer.address, tokenDenomination, { from: user })
+      await token.approve(tornado.address, tokenDenomination, { from: user })
       console.log('approve done')
-      await mixer.deposit(toFixedHex(deposit.commitment), { from: user, gasPrice: '0' })
+      await tornado.deposit(toFixedHex(deposit.commitment), { from: user, gasPrice: '0' })
       console.log('deposit done')
 
       const balanceUserAfter = await token.balanceOf(user)
@@ -457,16 +457,16 @@ contract('ERC20Mixer', accounts => {
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
       const { proof } = websnarkUtils.toSolidityInput(proofData)
 
-      const balanceMixerBefore = await token.balanceOf(mixer.address)
+      const balanceTornadoBefore = await token.balanceOf(tornado.address)
       const balanceRelayerBefore = await token.balanceOf(relayer)
       const ethBalanceOperatorBefore = await web3.eth.getBalance(operator)
       const balanceRecieverBefore = await token.balanceOf(toFixedHex(recipient, 20))
       const ethBalanceRecieverBefore = await web3.eth.getBalance(toFixedHex(recipient, 20))
-      let isSpent = await mixer.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
+      let isSpent = await tornado.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
       isSpent.should.be.equal(false)
 
       // Uncomment to measure gas usage
-      // gas = await mixer.withdraw.estimateGas(proof, publicSignals, { from: relayer, gasPrice: '0' })
+      // gas = await tornado.withdraw.estimateGas(proof, publicSignals, { from: relayer, gasPrice: '0' })
       // console.log('withdraw gas:', gas)
       const args = [
         toFixedHex(input.root),
@@ -476,16 +476,16 @@ contract('ERC20Mixer', accounts => {
         toFixedHex(input.fee),
         toFixedHex(input.refund)
       ]
-      const { logs } = await mixer.withdraw(proof, ...args, { value: refund, from: relayer, gasPrice: '0' })
+      const { logs } = await tornado.withdraw(proof, ...args, { value: refund, from: relayer, gasPrice: '0' })
       console.log('withdraw done')
 
-      const balanceMixerAfter = await token.balanceOf(mixer.address)
+      const balanceTornadoAfter = await token.balanceOf(tornado.address)
       const balanceRelayerAfter = await token.balanceOf(relayer)
       const ethBalanceOperatorAfter = await web3.eth.getBalance(operator)
       const balanceRecieverAfter = await token.balanceOf(toFixedHex(recipient, 20))
       const ethBalanceRecieverAfter = await web3.eth.getBalance(toFixedHex(recipient, 20))
       const feeBN = toBN(fee.toString())
-      balanceMixerAfter.should.be.eq.BN(toBN(balanceMixerBefore).sub(toBN(tokenDenomination)))
+      balanceTornadoAfter.should.be.eq.BN(toBN(balanceTornadoBefore).sub(toBN(tokenDenomination)))
       balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore))
       ethBalanceOperatorAfter.should.be.eq.BN(toBN(ethBalanceOperatorBefore).add(feeBN))
       balanceRecieverAfter.should.be.eq.BN(toBN(balanceRecieverBefore).add(toBN(tokenDenomination)))
@@ -496,7 +496,7 @@ contract('ERC20Mixer', accounts => {
       logs[0].args.nullifierHash.should.be.eq.BN(toBN(input.nullifierHash.toString()))
       logs[0].args.relayer.should.be.eq.BN(operator)
       logs[0].args.fee.should.be.eq.BN(feeBN)
-      isSpent = await mixer.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
+      isSpent = await tornado.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
       isSpent.should.be.equal(true)
     })
   })

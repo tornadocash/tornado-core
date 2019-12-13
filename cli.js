@@ -14,7 +14,7 @@ const buildGroth16 = require('websnark/src/groth16')
 const websnarkUtils = require('websnark/src/utils')
 const { toWei, fromWei } = require('web3-utils')
 
-let web3, mixer, erc20mixer, circuit, proving_key, groth16, erc20, senderAccount
+let web3, tornado, erc20tornado, circuit, proving_key, groth16, erc20, senderAccount
 let MERKLE_TREE_HEIGHT, ETH_AMOUNT, TOKEN_AMOUNT, ERC20_TOKEN
 
 /** Whether we are in a browser or node.js */
@@ -56,7 +56,7 @@ async function deposit() {
   const deposit = createDeposit(rbigint(31), rbigint(31))
 
   console.log('Submitting deposit transaction')
-  await mixer.methods.deposit(toHex(deposit.commitment)).send({ value: ETH_AMOUNT, from: senderAccount, gas:1e6 })
+  await tornado.methods.deposit(toHex(deposit.commitment)).send({ value: ETH_AMOUNT, from: senderAccount, gas:1e6 })
 
   const note = toHex(deposit.preimage, 62)
   console.log('Your note:', note)
@@ -75,10 +75,10 @@ async function depositErc20() {
   }
 
   console.log('Approving tokens for deposit')
-  await erc20.methods.approve(erc20mixer._address, TOKEN_AMOUNT).send({ from: senderAccount, gas:1e6 })
+  await erc20.methods.approve(erc20tornado._address, TOKEN_AMOUNT).send({ from: senderAccount, gas:1e6 })
 
   console.log('Submitting deposit transaction')
-  await erc20mixer.methods.deposit(toHex(deposit.commitment)).send({ from: senderAccount, gas:1e6 })
+  await erc20tornado.methods.deposit(toHex(deposit.commitment)).send({ from: senderAccount, gas:1e6 })
 
   const note = toHex(deposit.preimage, 62)
   console.log('Your note:', note)
@@ -89,12 +89,12 @@ async function depositErc20() {
  * Generate merkle tree for a deposit.
  * Download deposit events from the contract, reconstructs merkle tree, finds our deposit leaf
  * in it and generates merkle proof
- * @param contract Mixer contract address
+ * @param contract Tornado contract address
  * @param deposit Deposit object
  */
 async function generateMerkleProof(contract, deposit) {
   // Get all deposit events from smart contract and assemble merkle tree from them
-  console.log('Getting current state from mixer contract')
+  console.log('Getting current state from tornado contract')
   const events = await contract.getPastEvents('Deposit', { fromBlock: contract.deployedBlock, toBlock: 'latest' })
   const leaves = events
     .sort((a, b) => a.returnValues.leafIndex - b.returnValues.leafIndex) // Sort events in chronological order
@@ -118,7 +118,7 @@ async function generateMerkleProof(contract, deposit) {
 
 /**
  * Generate SNARK proof for withdrawal
- * @param contract Mixer contract address
+ * @param contract Tornado contract address
  * @param note Note string
  * @param recipient Funds recipient
  * @param relayer Relayer address
@@ -174,10 +174,10 @@ async function generateProof(contract, note, recipient, relayer = 0, fee = 0, re
  * @param recipient Recipient address
  */
 async function withdraw(note, recipient) {
-  const { proof, args } = await generateProof(mixer, note, recipient)
+  const { proof, args } = await generateProof(tornado, note, recipient)
 
   console.log('Submitting withdraw transaction')
-  await mixer.methods.withdraw(proof, ...args).send({ from: senderAccount, gas: 1e6 })
+  await tornado.methods.withdraw(proof, ...args).send({ from: senderAccount, gas: 1e6 })
   console.log('Done')
 }
 
@@ -187,10 +187,10 @@ async function withdraw(note, recipient) {
  * @param recipient Recipient address
  */
 async function withdrawErc20(note, recipient) {
-  const { proof, args } = await generateProof(erc20mixer, note, recipient)
+  const { proof, args } = await generateProof(erc20tornado, note, recipient)
 
   console.log('Submitting withdraw transaction')
-  await erc20mixer.methods.withdraw(proof, ...args).send({ from: senderAccount, gas: 1e6 })
+  await erc20tornado.methods.withdraw(proof, ...args).send({ from: senderAccount, gas: 1e6 })
   console.log('Done')
 }
 
@@ -207,10 +207,10 @@ async function withdrawRelay(note, recipient, relayUrl) {
   console.log('Relay address: ', relayerAddress)
 
   const fee = bigInt(toWei(gasPrices.fast.toString(), 'gwei')).mul(bigInt(1e6))
-  const { proof, args } = await generateProof(mixer, note, recipient, relayerAddress, fee)
+  const { proof, args } = await generateProof(tornado, note, recipient, relayerAddress, fee)
 
   console.log('Sending withdraw transaction through relay')
-  const resp2 = await axios.post(relayUrl + '/relay', { contract: mixer._address, proof: { proof, publicSignals: args } })
+  const resp2 = await axios.post(relayUrl + '/relay', { contract: tornado._address, proof: { proof, publicSignals: args } })
   console.log(`Transaction submitted through relay, tx hash: ${resp2.data.txHash}`)
 
   let receipt = await waitForTxReceipt(resp2.data.txHash)
@@ -232,10 +232,10 @@ async function withdrawRelayErc20(note, recipient, relayUrl) {
 
   const refund = bigInt(toWei('0.001'))
   const fee = bigInt(toWei(gasPrices.fast.toString(), 'gwei')).mul(bigInt(1e6)).add(refund).mul(bigInt(fromWei(ethPriceInDai.toString())))
-  const { proof, args } = await generateProof(erc20mixer, note, recipient, relayerAddress, fee, refund)
+  const { proof, args } = await generateProof(erc20tornado, note, recipient, relayerAddress, fee, refund)
 
   console.log('Sending withdraw transaction through relay')
-  const resp2 = await axios.post(relayUrl + '/relay', { contract: erc20mixer._address, proof: { proof, publicSignals: args } })
+  const resp2 = await axios.post(relayUrl + '/relay', { contract: erc20tornado._address, proof: { proof, publicSignals: args } })
   console.log(`Transaction submitted through relay, tx hash: ${resp2.data.txHash}`)
 
   let receipt = await waitForTxReceipt(resp2.data.txHash)
@@ -271,12 +271,12 @@ function waitForTxReceipt(txHash, attempts = 60, delay = 1000) {
  * Init web3, contracts, and snark
  */
 async function init() {
-  let contractJson, erc20ContractJson, erc20mixerJson
+  let contractJson, erc20ContractJson, erc20tornadoJson
   if (inBrowser) {
     // Initialize using injected web3 (Metamask)
     // To assemble web version run `npm run browserify`
     web3 = new Web3(window.web3.currentProvider, null, { transactionConfirmationBlocks: 1 })
-    contractJson = await (await fetch('build/contracts/ETHMixer.json')).json()
+    contractJson = await (await fetch('build/contracts/ETHTornado.json')).json()
     circuit = await (await fetch('build/circuits/withdraw.json')).json()
     proving_key = await (await fetch('build/circuits/withdraw_proving_key.bin')).arrayBuffer()
     MERKLE_TREE_HEIGHT = 16
@@ -285,7 +285,7 @@ async function init() {
   } else {
     // Initialize from local node
     web3 = new Web3('http://localhost:8545', null, { transactionConfirmationBlocks: 1 })
-    contractJson = require('./build/contracts/ETHMixer.json')
+    contractJson = require('./build/contracts/ETHTornado.json')
     circuit = require('./build/circuits/withdraw.json')
     proving_key = fs.readFileSync('build/circuits/withdraw_proving_key.bin').buffer
     require('dotenv').config()
@@ -294,19 +294,19 @@ async function init() {
     TOKEN_AMOUNT = process.env.TOKEN_AMOUNT
     ERC20_TOKEN = process.env.ERC20_TOKEN
     erc20ContractJson = require('./build/contracts/ERC20Mock.json')
-    erc20mixerJson = require('./build/contracts/ERC20Mixer.json')
+    erc20tornadoJson = require('./build/contracts/ERC20Tornado.json')
   }
   groth16 = await buildGroth16()
   let netId = await web3.eth.net.getId()
   if (contractJson.networks[netId]) {
     const tx = await web3.eth.getTransaction(contractJson.networks[netId].transactionHash)
-    mixer = new web3.eth.Contract(contractJson.abi, contractJson.networks[netId].address)
-    mixer.deployedBlock = tx.blockNumber
+    tornado = new web3.eth.Contract(contractJson.abi, contractJson.networks[netId].address)
+    tornado.deployedBlock = tx.blockNumber
   }
 
-  const tx3 = await web3.eth.getTransaction(erc20mixerJson.networks[netId].transactionHash)
-  erc20mixer = new web3.eth.Contract(erc20mixerJson.abi, erc20mixerJson.networks[netId].address)
-  erc20mixer.deployedBlock = tx3.blockNumber
+  const tx3 = await web3.eth.getTransaction(erc20tornadoJson.networks[netId].transactionHash)
+  erc20tornado = new web3.eth.Contract(erc20tornadoJson.abi, erc20tornadoJson.networks[netId].address)
+  erc20tornado.deployedBlock = tx3.blockNumber
 
   if(ERC20_TOKEN === '') {
     erc20 = new web3.eth.Contract(erc20ContractJson.abi, erc20ContractJson.networks[netId].address)
@@ -333,7 +333,7 @@ function printHelp(code = 0) {
 
   Check address balance
   $ ./cli.js balance <address>
-  
+
   Perform an automated test
   $ ./cli.js test
   $ ./cli.js testRelay
@@ -357,10 +357,10 @@ async function runConsole(args) {
     case 'deposit':
       if (args.length === 1) {
         await init()
-        await printBalance(mixer._address, 'Mixer')
+        await printBalance(tornado._address, 'Tornado')
         await printBalance(senderAccount, 'Sender account')
         await deposit()
-        await printBalance(mixer._address, 'Mixer')
+        await printBalance(tornado._address, 'Tornado')
         await printBalance(senderAccount, 'Sender account')
       } else {
         printHelp(1)
@@ -369,10 +369,10 @@ async function runConsole(args) {
     case 'depositErc20':
       if (args.length === 1) {
         await init()
-        await printBalance(erc20mixer._address, 'Mixer')
+        await printBalance(erc20tornado._address, 'Tornado')
         await printBalance(senderAccount, 'Sender account')
         await depositErc20()
-        await printBalance(erc20mixer._address, 'Mixer')
+        await printBalance(erc20tornado._address, 'Tornado')
         await printBalance(senderAccount, 'Sender account')
       } else {
         printHelp(1)
@@ -389,14 +389,14 @@ async function runConsole(args) {
     case 'withdraw':
       if (args.length >= 3 && args.length <= 4 && /^0x[0-9a-fA-F]{124}$/.test(args[1]) && /^0x[0-9a-fA-F]{40}$/.test(args[2])) {
         await init()
-        await printBalance(mixer._address, 'Mixer')
+        await printBalance(tornado._address, 'Tornado')
         await printBalance(args[2], 'Recipient account')
         if (args[3]) {
           await withdrawRelay(args[1], args[2], args[3])
         } else {
           await withdraw(args[1], args[2])
         }
-        await printBalance(mixer._address, 'Mixer')
+        await printBalance(tornado._address, 'Tornado')
         await printBalance(args[2], 'Recipient account')
       } else {
         printHelp(1)
@@ -405,14 +405,14 @@ async function runConsole(args) {
     case 'withdrawErc20':
       if (args.length >= 3 && args.length <= 4 && /^0x[0-9a-fA-F]{124}$/.test(args[1]) && /^0x[0-9a-fA-F]{40}$/.test(args[2])) {
         await init()
-        await printBalance(erc20mixer._address, 'Mixer')
+        await printBalance(erc20tornado._address, 'Tornado')
         await printBalance(args[2], 'Recipient account')
         if (args[3]) {
           await withdrawRelayErc20(args[1], args[2], args[3])
         } else {
           await withdrawErc20(args[1], args[2])
         }
-        await printBalance(erc20mixer._address, 'Mixer')
+        await printBalance(erc20tornado._address, 'Tornado')
         await printBalance(args[2], 'Recipient account')
       } else {
         printHelp(1)

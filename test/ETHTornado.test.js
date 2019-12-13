@@ -8,7 +8,7 @@ const fs = require('fs')
 const { toBN, randomHex } = require('web3-utils')
 const { takeSnapshot, revertSnapshot } = require('../lib/ganacheHelper')
 
-const Mixer = artifacts.require('./ETHMixer.sol')
+const Tornado = artifacts.require('./ETHTornado.sol')
 const { ETH_AMOUNT, MERKLE_TREE_HEIGHT } = process.env
 
 const websnarkUtils = require('websnark/src/utils')
@@ -51,8 +51,8 @@ function snarkVerify(proof) {
   return snarkjs['groth'].isValid(verification_key, proof, proof.publicSignals)
 }
 
-contract('ETHMixer', accounts => {
-  let mixer
+contract('ETHTornado', accounts => {
+  let tornado
   const sender = accounts[0]
   const operator = accounts[0]
   const levels = MERKLE_TREE_HEIGHT || 16
@@ -74,7 +74,7 @@ contract('ETHMixer', accounts => {
       null,
       prefix,
     )
-    mixer = await Mixer.deployed()
+    tornado = await Tornado.deployed()
     snapshotId = await takeSnapshot()
     groth16 = await buildGroth16()
     circuit = require('../build/circuits/withdraw.json')
@@ -83,7 +83,7 @@ contract('ETHMixer', accounts => {
 
   describe('#constructor', () => {
     it('should initialize', async () => {
-      const etherDenomination = await mixer.denomination()
+      const etherDenomination = await tornado.denomination()
       etherDenomination.should.be.eq.BN(toBN(value))
     })
   })
@@ -91,14 +91,14 @@ contract('ETHMixer', accounts => {
   describe('#deposit', () => {
     it('should emit event', async () => {
       let commitment = toFixedHex(42)
-      let { logs } = await mixer.deposit(commitment, { value, from: sender })
+      let { logs } = await tornado.deposit(commitment, { value, from: sender })
 
       logs[0].event.should.be.equal('Deposit')
       logs[0].args.commitment.should.be.equal(commitment)
       logs[0].args.leafIndex.should.be.eq.BN(0)
 
       commitment = toFixedHex(12);
-      ({ logs } = await mixer.deposit(commitment, { value, from: accounts[2] }))
+      ({ logs } = await tornado.deposit(commitment, { value, from: accounts[2] }))
 
       logs[0].event.should.be.equal('Deposit')
       logs[0].args.commitment.should.be.equal(commitment)
@@ -107,8 +107,8 @@ contract('ETHMixer', accounts => {
 
     it('should throw if there is a such commitment', async () => {
       const commitment = toFixedHex(42)
-      await mixer.deposit(commitment, { value, from: sender }).should.be.fulfilled
-      const error = await mixer.deposit(commitment, { value, from: sender }).should.be.rejected
+      await tornado.deposit(commitment, { value, from: sender }).should.be.fulfilled
+      const error = await tornado.deposit(commitment, { value, from: sender }).should.be.rejected
       error.reason.should.be.equal('The commitment has been submitted')
     })
   })
@@ -166,9 +166,9 @@ contract('ETHMixer', accounts => {
       const balanceUserBefore = await web3.eth.getBalance(user)
 
       // Uncomment to measure gas usage
-      // let gas = await mixer.deposit.estimateGas(toBN(deposit.commitment.toString()), { value, from: user, gasPrice: '0' })
+      // let gas = await tornado.deposit.estimateGas(toBN(deposit.commitment.toString()), { value, from: user, gasPrice: '0' })
       // console.log('deposit gas:', gas)
-      await mixer.deposit(toFixedHex(deposit.commitment), { value, from: user, gasPrice: '0' })
+      await tornado.deposit(toFixedHex(deposit.commitment), { value, from: user, gasPrice: '0' })
 
       const balanceUserAfter = await web3.eth.getBalance(user)
       balanceUserAfter.should.be.eq.BN(toBN(balanceUserBefore).sub(toBN(value)))
@@ -196,15 +196,15 @@ contract('ETHMixer', accounts => {
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
       const { proof } = websnarkUtils.toSolidityInput(proofData)
 
-      const balanceMixerBefore = await web3.eth.getBalance(mixer.address)
+      const balanceTornadoBefore = await web3.eth.getBalance(tornado.address)
       const balanceRelayerBefore = await web3.eth.getBalance(relayer)
       const balanceOperatorBefore = await web3.eth.getBalance(operator)
       const balanceRecieverBefore = await web3.eth.getBalance(toFixedHex(recipient, 20))
-      let isSpent = await mixer.isSpent(toFixedHex(input.nullifierHash))
+      let isSpent = await tornado.isSpent(toFixedHex(input.nullifierHash))
       isSpent.should.be.equal(false)
 
       // Uncomment to measure gas usage
-      // gas = await mixer.withdraw.estimateGas(proof, publicSignals, { from: relayer, gasPrice: '0' })
+      // gas = await tornado.withdraw.estimateGas(proof, publicSignals, { from: relayer, gasPrice: '0' })
       // console.log('withdraw gas:', gas)
       const args = [
         toFixedHex(input.root),
@@ -214,14 +214,14 @@ contract('ETHMixer', accounts => {
         toFixedHex(input.fee),
         toFixedHex(input.refund)
       ]
-      const { logs } = await mixer.withdraw(proof, ...args, { from: relayer, gasPrice: '0' })
+      const { logs } = await tornado.withdraw(proof, ...args, { from: relayer, gasPrice: '0' })
 
-      const balanceMixerAfter = await web3.eth.getBalance(mixer.address)
+      const balanceTornadoAfter = await web3.eth.getBalance(tornado.address)
       const balanceRelayerAfter = await web3.eth.getBalance(relayer)
       const balanceOperatorAfter = await web3.eth.getBalance(operator)
       const balanceRecieverAfter = await web3.eth.getBalance(toFixedHex(recipient, 20))
       const feeBN = toBN(fee.toString())
-      balanceMixerAfter.should.be.eq.BN(toBN(balanceMixerBefore).sub(toBN(value)))
+      balanceTornadoAfter.should.be.eq.BN(toBN(balanceTornadoBefore).sub(toBN(value)))
       balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore))
       balanceOperatorAfter.should.be.eq.BN(toBN(balanceOperatorBefore).add(feeBN))
       balanceRecieverAfter.should.be.eq.BN(toBN(balanceRecieverBefore).add(toBN(value)).sub(feeBN))
@@ -231,14 +231,14 @@ contract('ETHMixer', accounts => {
       logs[0].args.nullifierHash.should.be.equal(toFixedHex(input.nullifierHash))
       logs[0].args.relayer.should.be.eq.BN(operator)
       logs[0].args.fee.should.be.eq.BN(feeBN)
-      isSpent = await mixer.isSpent(toFixedHex(input.nullifierHash))
+      isSpent = await tornado.isSpent(toFixedHex(input.nullifierHash))
       isSpent.should.be.equal(true)
     })
 
     it('should prevent double spend', async () => {
       const deposit = generateDeposit()
       await tree.insert(deposit.commitment)
-      await mixer.deposit(toFixedHex(deposit.commitment), { value, from: sender })
+      await tornado.deposit(toFixedHex(deposit.commitment), { value, from: sender })
 
       const { root, path_elements, path_index } = await tree.path(0)
 
@@ -264,15 +264,15 @@ contract('ETHMixer', accounts => {
         toFixedHex(input.fee),
         toFixedHex(input.refund)
       ]
-      await mixer.withdraw(proof, ...args, { from: relayer }).should.be.fulfilled
-      const error = await mixer.withdraw(proof, ...args, { from: relayer }).should.be.rejected
+      await tornado.withdraw(proof, ...args, { from: relayer }).should.be.fulfilled
+      const error = await tornado.withdraw(proof, ...args, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('The note has been already spent')
     })
 
     it('should prevent double spend with overflow', async () => {
       const deposit = generateDeposit()
       await tree.insert(deposit.commitment)
-      await mixer.deposit(toFixedHex(deposit.commitment), { value, from: sender })
+      await tornado.deposit(toFixedHex(deposit.commitment), { value, from: sender })
 
       const { root, path_elements, path_index } = await tree.path(0)
 
@@ -298,14 +298,14 @@ contract('ETHMixer', accounts => {
         toFixedHex(input.fee),
         toFixedHex(input.refund)
       ]
-      const error = await mixer.withdraw(proof, ...args, { from: relayer }).should.be.rejected
+      const error = await tornado.withdraw(proof, ...args, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('verifier-gte-snark-scalar-field')
     })
 
     it('fee should be less or equal transfer value', async () => {
       const deposit = generateDeposit()
       await tree.insert(deposit.commitment)
-      await mixer.deposit(toFixedHex(deposit.commitment), { value, from: sender })
+      await tornado.deposit(toFixedHex(deposit.commitment), { value, from: sender })
 
       const { root, path_elements, path_index } = await tree.path(0)
       const largeFee = bigInt(value).add(bigInt(1))
@@ -332,14 +332,14 @@ contract('ETHMixer', accounts => {
         toFixedHex(input.fee),
         toFixedHex(input.refund)
       ]
-      const error = await mixer.withdraw(proof, ...args, { from: relayer }).should.be.rejected
+      const error = await tornado.withdraw(proof, ...args, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('Fee exceeds transfer value')
     })
 
     it('should throw for corrupted merkle tree root', async () => {
       const deposit = generateDeposit()
       await tree.insert(deposit.commitment)
-      await mixer.deposit(toFixedHex(deposit.commitment), { value, from: sender })
+      await tornado.deposit(toFixedHex(deposit.commitment), { value, from: sender })
 
       const { root, path_elements, path_index } = await tree.path(0)
 
@@ -367,14 +367,14 @@ contract('ETHMixer', accounts => {
         toFixedHex(input.fee),
         toFixedHex(input.refund)
       ]
-      const error = await mixer.withdraw(proof, ...args, { from: relayer }).should.be.rejected
+      const error = await tornado.withdraw(proof, ...args, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('Cannot find your merkle root')
     })
 
     it('should reject with tampered public inputs', async () => {
       const deposit = generateDeposit()
       await tree.insert(deposit.commitment)
-      await mixer.deposit(toFixedHex(deposit.commitment), { value, from: sender })
+      await tornado.deposit(toFixedHex(deposit.commitment), { value, from: sender })
 
       let { root, path_elements, path_index } = await tree.path(0)
 
@@ -412,7 +412,7 @@ contract('ETHMixer', accounts => {
         toFixedHex(input.fee),
         toFixedHex(input.refund)
       ]
-      let error = await mixer.withdraw(proof, ...incorrectArgs, { from: relayer }).should.be.rejected
+      let error = await tornado.withdraw(proof, ...incorrectArgs, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('Invalid withdraw proof')
 
       // fee
@@ -424,7 +424,7 @@ contract('ETHMixer', accounts => {
         toFixedHex('0x000000000000000000000000000000000000000000000000015345785d8a0000'),
         toFixedHex(input.refund)
       ]
-      error = await mixer.withdraw(proof, ...incorrectArgs, { from: relayer }).should.be.rejected
+      error = await tornado.withdraw(proof, ...incorrectArgs, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('Invalid withdraw proof')
 
       // nullifier
@@ -436,21 +436,21 @@ contract('ETHMixer', accounts => {
         toFixedHex(input.fee),
         toFixedHex(input.refund)
       ]
-      error = await mixer.withdraw(proof, ...incorrectArgs, { from: relayer }).should.be.rejected
+      error = await tornado.withdraw(proof, ...incorrectArgs, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('Invalid withdraw proof')
 
       // proof itself
       proof = '0xbeef' + proof.substr(6)
-      await mixer.withdraw(proof, ...args, { from: relayer }).should.be.rejected
+      await tornado.withdraw(proof, ...args, { from: relayer }).should.be.rejected
 
       // should work with original values
-      await mixer.withdraw(originalProof, ...args, { from: relayer }).should.be.fulfilled
+      await tornado.withdraw(originalProof, ...args, { from: relayer }).should.be.fulfilled
     })
 
     it('should reject with non zero refund', async () => {
       const deposit = generateDeposit()
       await tree.insert(deposit.commitment)
-      await mixer.deposit(toFixedHex(deposit.commitment), { value, from: sender })
+      await tornado.deposit(toFixedHex(deposit.commitment), { value, from: sender })
 
       const { root, path_elements, path_index } = await tree.path(0)
 
@@ -478,29 +478,29 @@ contract('ETHMixer', accounts => {
         toFixedHex(input.fee),
         toFixedHex(input.refund)
       ]
-      const error = await mixer.withdraw(proof, ...args, { from: relayer }).should.be.rejected
-      error.reason.should.be.equal('Refund value is supposed to be zero for ETH mixer')
+      const error = await tornado.withdraw(proof, ...args, { from: relayer }).should.be.rejected
+      error.reason.should.be.equal('Refund value is supposed to be zero for ETH instance')
     })
   })
 
   describe('#changeOperator', () => {
     it('should work', async () => {
-      let operator = await mixer.operator()
+      let operator = await tornado.operator()
       operator.should.be.equal(sender)
 
       const newOperator = accounts[7]
-      await mixer.changeOperator(newOperator).should.be.fulfilled
+      await tornado.changeOperator(newOperator).should.be.fulfilled
 
-      operator = await mixer.operator()
+      operator = await tornado.operator()
       operator.should.be.equal(newOperator)
     })
 
     it('cannot change from different address', async () => {
-      let operator = await mixer.operator()
+      let operator = await tornado.operator()
       operator.should.be.equal(sender)
 
       const newOperator = accounts[7]
-      const error = await mixer.changeOperator(newOperator, { from:  accounts[7] }).should.be.rejected
+      const error = await tornado.changeOperator(newOperator, { from:  accounts[7] }).should.be.rejected
       error.reason.should.be.equal('Only operator can call this function.')
 
     })
@@ -508,22 +508,22 @@ contract('ETHMixer', accounts => {
 
   describe('#updateVerifier', () => {
     it('should work', async () => {
-      let operator = await mixer.operator()
+      let operator = await tornado.operator()
       operator.should.be.equal(sender)
 
       const newVerifier = accounts[7]
-      await mixer.updateVerifier(newVerifier).should.be.fulfilled
+      await tornado.updateVerifier(newVerifier).should.be.fulfilled
 
-      const verifier = await mixer.verifier()
+      const verifier = await tornado.verifier()
       verifier.should.be.equal(newVerifier)
     })
 
     it('cannot change from different address', async () => {
-      let operator = await mixer.operator()
+      let operator = await tornado.operator()
       operator.should.be.equal(sender)
 
       const newVerifier = accounts[7]
-      const error = await mixer.updateVerifier(newVerifier, { from:  accounts[7] }).should.be.rejected
+      const error = await tornado.updateVerifier(newVerifier, { from:  accounts[7] }).should.be.rejected
       error.reason.should.be.equal('Only operator can call this function.')
 
     })
@@ -535,8 +535,8 @@ contract('ETHMixer', accounts => {
       const deposit2 = generateDeposit()
       await tree.insert(deposit1.commitment)
       await tree.insert(deposit2.commitment)
-      await mixer.deposit(toFixedHex(deposit1.commitment), { value, gasPrice: '0' })
-      await mixer.deposit(toFixedHex(deposit2.commitment), { value, gasPrice: '0' })
+      await tornado.deposit(toFixedHex(deposit1.commitment), { value, gasPrice: '0' })
+      await tornado.deposit(toFixedHex(deposit2.commitment), { value, gasPrice: '0' })
 
       const { root, path_elements, path_index } = await tree.path(1)
 
@@ -570,11 +570,11 @@ contract('ETHMixer', accounts => {
         toFixedHex(input.refund)
       ]
 
-      await mixer.withdraw(proof, ...args, { from: relayer, gasPrice: '0' })
+      await tornado.withdraw(proof, ...args, { from: relayer, gasPrice: '0' })
 
       const nullifierHash1 = toFixedHex(pedersenHash(deposit1.nullifier.leInt2Buff(31)))
       const nullifierHash2 = toFixedHex(pedersenHash(deposit2.nullifier.leInt2Buff(31)))
-      const spentArray = await mixer.isSpentArray([nullifierHash1, nullifierHash2])
+      const spentArray = await tornado.isSpentArray([nullifierHash1, nullifierHash2])
       spentArray.should.be.deep.equal([false, true])
     })
   })
