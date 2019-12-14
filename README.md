@@ -78,6 +78,19 @@ If you want, you can point the app to existing tornado contracts on Mainnet or K
 
 **Note**. If you want to reuse the same verifier for all the instances, then after you deployed one of the instances you should only run 4th or 5th migration for ETH or ERC20 contracts respectively (`--f 4 --to 4` or `--f 5`).
 
+## Migraton
+1. `npm install`
+1. `cp .env.example .env`
+1. `npm run build` - this may take 10 minutes or more
+1. `npm run migrate:kovan`
+1. Take `ETHTornado's address` address from the output and set it as `HELPER_INSTANCE` in `./migrationDeposits.js`
+1. Go to `./migrations/4_deploy_eth_mixer.js` and change `const ETHTornado = artifacts.require('ETHTornado')` to `const ETHTornado = artifacts.require('MigratableETHTornado')`
+1. `npm run migrate:mainnet`
+1. Take `ETHTornado's address` address from the output and set it as `NEW_INSTANCE` in `./migrationDeposits.js`
+1. Setup right `SOURCE_RPC` and `TARGET_RPC` in the `./migrationDeposits.js`
+1. Go to `./migrationDeposits.js` at the line 141 (`// 3. Decide should we uncomment here`)
+1. `node migrationDeposits.js`
+
 ## Credits
 
 Special thanks to @barryWhiteHat and @kobigurk for valuable input,

@@ -17,8 +17,8 @@ const { numberToHex, toWei } = require('web3-utils')
 
 // 2. edit here
 const PREVIOUS_INSTANCE = '0xb541fc07bC7619fD4062A54d96268525cBC6FfEF'
-const HELPER_INSTANCE = ''
-const NEW_INSTANCE = ''
+const HELPER_INSTANCE = '0x831822ad4A8AEbfC27DF0b915902de855E613eb2'
+const NEW_INSTANCE = '0xcdA7FC8a05CFF618f7e323c547d6F2EF6c3578AA'
 
 function toHex(number, length = 32) {
   let str = number instanceof Buffer ? number.toString('hex') : bigInt(number).toString(16)
