@@ -1,6 +1,6 @@
-# Tornado Privacy Solution [![Build Status](https://travis-ci.org/tornadocash/tornado-core.svg?branch=master)](https://travis-ci.org/tornadocash/tornado-core)
+# Tornado Cash Privacy Solution [![Build Status](https://travis-ci.org/tornadocash/tornado-core.svg?branch=master)](https://travis-ci.org/tornadocash/tornado-core)
 
-Tornado is a non-custodial Ethereum and ERC20 privacy solution based on zkSNARKs. It improves transaction privacy by breaking the on-chain link between recipient and destination addresses. It uses a smart contract that accepts ETH deposits that can be withdrawn by a different address. Whenever ETH is withdrawn by the new address, there is no way to link the withdrawal to the deposit, ensuring complete privacy.
+Tornado Cash is a non-custodial Ethereum and ERC20 privacy solution based on zkSNARKs. It improves transaction privacy by breaking the on-chain link between recipient and destination addresses. It uses a smart contract that accepts ETH deposits that can be withdrawn by a different address. Whenever ETH is withdrawn by the new address, there is no way to link the withdrawal to the deposit, ensuring complete privacy.
 
 To make a deposit user generates a secret and sends its hash (called a commitment) along with the deposit amount to the Tornado smart contract. The contract accepts the deposit and adds the commitment to its list of deposits.
 
@@ -9,25 +9,25 @@ Later, the user decides to make a withdrawal. In order to do that, the user shou
 You can read more about it in [this medium article](https://medium.com/@tornado.cash.mixer/introducing-private-transactions-on-ethereum-now-42ee915babe0)
 
 ## Specs
-- Deposit gas const: 888054 (43381 + 50859 * tree_depth)
-- Withdraw gas cost: 692133
-- Circuit Constraints = 22617 (1869 + 1325 * tree_depth)
-- Circuit Proof time = 6116ms (1071 + 347 * tree_depth)
+- Deposit gas const: 1088354 (43381 + 50859 * tree_depth)
+- Withdraw gas cost: 301233
+- Circuit Constraints = 28271 (1869 + 1325 * tree_depth)
+- Circuit Proof time = 10213ms (1071 + 347 * tree_depth)
 - Serverless
 
 ![image](diagram.png)
 
-## Security risks
-* Cryptographic tools used by Tornado (zkSNARKS, Pedersen commitment, MiMC hash) are yet NOT extensively audited by cryptographic experts and may be vulnerable
- * Note: we use MiMC hash only for merkle tree, so even if a preimage attack on MiMC is discovered, it will not allow to deanonymize users. To drain funds attacker needs to be able to generate arbitrary hash collisions, which is a pretty strong assumption.
-* Bugs in contract. Even though we have an extensive experience in smart contract security audits, we can still make mistakes. An external audit is needed to reduce probablility of bugs. Our code is currently being audited, stay tuned.
-* Relayer is frontrunnable. When relayer submits a transaction someone can see it in tx pool and frontrun it with higher gas price to get the fee and drain relayer funds.
-	* Workaround: we can set high gas price so that (almost) all fee is used on gas
-	* Second workaround: allow only single hardcoded relayer, we use this approach for now
-* ~~Nullifier griefing. when you submit a withdraw transaction you reveal the nullifier for your note. If someone manages to
-make a deposit with the same nullifier and withdraw it while your transaction is still in tx pool, your note will be considered
-spent since it has the same nullifier and it will prevent you from withdrawing your funds~~
-  * Fixed by sending nullifier hash instead of plain nullifier
+## Was it audited?
+
+Tornado.cash protocols, circuits, and smart contracts were audited by a group of experts from [ABDK Consulting](https://www.abdk.consulting), specializing in zero knowledge, cryptography, and smart contracts.
+
+During the audit no critical issues were found and all outstanding issues were fixed. The results can be found here:
+
+* Cryptographic review https://tornado.cash/Tornado_cryptographic_review.pdf
+* Smart contract audit https://tornado.cash/Tornado_solidity_audit.pdf
+* Zk-SNARK circuits audit https://tornado.cash/Tornado_circuit_audit.pdf
+
+Underlying circomlib dependency is currently being audited, and the team already published most of the fixes for found issues
 
 ## Requirements
 1. `node v11.15.0`
