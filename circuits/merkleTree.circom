@@ -6,7 +6,7 @@ template HashLeftRight() {
     signal input right;
     signal output hash;
 
-    component hasher = MiMCSponge(2, 220, 1);
+    component hasher = MiMCSponge(2, 1);
     hasher.ins[0] <== left;
     hasher.ins[1] <== right;
     hasher.k <== 0;

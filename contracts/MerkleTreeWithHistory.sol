@@ -12,7 +12,7 @@
 pragma solidity ^0.5.8;
 
 library Hasher {
-  function MiMCSponge(uint256 in_xL, uint256 in_xR, uint256 in_k) public pure returns (uint256 xL, uint256 xR);
+  function MiMCSponge(uint256 in_xL, uint256 in_xR) public pure returns (uint256 xL, uint256 xR);
 }
 
 contract MerkleTreeWithHistory {
@@ -56,9 +56,9 @@ contract MerkleTreeWithHistory {
     require(uint256(_right) < FIELD_SIZE, "_right should be inside the field");
     uint256 R = uint256(_left);
     uint256 C = 0;
-    (R, C) = Hasher.MiMCSponge(R, C, 0);
+    (R, C) = Hasher.MiMCSponge(R, C);
     R = addmod(R, uint256(_right), FIELD_SIZE);
-    (R, C) = Hasher.MiMCSponge(R, C, 0);
+    (R, C) = Hasher.MiMCSponge(R, C);
     return bytes32(R);
   }
 
@@ -100,13 +100,13 @@ contract MerkleTreeWithHistory {
     }
     uint32 i = currentRootIndex;
     do {
-       if (_root == roots[i]) {
-           return true;
-       }
-       if (i == 0) {
-           i = ROOT_HISTORY_SIZE;
-       }
-       i--;
+      if (_root == roots[i]) {
+        return true;
+      }
+      if (i == 0) {
+        i = ROOT_HISTORY_SIZE;
+      }
+      i--;
     } while (i != currentRootIndex);
     return false;
   }

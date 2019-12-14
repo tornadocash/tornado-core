@@ -36,7 +36,7 @@
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "circom": "0.0.34",
-    "circomlib": "^0.0.19",
+    "circomlib": "git+https://github.com/tornadocash/circomlib.git#347822604996bf25f659f96ee0f02810a1f71bb0",
     "dotenv": "^8.2.0",
     "eslint": "^6.6.0",
     "ganache-cli": "^6.7.0",
