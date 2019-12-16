@@ -14,7 +14,8 @@ contract MigratableETHTornado is ETHTornado {
   }
 
   /**
-    @dev Migrate state from old instance to this one.
+    @dev Migrate state from old v1 tornado.cash instance to this contract.
+    @dev only applies to eth 0.1 deposits
     @param _commitments deposited commitments from previous contract
     @param _nullifierHashes spent nullifiers from previous contract
   */

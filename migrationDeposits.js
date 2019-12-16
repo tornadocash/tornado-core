@@ -3,7 +3,7 @@ const Web3 = require('web3')
 
 // 1. edit here
 const SOURCE_RPC = 'https://mainnet.infura.io/v3/c7463beadf2144e68646ff049917b716'
-const TARGET_RPC = 'https://kovan.poa.network'
+const TARGET_RPC = 'https://mainnet.infura.io/v3/c7463beadf2144e68646ff049917b716'
 const HELPER_RPC = 'https://kovan.poa.network'
 const web3Source = new Web3(SOURCE_RPC, null, { transactionConfirmationBlocks: 1 })
 const web3Target = new Web3(TARGET_RPC, null, { transactionConfirmationBlocks: 1 })
@@ -17,8 +17,8 @@ const { numberToHex, toWei } = require('web3-utils')
 
 // 2. edit here
 const PREVIOUS_INSTANCE = '0xb541fc07bC7619fD4062A54d96268525cBC6FfEF'
-const HELPER_INSTANCE = '0x831822ad4A8AEbfC27DF0b915902de855E613eb2'
-const NEW_INSTANCE = '0xcdA7FC8a05CFF618f7e323c547d6F2EF6c3578AA'
+const HELPER_INSTANCE = '0xAF1a4734e1234898a7e000fC7eBE8dcb2ca83472'
+const NEW_INSTANCE = '0x12D66f87A04A9E220743712cE6d9bB1B5616B8Fc'
 
 function toHex(number, length = 32) {
   let str = number instanceof Buffer ? number.toString('hex') : bigInt(number).toString(16)
@@ -51,7 +51,7 @@ async function makeDeposit({ web3, privKey, instance, nonce, commitment }) {
     from: web3Helper.eth.defaultAccount,
     value: toWei('0.1'),
     gas: 2e6,
-    gasPrice: toHex(toWei('2', 'gwei')),
+    gasPrice: toHex(toWei('12', 'gwei')),
     to: instance._address,
     netId: await web3.eth.net.getId(),
     data,
@@ -93,7 +93,7 @@ async function migrateState({ subtrees, lastRoot, commitments, nullifiers, newIn
   let nullifiersToLoad
   await newInstance.methods.initializeTreeForMigration(subtrees, lastRoot).send({
     gas: numberToHex(2500000),
-    gasPrice: toHex(toWei('10', 'gwei')),
+    gasPrice: toHex(toWei('12', 'gwei')),
     from: web3Target.eth.defaultAccount
   })
   for(let i=0; i < commitments.length / loadBy; i++) {
@@ -108,7 +108,7 @@ async function migrateState({ subtrees, lastRoot, commitments, nullifiers, newIn
       nullifiersToLoad
     ).send({
       gas: numberToHex(6500000),
-      gasPrice: toHex(toWei('10', 'gwei')),
+      gasPrice: toHex(toWei('12', 'gwei')),
       from: web3Target.eth.defaultAccount
     })
     console.log('Gas used:', tx.gasUsed)
