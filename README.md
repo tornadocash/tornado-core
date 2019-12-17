@@ -6,7 +6,7 @@ To make a deposit user generates a secret and sends its hash (called a commitmen
 
 Later, the user decides to make a withdrawal. In order to do that, the user should provide a proof that he or she possesses a secret to an unspent commitment from the smart contract’s list of deposits. zkSnark technology allows that to happen without revealing which exact deposit corresponds to this secret. The smart contract will check the proof, and transfer deposited funds to the address specified for withdrawal. An external observer will be unable to determine which deposit this withdrawal came from.
 
-You can read more about it in [this medium article](https://medium.com/@tornado.cash.mixer/introducing-private-transactions-on-ethereum-now-42ee915babe0)
+You can read more about it in [this medium article](https://medium.com/@tornado.cash/introducing-private-transactions-on-ethereum-now-42ee915babe0)
 
 ## Specs
 - Deposit gas const: 1088354 (43381 + 50859 * tree_depth)
@@ -14,6 +14,8 @@ You can read more about it in [this medium article](https://medium.com/@tornado.
 - Circuit Constraints = 28271 (1869 + 1325 * tree_depth)
 - Circuit Proof time = 10213ms (1071 + 347 * tree_depth)
 - Serverless
+
+[Whitepaper](https://tornado.cash/Tornado.cash_Whitepaper_v1.4.pdf)
 
 ![image](diagram.png)
 
