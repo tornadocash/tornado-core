@@ -15,9 +15,10 @@ You can read more about it in [this medium article](https://medium.com/@tornado.
 - Circuit Proof time = 10213ms (1071 + 347 * tree_depth)
 - Serverless
 
-[Whitepaper](https://tornado.cash/Tornado.cash_Whitepaper_v1.4.pdf)
-
 ![image](diagram.png)
+
+## Whitepaper
+**[https://tornado.cash/Tornado.cash_whitepaper_v1.4.pdf](https://tornado.cash/Tornado.cash_whitepaper_v1.4.pdf)**
 
 ## Was it audited?
 
