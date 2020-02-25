@@ -13,6 +13,7 @@ const Web3 = require('web3')
 const buildGroth16 = require('websnark/src/groth16')
 const websnarkUtils = require('websnark/src/utils')
 const { toWei, fromWei } = require('web3-utils')
+const config = require('./config')
 
 let web3, tornado, erc20tornado, circuit, proving_key, groth16, erc20, senderAccount
 let MERKLE_TREE_HEIGHT, ETH_AMOUNT, TOKEN_AMOUNT, ERC20_TOKEN
@@ -28,7 +29,7 @@ const pedersenHash = data => circomlib.babyJub.unpackPoint(circomlib.pedersenHas
 
 /** BigNumber to hex string of specified length */
 function toHex(number, length = 32) {
-  let str = number instanceof Buffer ? number.toString('hex') : bigInt(number).toString(16)
+  const str = number instanceof Buffer ? number.toString('hex') : bigInt(number).toString(16)
   return '0x' + str.padStart(length * 2, '0')
 }
 
@@ -42,7 +43,7 @@ async function printBalance(account, name) {
  * Create deposit object from secret and nullifier
  */
 function createDeposit(nullifier, secret) {
-  let deposit = { nullifier, secret }
+  const deposit = { nullifier, secret }
   deposit.preimage = Buffer.concat([deposit.nullifier.leInt2Buff(31), deposit.secret.leInt2Buff(31)])
   deposit.commitment = pedersenHash(deposit.preimage)
   deposit.nullifierHash = pedersenHash(deposit.nullifier.leInt2Buff(31))
@@ -102,8 +103,8 @@ async function generateMerkleProof(contract, deposit) {
   const tree = new merkleTree(MERKLE_TREE_HEIGHT, leaves)
 
   // Find current commitment in the tree
-  let depositEvent = events.find(e => e.returnValues.commitment === toHex(deposit.commitment))
-  let leafIndex = depositEvent ? depositEvent.returnValues.leafIndex : -1
+  const depositEvent = events.find(e => e.returnValues.commitment === toHex(deposit.commitment))
+  const leafIndex = depositEvent ? depositEvent.returnValues.leafIndex : -1
 
   // Validate that our data is correct
   const isValidRoot = await contract.methods.isKnownRoot(toHex(await tree.root())).call()
@@ -119,33 +120,29 @@ async function generateMerkleProof(contract, deposit) {
 /**
  * Generate SNARK proof for withdrawal
  * @param contract Tornado contract address
- * @param note Note string
+ * @param note Note
  * @param recipient Funds recipient
  * @param relayer Relayer address
  * @param fee Relayer fee
  * @param refund Receive ether for exchanged tokens
  */
 async function generateProof(contract, note, recipient, relayer = 0, fee = 0, refund = 0) {
-  // Decode hex string and restore the deposit object
-  let buf = Buffer.from(note.slice(2), 'hex')
-  let deposit = createDeposit(bigInt.leBuff2int(buf.slice(0, 31)), bigInt.leBuff2int(buf.slice(31, 62)))
-
   // Compute merkle proof of our commitment
-  const { root, path_elements, path_index } = await generateMerkleProof(contract, deposit)
+  const { root, path_elements, path_index } = await generateMerkleProof(contract, note.deposit)
 
   // Prepare circuit input
   const input = {
     // Public snark inputs
     root: root,
-    nullifierHash: deposit.nullifierHash,
+    nullifierHash: note.deposit.nullifierHash,
     recipient: bigInt(recipient),
     relayer: bigInt(relayer),
     fee: bigInt(fee),
     refund: bigInt(refund),
 
     // Private snark inputs
-    nullifier: deposit.nullifier,
-    secret: deposit.secret,
+    nullifier: note.deposit.nullifier,
+    secret: note.deposit.secret,
     pathElements: path_elements,
     pathIndices: path_index,
   }
@@ -170,10 +167,11 @@ async function generateProof(contract, note, recipient, relayer = 0, fee = 0, re
 
 /**
  * Do an ETH withdrawal
- * @param note Note to withdraw
+ * @param noteString Note to withdraw
  * @param recipient Recipient address
  */
-async function withdraw(note, recipient) {
+async function withdraw(noteString, recipient) {
+  const note = parseNote(noteString)
   const { proof, args } = await generateProof(tornado, note, recipient)
 
   console.log('Submitting withdraw transaction')
@@ -183,10 +181,11 @@ async function withdraw(note, recipient) {
 
 /**
  * Do a ERC20 withdrawal
- * @param note Note to withdraw
+ * @param noteString Note to withdraw
  * @param recipient Recipient address
  */
-async function withdrawErc20(note, recipient) {
+async function withdrawErc20(noteString, recipient) {
+  const note = parseNote(noteString)
   const { proof, args } = await generateProof(erc20tornado, note, recipient)
 
   console.log('Submitting withdraw transaction')
@@ -196,11 +195,12 @@ async function withdrawErc20(note, recipient) {
 
 /**
  * Do an ETH withdrawal through relay
- * @param note Note to withdraw
+ * @param noteString Note to withdraw
  * @param recipient Recipient address
  * @param relayUrl Relay url address
  */
-async function withdrawRelay(note, recipient, relayUrl) {
+async function withdrawRelay(noteString, recipient, relayUrl) {
+  const note = parseNote(noteString)
   const resp = await axios.get(relayUrl + '/status')
   const { relayerAddress, netId, gasPrices } = resp.data
   assert(netId === await web3.eth.net.getId() || netId === '*', 'This relay is for different network')
@@ -213,18 +213,19 @@ async function withdrawRelay(note, recipient, relayUrl) {
   const resp2 = await axios.post(relayUrl + '/relay', { contract: tornado._address, proof: { proof, publicSignals: args } })
   console.log(`Transaction submitted through relay, tx hash: ${resp2.data.txHash}`)
 
-  let receipt = await waitForTxReceipt(resp2.data.txHash)
+  const receipt = await waitForTxReceipt(resp2.data.txHash)
   console.log('Transaction mined in block', receipt.blockNumber)
   console.log('Done')
 }
 
 /**
  * Do a ERC20 withdrawal through relay
- * @param note Note to withdraw
+ * @param noteString Note to withdraw
  * @param recipient Recipient address
  * @param relayUrl Relay url address
  */
-async function withdrawRelayErc20(note, recipient, relayUrl) {
+async function withdrawRelayErc20(noteString, recipient, relayUrl) {
+  const note = parseNote(noteString)
   const resp = await axios.get(relayUrl + '/status')
   const { relayerAddress, netId, gasPrices, ethPriceInDai } = resp.data
   assert(netId === await web3.eth.net.getId() || netId === '*', 'This relay is for different network')
@@ -238,7 +239,7 @@ async function withdrawRelayErc20(note, recipient, relayUrl) {
   const resp2 = await axios.post(relayUrl + '/relay', { contract: erc20tornado._address, proof: { proof, publicSignals: args } })
   console.log(`Transaction submitted through relay, tx hash: ${resp2.data.txHash}`)
 
-  let receipt = await waitForTxReceipt(resp2.data.txHash)
+  const receipt = await waitForTxReceipt(resp2.data.txHash)
   console.log('Transaction mined in block', receipt.blockNumber)
   console.log('Done')
 }
@@ -267,6 +268,25 @@ function waitForTxReceipt(txHash, attempts = 60, delay = 1000) {
   })
 }
 
+function parseNote(noteString) {
+  const noteRegex = /tornado-(?<currency>\w+)-(?<amount>[\d.]+)-(?<netId>\d+)-0x(?<note>[0-9a-fA-F]{124})/g
+  const match = noteRegex.exec(noteString)
+  if (!match) {
+    throw new Error('The note has invalid format')
+  }
+
+  const buf = Buffer.from(match.groups.note, 'hex')
+  const nullifier = bigInt.leBuff2int(buf.slice(0, 31))
+  const secret = bigInt.leBuff2int(buf.slice(31, 62))
+  const deposit = createDeposit(nullifier, secret)
+
+
+  const netId = Number(match.groups.netId)
+  const address = config.mixers['netId' + netId][match.groups.currency][match.groups.amount]
+
+  return { address, netId, deposit }
+}
+
 /**
  * Init web3, contracts, and snark
  */
@@ -284,7 +304,7 @@ async function init() {
     TOKEN_AMOUNT = 1e19
   } else {
     // Initialize from local node
-    web3 = new Web3('http://localhost:8545', null, { transactionConfirmationBlocks: 1 })
+    web3 = new Web3('https://mainnet.infura.io', null, { transactionConfirmationBlocks: 1 })
     contractJson = require('./build/contracts/ETHTornado.json')
     circuit = require('./build/circuits/withdraw.json')
     proving_key = fs.readFileSync('build/circuits/withdraw_proving_key.bin').buffer
@@ -297,10 +317,10 @@ async function init() {
     erc20tornadoJson = require('./build/contracts/ERC20Tornado.json')
   }
   groth16 = await buildGroth16()
-  let netId = await web3.eth.net.getId()
+  const netId = await web3.eth.net.getId()
   if (contractJson.networks[netId]) {
     const tx = await web3.eth.getTransaction(contractJson.networks[netId].transactionHash)
-    tornado = new web3.eth.Contract(contractJson.abi, contractJson.networks[netId].address)
+    tornado = new web3.eth.Contract(contractJson.abi, '0xb541fc07bC7619fD4062A54d96268525cBC6FfEF')
     tornado.deployedBlock = tx.blockNumber
   }
 
