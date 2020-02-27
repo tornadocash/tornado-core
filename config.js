@@ -1,13 +1,6 @@
 require('dotenv').config()
 
 module.exports = {
-  version: '2.2',
-  netId: Number(process.env.NET_ID) || 42,
-  redisUrl: process.env.REDIS_URL,
-  rpcUrl: process.env.RPC_URL || 'https://kovan.infura.io/',
-  oracleRpcUrl: process.env.ORACLE_RPC_URL || 'https://cloudflare-eth.com',
-  oracleAddress: '0xB5eE7907FF5f4c1FC9086Fc117E6c397431F39ad',
-  privateKey: process.env.PRIVATE_KEY,
   deployments: {
     netId1: {
       eth: {
@@ -143,9 +136,5 @@ module.exports = {
         decimals: 6
       }
     }
-  },
-  defaultGasPrice: 2,
-  gasOracleUrls: ['https://ethgasstation.info/json/ethgasAPI.json', 'https://gasprice.poa.network/'],
-  port: process.env.APP_PORT,
-  relayerServiceFee: Number(process.env.RELAYER_FEE)
+  }
 }
