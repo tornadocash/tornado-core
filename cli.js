@@ -1,6 +1,7 @@
-#!/usr/bin/env node
+#!/usr/bin/env NODE_OPTIONS=--no-warnings node
 // Temporary demo client
 // Works both in browser and node.js
+
 require('dotenv').config()
 const fs = require('fs')
 const axios = require('axios')
@@ -367,13 +368,14 @@ async function init({ rpc, noteNetId, currency = 'dai', amount = '100' }) {
   if (inBrowser) {
     // Initialize using injected web3 (Metamask)
     // To assemble web version run `npm run browserify`
-    // web3 = new Web3(window.web3.currentProvider, null, { transactionConfirmationBlocks: 1 })
-    // contractJson = await (await fetch('build/contracts/ETHTornado.json')).json()
-    // circuit = await (await fetch('build/circuits/withdraw.json')).json()
-    // proving_key = await (await fetch('build/circuits/withdraw_proving_key.bin')).arrayBuffer()
-    // MERKLE_TREE_HEIGHT = 16
-    // ETH_AMOUNT = 1e18
-    // TOKEN_AMOUNT = 1e19
+    web3 = new Web3(window.web3.currentProvider, null, { transactionConfirmationBlocks: 1 })
+    contractJson = await (await fetch('build/contracts/ETHTornado.json')).json()
+    circuit = await (await fetch('build/circuits/withdraw.json')).json()
+    proving_key = await (await fetch('build/circuits/withdraw_proving_key.bin')).arrayBuffer()
+    MERKLE_TREE_HEIGHT = 20
+    ETH_AMOUNT = 1e18
+    TOKEN_AMOUNT = 1e19
+    senderAccount = (await web3.eth.getAccounts())[0]
   } else {
     // Initialize from local node
     web3 = new Web3(rpc, null, { transactionConfirmationBlocks: 1 })
@@ -386,6 +388,10 @@ async function init({ rpc, noteNetId, currency = 'dai', amount = '100' }) {
     PRIVATE_KEY = process.env.PRIVATE_KEY
     erc20ContractJson = require('./build/contracts/ERC20Mock.json')
     erc20tornadoJson = require('./build/contracts/ERC20Tornado.json')
+    const account = web3.eth.accounts.privateKeyToAccount('0x' + PRIVATE_KEY)
+    web3.eth.accounts.wallet.add('0x' + PRIVATE_KEY)
+    web3.eth.defaultAccount = account.address
+    senderAccount = account.address
   }
   // groth16 initialises a lot of Promises that will never be resolved, that's why we need to use process.exit to terminate the CLI
   groth16 = await buildGroth16()
@@ -406,11 +412,6 @@ async function init({ rpc, noteNetId, currency = 'dai', amount = '100' }) {
         throw new Error()
       }
       tokenAddress = config.deployments[`netId${netId}`][currency].tokenAddress
-      const account = web3.eth.accounts.privateKeyToAccount('0x' + PRIVATE_KEY)
-      web3.eth.accounts.wallet.add('0x' + PRIVATE_KEY)
-      // eslint-disable-next-line require-atomic-updates
-      web3.eth.defaultAccount = account.address
-      senderAccount = account.address
     } catch(e) {
       console.error('There is no such tornado instance, check the currency and amount you provide')
       process.exit(1)
@@ -422,14 +423,19 @@ async function init({ rpc, noteNetId, currency = 'dai', amount = '100' }) {
 
 async function main() {
   if (inBrowser) {
-    // window.deposit = deposit
-    // window.depositErc20 = depositErc20
-    // window.withdraw = async () => {
-    //   const note = prompt('Enter the note to withdraw')
-    //   const recipient = (await web3.eth.getAccounts())[0]
-    //   await withdraw(note, recipient)
-    // }
-    // init()
+    const instance = { currency: 'eth', amount: '0.1' }
+    await init(instance)
+    window.deposit = async () => {
+      await deposit(instance)
+    }
+    window.withdraw = async () => {
+      const noteString = prompt('Enter the note to withdraw')
+      const recipient = (await web3.eth.getAccounts())[0]
+
+      const { currency, amount, netId, deposit } = parseNote(noteString)
+      await init({ noteNetId: netId, currency, amount })
+      await withdraw({ deposit, currency, amount, recipient })
+    }
   } else {
     program
       .option('-r, --rpc <URL>', 'The RPC, CLI should interact with', 'http://localhost:8545')
@@ -482,6 +488,7 @@ async function main() {
       })
     try {
       await program.parseAsync(process.argv)
+      process.exit(0)
     } catch(e) {
       console.log('Error:', e)
       process.exit(1)
@@ -489,4 +496,4 @@ async function main() {
   }
 }
 
-main().then(process.exit(0))
+main()
