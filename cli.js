@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Temporary demo client
 // Works both in browser and node.js
+require('dotenv').config()
 const fs = require('fs')
 const axios = require('axios')
 const assert = require('assert')
@@ -77,7 +78,7 @@ async function deposit({ currency, amount }) {
     await tornado.methods.deposit(toHex(deposit.commitment)).send({ value, from: senderAccount, gas:2e6 })
     await printETHBalance({ address: tornado._address, name: 'Tornado' })
     await printETHBalance({ address: senderAccount, name: 'Sender account' })
-  } else {
+  } else { // a token
     await printERC20Balance({ address: tornado._address, name: 'Tornado' })
     await printERC20Balance({ address: senderAccount, name: 'Sender account' })
     const decimals = isLocalRPC ? 18 : config.deployments[`netId${netId}`][currency].decimals
@@ -130,12 +131,12 @@ async function generateMerkleProof(deposit) {
   assert(leafIndex >= 0, 'The deposit is not found in the tree')
 
   // Compute merkle proof of our commitment
-  return await tree.path(leafIndex)
+  return tree.path(leafIndex)
 }
 
 /**
  * Generate SNARK proof for withdrawal
- * @param note Note
+ * @param deposit Deposit object
  * @param recipient Funds recipient
  * @param relayer Relayer address
  * @param fee Relayer fee
@@ -221,7 +222,7 @@ async function withdraw({ deposit, currency, amount, recipient, relayerURL, refu
         console.error(e.message)
       }
     }
-  } else {
+  } else { // using private key
     const { proof, args } = await generateProof({ deposit, recipient, refund })
 
     console.log('Submitting withdraw transaction')
@@ -366,20 +367,19 @@ async function init({ rpc, noteNetId, currency = 'dai', amount = '100' }) {
   if (inBrowser) {
     // Initialize using injected web3 (Metamask)
     // To assemble web version run `npm run browserify`
-    web3 = new Web3(window.web3.currentProvider, null, { transactionConfirmationBlocks: 1 })
-    contractJson = await (await fetch('build/contracts/ETHTornado.json')).json()
-    circuit = await (await fetch('build/circuits/withdraw.json')).json()
-    proving_key = await (await fetch('build/circuits/withdraw_proving_key.bin')).arrayBuffer()
-    MERKLE_TREE_HEIGHT = 16
-    ETH_AMOUNT = 1e18
-    TOKEN_AMOUNT = 1e19
+    // web3 = new Web3(window.web3.currentProvider, null, { transactionConfirmationBlocks: 1 })
+    // contractJson = await (await fetch('build/contracts/ETHTornado.json')).json()
+    // circuit = await (await fetch('build/circuits/withdraw.json')).json()
+    // proving_key = await (await fetch('build/circuits/withdraw_proving_key.bin')).arrayBuffer()
+    // MERKLE_TREE_HEIGHT = 16
+    // ETH_AMOUNT = 1e18
+    // TOKEN_AMOUNT = 1e19
   } else {
     // Initialize from local node
     web3 = new Web3(rpc, null, { transactionConfirmationBlocks: 1 })
     contractJson = require('./build/contracts/ETHTornado.json')
     circuit = require('./build/circuits/withdraw.json')
     proving_key = fs.readFileSync('build/circuits/withdraw_proving_key.bin').buffer
-    require('dotenv').config()
     MERKLE_TREE_HEIGHT = process.env.MERKLE_TREE_HEIGHT
     ETH_AMOUNT = process.env.ETH_AMOUNT
     TOKEN_AMOUNT = process.env.TOKEN_AMOUNT
@@ -387,6 +387,7 @@ async function init({ rpc, noteNetId, currency = 'dai', amount = '100' }) {
     erc20ContractJson = require('./build/contracts/ERC20Mock.json')
     erc20tornadoJson = require('./build/contracts/ERC20Tornado.json')
   }
+  // groth16 initialises a lot of Promises that will never be resolved, that's why we need to use process.exit to terminate the CLI
   groth16 = await buildGroth16()
   netId = await web3.eth.net.getId()
   if (noteNetId && Number(noteNetId) !== netId) {
@@ -407,6 +408,7 @@ async function init({ rpc, noteNetId, currency = 'dai', amount = '100' }) {
       tokenAddress = config.deployments[`netId${netId}`][currency].tokenAddress
       const account = web3.eth.accounts.privateKeyToAccount('0x' + PRIVATE_KEY)
       web3.eth.accounts.wallet.add('0x' + PRIVATE_KEY)
+      // eslint-disable-next-line require-atomic-updates
       web3.eth.defaultAccount = account.address
       senderAccount = account.address
     } catch(e) {
@@ -419,7 +421,6 @@ async function init({ rpc, noteNetId, currency = 'dai', amount = '100' }) {
 }
 
 async function main() {
-  process.setMaxListeners(30)
   if (inBrowser) {
     // window.deposit = deposit
     // window.depositErc20 = depositErc20
@@ -485,8 +486,7 @@ async function main() {
       console.log('Error:', e)
       process.exit(1)
     }
-    process.exit(0)
   }
 }
 
-main()
+main().then(process.exit(0))
