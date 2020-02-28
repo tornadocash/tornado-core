@@ -84,3 +84,12 @@ If you want, you can point the app to existing tornado contracts on Mainnet or K
 
 Special thanks to @barryWhiteHat and @kobigurk for valuable input,
 and to @jbaylina for awesome [Circom](https://github.com/iden3/circom) & [Websnark](https://github.com/iden3/websnark) framework
+
+## Minimal demo example
+1. `npm i`
+1. `ganache-cli -d`
+1. `npm run downloadKeys`
+1. `npm build:contract`
+1. `cp .env.example .env`
+1. `npm run migrate:dev`
+1. `node minimal-demo.js`

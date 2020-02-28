@@ -11,10 +11,10 @@ const { toWei } = require('web3-utils')
 
 let web3, contract, netId, circuit, proving_key, groth16
 const RPC_URL = 'http://localhost:8545'
-const CONTRACT_ADDRESS = '0x47CE0C6eD5B0Ce3d3A51fdb1C52DC66a7c3c2936'
+const CONTRACT_ADDRESS = '0x9561C133DD8580860B6b7E504bC5Aa500f0f06a7'
 const MERKLE_TREE_HEIGHT = 20
-const AMOUNT = '1'
-const DEPLOYED_BLOCK = 9117609
+const AMOUNT = '0.1'
+const DEPLOYED_BLOCK = 0
 
 /** Generate random number of specified byte length */
 const rbigint = nbytes => bigInt.leBuff2int(crypto.randomBytes(nbytes))
@@ -157,6 +157,7 @@ async function main() {
   console.log('Deposited note:', note)
   await withdraw(note, web3.eth.defaultAccount)
   console.log('Done')
+  process.exit()
 }
 
 main()
