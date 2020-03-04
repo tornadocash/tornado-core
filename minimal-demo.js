@@ -10,11 +10,12 @@ const websnarkUtils = require('websnark/src/utils')
 const { toWei } = require('web3-utils')
 
 let web3, contract, netId, circuit, proving_key, groth16
-const RPC_URL = 'http://localhost:8545'
-const CONTRACT_ADDRESS = '0x9561C133DD8580860B6b7E504bC5Aa500f0f06a7'
 const MERKLE_TREE_HEIGHT = 20
-const AMOUNT = '0.1'
-const DEPLOYED_BLOCK = 0
+const RPC_URL = 'https://kovan.infura.io/v3/0279e3bdf3ee49d0b547c643c2ef78ef'
+const PRIVATE_KEY = 'ad5b6eb7ee88173fa43dedcff8b1d9024d03f6307a1143ecf04bea8ed40f283f' // 0x94462e71A887756704f0fb1c0905264d487972fE
+const CONTRACT_ADDRESS = '0xD6a6AC46d02253c938B96D12BE439F570227aE8E'
+const AMOUNT = '1'
+// CURRENCY = 'ETH'
 
 /** Generate random number of specified byte length */
 const rbigint = nbytes => bigInt.leBuff2int(crypto.randomBytes(nbytes))
@@ -42,7 +43,8 @@ function createDeposit(nullifier, secret) {
 async function deposit() {
   const deposit = createDeposit(rbigint(31), rbigint(31))
   console.log('Sending deposit transaction...')
-  await contract.methods.deposit(toHex(deposit.commitment)).send({ value: toWei(AMOUNT), from: web3.eth.defaultAccount, gas:2e6 })
+  const tx = await contract.methods.deposit(toHex(deposit.commitment)).send({ value: toWei(AMOUNT), from: web3.eth.defaultAccount, gas:2e6 })
+  console.log(`https://kovan.etherscan.io/tx/${tx.transactionHash}`)
   return `tornado-eth-${AMOUNT}-${netId}-${toHex(deposit.preimage, 62)}`
 }
 
@@ -55,7 +57,8 @@ async function withdraw(note, recipient) {
   const deposit = parseNote(note)
   const { proof, args } = await generateSnarkProof(deposit, recipient)
   console.log('Sending withdrawal transaction...')
-  await contract.methods.withdraw(proof, ...args).send({ from: web3.eth.defaultAccount, gas: 1e6 })
+  const tx = await contract.methods.withdraw(proof, ...args).send({ from: web3.eth.defaultAccount, gas: 1e6 })
+  console.log(`https://kovan.etherscan.io/tx/${tx.transactionHash}`)
 }
 
 /**
@@ -81,7 +84,7 @@ function parseNote(noteString) {
  */
 async function generateMerkleProof(deposit) {
   console.log('Getting contract state...')
-  const events = await contract.getPastEvents('Deposit', { fromBlock: DEPLOYED_BLOCK, toBlock: 'latest' })
+  const events = await contract.getPastEvents('Deposit', { fromBlock: 0, toBlock: 'latest' })
   const leaves = events
     .sort((a, b) => a.returnValues.leafIndex - b.returnValues.leafIndex) // Sort events in chronological order
     .map(e => e.returnValues.commitment)
@@ -151,7 +154,9 @@ async function main() {
   groth16 = await buildGroth16()
   netId = await web3.eth.net.getId()
   contract = new web3.eth.Contract(require('./build/contracts/ETHTornado.json').abi, CONTRACT_ADDRESS)
-  web3.eth.defaultAccount = (await web3.eth.getAccounts())[0]
+  const account = web3.eth.accounts.privateKeyToAccount('0x' + PRIVATE_KEY)
+  web3.eth.accounts.wallet.add('0x' + PRIVATE_KEY)
+  web3.eth.defaultAccount = account.address
 
   const note = await deposit()
   console.log('Deposited note:', note)
