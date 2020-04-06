@@ -156,6 +156,7 @@ async function main() {
   contract = new web3.eth.Contract(require('./build/contracts/ETHTornado.json').abi, CONTRACT_ADDRESS)
   const account = web3.eth.accounts.privateKeyToAccount('0x' + PRIVATE_KEY)
   web3.eth.accounts.wallet.add('0x' + PRIVATE_KEY)
+  // eslint-disable-next-line require-atomic-updates
   web3.eth.defaultAccount = account.address
 
   const note = await deposit()
