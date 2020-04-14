@@ -43,7 +43,7 @@ module.exports = {
     // Useful for deploying to a public network.
     // NB: It's important to wrap the provider as a function.
     kovan: {
-      provider: () => new HDWalletProvider(process.env.PRIVATE_KEY, 'https://kovan.infura.io/v3/c7463beadf2144e68646ff049917b716'),
+      provider: () => new HDWalletProvider(process.env.PRIVATE_KEY, 'https://kovan.infura.io/v3/97c8bf358b9942a9853fab1ba93dc5b3'),
       network_id: 42,
       gas: 6000000,
       gasPrice: utils.toWei('1', 'gwei'),
@@ -52,7 +52,7 @@ module.exports = {
       skipDryRun: true
     },
     rinkeby: {
-      provider: () => new HDWalletProvider(process.env.PRIVATE_KEY, 'https://rinkeby.infura.io/v3/c7463beadf2144e68646ff049917b716'),
+      provider: () => new HDWalletProvider(process.env.PRIVATE_KEY, 'https://rinkeby.infura.io/v3/97c8bf358b9942a9853fab1ba93dc5b3'),
       network_id: 4,
       gas: 6000000,
       gasPrice: utils.toWei('1', 'gwei'),
