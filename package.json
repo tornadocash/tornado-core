@@ -28,8 +28,8 @@
   "license": "ISC",
   "dependencies": {
     "@openzeppelin/contracts": "^2.5.0",
-    "@truffle/artifactor": "^4.0.54",
-    "@truffle/contract": "^4.1.15",
+    "@truffle/artifactor": "^4.0.55",
+    "@truffle/contract": "^4.2.0",
     "@truffle/hdwallet-provider": "^1.0.34",
     "axios": "^0.19.2",
     "bn-chai": "^1.0.1",
@@ -43,8 +43,8 @@
     "eslint": "^6.8.0",
     "ganache-cli": "^6.9.1",
     "snarkjs": "git+https://github.com/tornadocash/snarkjs.git#869181cfaf7526fe8972073d31655493a04326d5",
-    "truffle": "^5.1.20",
-    "truffle-flattener": "^1.4.2",
+    "truffle": "^5.1.21",
+    "truffle-flattener": "^1.4.3",
     "web3": "^1.2.6",
     "web3-utils": "^1.2.6",
     "websnark": "git+https://github.com/tornadocash/websnark.git#2041cfa5fa0b71cd5cca9022a4eeea4afe28c9f7"
