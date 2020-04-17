@@ -1,4 +1,4 @@
-#!/usr/bin/env NODE_OPTIONS=--no-warnings node
+#!/usr/bin/env node
 // Temporary demo client
 // Works both in browser and node.js
 
