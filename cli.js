@@ -57,7 +57,9 @@ function createDeposit({ nullifier, secret }) {
   const deposit = { nullifier, secret }
   deposit.preimage = Buffer.concat([deposit.nullifier.leInt2Buff(31), deposit.secret.leInt2Buff(31)])
   deposit.commitment = pedersenHash(deposit.preimage)
+  deposit.commitmentHex = toHex(deposit.commitment)
   deposit.nullifierHash = pedersenHash(deposit.nullifier.leInt2Buff(31))
+  deposit.nullifierHex = toHex(deposit.nullifierHash)
   return deposit
 }
 
@@ -363,6 +365,81 @@ function parseNote(noteString) {
   return { currency: match.groups.currency, amount: match.groups.amount, netId, deposit }
 }
 
+async function loadDepositData({ deposit }) {
+  try {
+    const eventWhenHappened = await tornado.getPastEvents('Deposit', {
+      filter: {
+        commitment: deposit.commitmentHex
+      },
+      fromBlock: 0,
+      toBlock: 'latest'
+    })
+    if (eventWhenHappened.length === 0) {
+      throw new Error('There is no related deposit, the note is invalid')
+    }
+
+    const { timestamp } = eventWhenHappened[0].returnValues
+    const txHash = eventWhenHappened[0].transactionHash
+    const isSpent = await tornado.methods.isSpent(deposit.nullifierHex).call()
+    const receipt = await web3.eth.getTransactionReceipt(txHash)
+
+    return { timestamp, txHash, isSpent, from: receipt.from, commitment: deposit.commitmentHex }
+  } catch (e) {
+    console.error('loadDepositData', e)
+  }
+  return {}
+}
+// async loadWithdrawalData({ getters, commit, rootGetters }, { withdrawNote }) {
+//   try {
+//     const { currency, amount, netId, nullifierHex } = getters.parseNote(withdrawNote)
+//     const contractInstance = getters.mixerContract({ currency, amount, netId })
+//     let cached = []
+//     let fromBlock = 0
+//     if (Number(netId) === 1 && currency === 'eth') {
+//       if (Number(amount) === 0.1) {
+//         cached = require('./events/withdraw_eth_01.json')
+//         fromBlock = 10000030
+//       }
+//       if (Number(amount) === 1) {
+//         cached = require('./events/withdraw_eth_1.json')
+//         fromBlock = 9999498
+//       }
+//       if (Number(amount) === 10) {
+//         cached = require('./events/withdraw_eth_10.json')
+//         fromBlock = 9997251
+//       }
+//     }
+
+//     let events = await contractInstance.getPastEvents('Withdrawal', {
+//       fromBlock,
+//       toBlock: 'latest'
+//     })
+
+//     events = events.concat(cached)
+
+//     const withdrawEvent = events.filter((event) => {
+//       return event.returnValues.nullifierHash === nullifierHex
+//     })[0]
+
+//     const fee = withdrawEvent.returnValues.fee
+//     const decimals = rootGetters['metamask/networkConfig'].tokens[currency].decimals
+//     const withdrawalAmount = toBN(rootGetters['token/fromDecimals'](amount.toString())).sub(
+//       toBN(fee)
+//     )
+
+//     return {
+//       amount: rootGetters['token/toDecimals'](withdrawalAmount, decimals, 9),
+//       txHash: withdrawEvent.transactionHash,
+//       to: withdrawEvent.returnValues.to,
+//       blockHash: withdrawEvent.blockHash,
+//       fee: rootGetters['token/toDecimals'](fee, decimals, 9)
+//     }
+//   } catch (e) {
+//     console.error('e', e)
+//     commit('SAVE_ERROR', e.message)
+//   }
+// }
+
 /**
  * Init web3, contracts, and snark
  */
@@ -472,6 +549,21 @@ async function main() {
         await printETHBalance({ address, name: '' })
         if (tokenAddress) {
           await printERC20Balance({ address, name: '', tokenAddress })
+        }
+      })
+    program
+      .command('compliance <note>')
+      .description('Shows the deposit and withdrawal of the provided note. This might be necessary to show the origin of assets held in your withdrawal address.')
+      .action(async (noteString) => {
+        const { currency, amount, netId, deposit } = parseNote(noteString)
+        await init({ rpc: program.rpc, noteNetId: netId, currency, amount })
+        const depositInfo  = await loadDepositData({ deposit })
+        console.log('Date', new Date(depositInfo.timestamp * 1000))
+        console.log('From', `https://kovan.etherescan.io/tx/${depositInfo.from}`)
+        console.log('Transaction', `https://kovan.etherescan.io/tx/${depositInfo.txHash}`)
+        console.log('Commitment', depositInfo.commitment)
+        if (deposit.isSpent) {
+          console.log('The note was not spent')
         }
       })
     program
