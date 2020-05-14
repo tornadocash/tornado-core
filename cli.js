@@ -125,7 +125,8 @@ async function generateMerkleProof(deposit) {
   const leafIndex = depositEvent ? depositEvent.returnValues.leafIndex : -1
 
   // Validate that our data is correct
-  const isValidRoot = await tornado.methods.isKnownRoot(toHex(await tree.root())).call()
+  const root = await tree.root()
+  const isValidRoot = await tornado.methods.isKnownRoot(toHex(root)).call()
   const isSpent = await tornado.methods.isSpent(toHex(deposit.nullifierHash)).call()
   assert(isValidRoot === true, 'Merkle tree is corrupted')
   assert(isSpent === false, 'The note is already spent')
@@ -193,6 +194,9 @@ async function withdraw({ deposit, currency, amount, recipient, relayerURL, refu
   }
   refund = toWei(refund)
   if (relayerURL) {
+    if(relayerURL.endsWith('.eth')) {
+      throw new Error('ENS name resolving is not supported. Please provide DNS name of the relayer. See instuctions in README.md')
+    }
     const relayerStatus = await axios.get(relayerURL + '/status')
     const { relayerAddress, netId, gasPrices, ethPrices, relayerServiceFee } = relayerStatus.data
     assert(netId === await web3.eth.net.getId() || netId === '*', 'This relay is for different network')
@@ -382,16 +386,20 @@ async function init({ rpc, noteNetId, currency = 'dai', amount = '100' }) {
     contractJson = require('./build/contracts/ETHTornado.json')
     circuit = require('./build/circuits/withdraw.json')
     proving_key = fs.readFileSync('build/circuits/withdraw_proving_key.bin').buffer
-    MERKLE_TREE_HEIGHT = process.env.MERKLE_TREE_HEIGHT
+    MERKLE_TREE_HEIGHT = process.env.MERKLE_TREE_HEIGHT || 20
     ETH_AMOUNT = process.env.ETH_AMOUNT
     TOKEN_AMOUNT = process.env.TOKEN_AMOUNT
     PRIVATE_KEY = process.env.PRIVATE_KEY
+    if (PRIVATE_KEY) {
+      const account = web3.eth.accounts.privateKeyToAccount('0x' + PRIVATE_KEY)
+      web3.eth.accounts.wallet.add('0x' + PRIVATE_KEY)
+      web3.eth.defaultAccount = account.address
+      senderAccount = account.address
+    } else {
+      console.log('Warning! PRIVATE_KEY not found. Please provide PRIVATE_KEY in .env file if you deposit')
+    }
     erc20ContractJson = require('./build/contracts/ERC20Mock.json')
     erc20tornadoJson = require('./build/contracts/ERC20Tornado.json')
-    const account = web3.eth.accounts.privateKeyToAccount('0x' + PRIVATE_KEY)
-    web3.eth.accounts.wallet.add('0x' + PRIVATE_KEY)
-    web3.eth.defaultAccount = account.address
-    senderAccount = account.address
   }
   // groth16 initialises a lot of Promises that will never be resolved, that's why we need to use process.exit to terminate the CLI
   groth16 = await buildGroth16()
