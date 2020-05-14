@@ -15,7 +15,7 @@ You can read more about it in [this medium article](https://medium.com/@tornado.
 - Circuit Proof time = 10213ms (1071 + 347 * tree_depth)
 - Serverless
 
-![image](diagram.png)
+![image](docs/diagram.png)
 
 ## Whitepaper
 **[https://tornado.cash/Tornado.cash_whitepaper_v1.4.pdf](https://tornado.cash/Tornado.cash_whitepaper_v1.4.pdf)**
@@ -95,7 +95,6 @@ Example:
 > Transaction mined in block 17036120
 > Done
 
-
 ## Deploy ETH Tornado Cash
 1. `cp .env.example .env`
 1. Tune all necessary params
@@ -108,6 +107,15 @@ Example:
 1. `npx truffle migrate --network kovan --reset --f 5`
 
 **Note**. If you want to reuse the same verifier for all the instances, then after you deployed one of the instances you should only run 4th or 5th migration for ETH or ERC20 contracts respectively (`--f 4 --to 4` or `--f 5`).
+
+## How to resolve ENS name to DNS name for a relayer
+1. Visit https://etherscan.io/enslookup and put relayer ENS name to the form.
+2. Copy the namehash (1) and click on the `Resolver` link (2)
+![enslookup](docs/enslookup.png)
+3. Go to `Contract` tab. Click on `Read Contract` and scrolldown to the `5. text` method.
+4. Put the values:
+![resolver](docs/resolver.png)
+5. Click `Query` and you will get the DNS name. Just add `https://` to it and use it as `relayer url`
 
 ## Credits
 
