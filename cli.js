@@ -300,6 +300,51 @@ function fromDecimals({ amount, decimals }) {
   return new BN(wei.toString(10), 10)
 }
 
+function toDecimals(value, decimals, fixed) {
+  const zero = new BN(0)
+  const negative1 = new BN(-1)
+  decimals = decimals || 18
+  fixed = fixed || 7
+
+  value = new BN(value)
+  const negative = value.lt(zero)
+  const base = new BN('10').pow(new BN(decimals))
+  const baseLength = base.toString(10).length - 1 || 1
+
+  if (negative) {
+    value = value.mul(negative1)
+  }
+
+  let fraction = value.mod(base).toString(10)
+  while (fraction.length < baseLength) {
+    fraction = `0${fraction}`
+  }
+  fraction = fraction.match(/^([0-9]*[1-9]|0)(0*)/)[1]
+
+  const whole = value.div(base).toString(10)
+  value = `${whole}${fraction === '0' ? '' : `.${fraction}`}`
+
+  if (negative) {
+    value = `-${value}`
+  }
+
+  if (fixed) {
+    value = value.slice(0, fixed)
+  }
+
+  return value
+}
+
+function getCurrentNetworkName() {
+  switch(netId) {
+  case 1:
+    return ''
+  case 42:
+    return 'kovan.'
+  }
+
+}
+
 function calculateFee({ gasPrices, currency, amount, refund, ethPrices, relayerServiceFee, decimals }) {
   const feePercent = toBN(fromDecimals({ amount, decimals })).mul(toBN(relayerServiceFee * 10)).div(toBN('1000'))
   const expense = toBN(toWei(gasPrices.fast.toString(), 'gwei')).mul(toBN(5e5))
@@ -389,56 +434,35 @@ async function loadDepositData({ deposit }) {
   }
   return {}
 }
-// async loadWithdrawalData({ getters, commit, rootGetters }, { withdrawNote }) {
-//   try {
-//     const { currency, amount, netId, nullifierHex } = getters.parseNote(withdrawNote)
-//     const contractInstance = getters.mixerContract({ currency, amount, netId })
-//     let cached = []
-//     let fromBlock = 0
-//     if (Number(netId) === 1 && currency === 'eth') {
-//       if (Number(amount) === 0.1) {
-//         cached = require('./events/withdraw_eth_01.json')
-//         fromBlock = 10000030
-//       }
-//       if (Number(amount) === 1) {
-//         cached = require('./events/withdraw_eth_1.json')
-//         fromBlock = 9999498
-//       }
-//       if (Number(amount) === 10) {
-//         cached = require('./events/withdraw_eth_10.json')
-//         fromBlock = 9997251
-//       }
-//     }
+async function loadWithdrawalData({ amount, currency, deposit }) {
+  try {
+    const events = await await tornado.getPastEvents('Withdrawal', {
+      fromBlock: 0,
+      toBlock: 'latest'
+    })
 
-//     let events = await contractInstance.getPastEvents('Withdrawal', {
-//       fromBlock,
-//       toBlock: 'latest'
-//     })
+    const withdrawEvent = events.filter((event) => {
+      return event.returnValues.nullifierHash === deposit.nullifierHex
+    })[0]
 
-//     events = events.concat(cached)
-
-//     const withdrawEvent = events.filter((event) => {
-//       return event.returnValues.nullifierHash === nullifierHex
-//     })[0]
-
-//     const fee = withdrawEvent.returnValues.fee
-//     const decimals = rootGetters['metamask/networkConfig'].tokens[currency].decimals
-//     const withdrawalAmount = toBN(rootGetters['token/fromDecimals'](amount.toString())).sub(
-//       toBN(fee)
-//     )
-
-//     return {
-//       amount: rootGetters['token/toDecimals'](withdrawalAmount, decimals, 9),
-//       txHash: withdrawEvent.transactionHash,
-//       to: withdrawEvent.returnValues.to,
-//       blockHash: withdrawEvent.blockHash,
-//       fee: rootGetters['token/toDecimals'](fee, decimals, 9)
-//     }
-//   } catch (e) {
-//     console.error('e', e)
-//     commit('SAVE_ERROR', e.message)
-//   }
-// }
+    const fee = withdrawEvent.returnValues.fee
+    const decimals = config.deployments[`netId${netId}`][currency].decimals
+    const withdrawalAmount = toBN(fromDecimals({ amount, decimals })).sub(
+      toBN(fee)
+    )
+    const { timestamp } = await web3.eth.getBlock(withdrawEvent.blockHash)
+    return {
+      amount: toDecimals(withdrawalAmount, decimals, 9),
+      txHash: withdrawEvent.transactionHash,
+      to: withdrawEvent.returnValues.to,
+      timestamp,
+      nullifier: deposit.nullifierHex,
+      fee: toDecimals(fee, decimals, 9)
+    }
+  } catch (e) {
+    console.error('loadWithdrawalData', e)
+  }
+}
 
 /**
  * Init web3, contracts, and snark
@@ -558,13 +582,26 @@ async function main() {
         const { currency, amount, netId, deposit } = parseNote(noteString)
         await init({ rpc: program.rpc, noteNetId: netId, currency, amount })
         const depositInfo  = await loadDepositData({ deposit })
-        console.log('Date', new Date(depositInfo.timestamp * 1000))
-        console.log('From', `https://kovan.etherescan.io/tx/${depositInfo.from}`)
-        console.log('Transaction', `https://kovan.etherescan.io/tx/${depositInfo.txHash}`)
-        console.log('Commitment', depositInfo.commitment)
+        const depositDate = new Date(depositInfo.timestamp * 1000)
+        console.log('\n=============Deposit=================')
+        console.log('Deposit     :', amount, currency)
+        console.log('Date        :', depositDate.toLocaleDateString(), depositDate.toLocaleTimeString())
+        console.log('From        :', `https://${getCurrentNetworkName()}etherscan.io/address/${depositInfo.from}`)
+        console.log('Transaction :', `https://${getCurrentNetworkName()}etherscan.io/tx/${depositInfo.txHash}`)
+        console.log('Commitment  :', depositInfo.commitment)
         if (deposit.isSpent) {
           console.log('The note was not spent')
         }
+
+        const withdrawInfo  = await loadWithdrawalData({ amount, currency, deposit })
+        const withdrawalDate = new Date(withdrawInfo.timestamp * 1000)
+        console.log('\n=============Withdrawal==============')
+        console.log('Withdrawal  :', withdrawInfo.amount, currency)
+        console.log('Relayer Fee :', withdrawInfo.fee, currency)
+        console.log('Date        :', withdrawalDate.toLocaleDateString(), withdrawalDate.toLocaleTimeString())
+        console.log('To          :', `https://${getCurrentNetworkName()}etherscan.io/address/${withdrawInfo.to}`)
+        console.log('Transaction :', `https://${getCurrentNetworkName()}etherscan.io/tx/${withdrawInfo.txHash}`)
+        console.log('Nullifier   :', withdrawInfo.nullifier)
       })
     program
       .command('test')
