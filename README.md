@@ -130,3 +130,13 @@ and to @jbaylina for awesome [Circom](https://github.com/iden3/circom) & [Websna
 1. `cp .env.example .env`
 1. `npm run migrate:dev`
 1. `node minimal-demo.js`
+
+## Emulate MPC trusted setup ceremony
+```bash
+cargo install zkutil
+npx circom circuits/withdraw.circom -o build/circuits/withdraw.json
+zkutil setup -c build/circuits/withdraw.json -p build/circuits/withdraw.params
+zkutil export-keys -c build/circuits/withdraw.json -p build/circuits/withdraw.params -r build/circuits/withdraw_proving_key.json -v build/circuits/withdraw_verification_key.json
+zkutil generate-verifier -p build/circuits/withdraw.params -v build/circuits/Verifier.sol
+sed -i -e 's/pragma solidity \^0.6.0/pragma solidity 0.5.17/g' ./build/circuits/Verifier.sol
+```
