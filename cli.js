@@ -1,4 +1,4 @@
-#!/usr/bin/env NODE_OPTIONS=--no-warnings node
+#!/usr/bin/env node
 // Temporary demo client
 // Works both in browser and node.js
 
@@ -515,6 +515,16 @@ async function init({ rpc, noteNetId, currency = 'dai', amount = '100' }) {
     tokenAddress = currency !== 'eth' ? erc20ContractJson.networks[netId].address : null
     senderAccount = (await web3.eth.getAccounts())[0]
   } else {
+    try {
+      const account = web3.eth.accounts.privateKeyToAccount('0x' + PRIVATE_KEY)
+      web3.eth.accounts.wallet.add('0x' + PRIVATE_KEY)
+      // eslint-disable-next-line require-atomic-updates
+      web3.eth.defaultAccount = account.address
+      senderAccount = account.address
+    } catch(e) {
+      console.error('Please provide PRIVATE_KEY in .env file')
+      process.exit(1)
+    }
     try{
       tornadoAddress = config.deployments[`netId${netId}`][currency].instanceAddress[amount]
       if (!tornadoAddress) {
