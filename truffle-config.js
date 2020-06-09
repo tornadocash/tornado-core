@@ -95,6 +95,12 @@ module.exports = {
         },
         // evmVersion: "byzantium"
       }
+    },
+    external: {
+      command: 'node ./compileHasher.js',
+      targets: [{
+        path: './build/Hasher.json'
+      }]
     }
   }
 }
