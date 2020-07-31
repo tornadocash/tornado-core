@@ -47,6 +47,7 @@
     "eslint-config-prettier": "^7.2.0",
     "eslint-plugin-prettier": "^3.3.1",
     "eth-json-rpc-filters": "^4.1.1",
+    "fixed-merkle-tree": "^0.6.0",
     "ganache-cli": "^6.7.0",
     "prettier": "^2.2.1",
     "prettier-plugin-solidity": "^1.0.0-beta.3",

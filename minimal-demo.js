@@ -3,7 +3,7 @@ const assert = require('assert')
 const { bigInt } = require('snarkjs')
 const crypto = require('crypto')
 const circomlib = require('circomlib')
-const merkleTree = require('./lib/MerkleTree')
+const merkleTree = require('fixed-merkle-tree')
 const Web3 = require('web3')
 const buildGroth16 = require('websnark/src/groth16')
 const websnarkUtils = require('websnark/src/utils')
@@ -99,14 +99,14 @@ async function generateMerkleProof(deposit) {
   let leafIndex = depositEvent ? depositEvent.returnValues.leafIndex : -1
 
   // Validate that our data is correct (optional)
-  const isValidRoot = await contract.methods.isKnownRoot(toHex(await tree.root())).call()
+  const isValidRoot = await contract.methods.isKnownRoot(toHex(tree.root())).call()
   const isSpent = await contract.methods.isSpent(toHex(deposit.nullifierHash)).call()
   assert(isValidRoot === true, 'Merkle tree is corrupted')
   assert(isSpent === false, 'The note is already spent')
   assert(leafIndex >= 0, 'The deposit is not found in the tree')
 
   // Compute merkle proof of our commitment
-  return await tree.path(leafIndex)
+  return tree.path(leafIndex)
 }
 
 /**
@@ -116,7 +116,7 @@ async function generateMerkleProof(deposit) {
  */
 async function generateSnarkProof(deposit, recipient) {
   // Compute merkle proof of our commitment
-  const { root, path_elements, path_index } = await generateMerkleProof(deposit)
+  const { root, pathElements, pathIndices } = generateMerkleProof(deposit)
 
   // Prepare circuit input
   const input = {
@@ -131,8 +131,8 @@ async function generateSnarkProof(deposit, recipient) {
     // Private snark inputs
     nullifier: deposit.nullifier,
     secret: deposit.secret,
-    pathElements: path_elements,
-    pathIndices: path_index,
+    pathElements: pathElements,
+    pathIndices: pathIndices,
   }
 
   console.log('Generating SNARK proof...')

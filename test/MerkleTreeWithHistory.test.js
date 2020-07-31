@@ -1,4 +1,4 @@
-/* global artifacts, web3, contract, assert */
+/* global artifacts, web3, contract */
 require('chai').use(require('bn-chai')(web3.utils.BN)).use(require('chai-as-promised')).should()
 
 const { takeSnapshot, revertSnapshot } = require('../lib/ganacheHelper')
@@ -6,8 +6,7 @@ const { takeSnapshot, revertSnapshot } = require('../lib/ganacheHelper')
 const MerkleTreeWithHistory = artifacts.require('./MerkleTreeWithHistoryMock.sol')
 const hasherContract = artifacts.require('./Hasher.sol')
 
-const MerkleTree = require('../lib/MerkleTree')
-const hasherImpl = require('../lib/MiMC')
+const MerkleTree = require('fixed-merkle-tree')
 
 const snarkjs = require('snarkjs')
 const bigInt = snarkjs.bigInt
@@ -38,12 +37,10 @@ contract('MerkleTreeWithHistory', (accounts) => {
   // eslint-disable-next-line no-unused-vars
   const value = ETH_AMOUNT || '1000000000000000000'
   let snapshotId
-  let prefix = 'test'
   let tree
-  let hasher
 
   before(async () => {
-    tree = new MerkleTree(levels, null, prefix)
+    tree = new MerkleTree(levels)
     hasherInstance = await hasherContract.deployed()
     merkleTreeWithHistory = await MerkleTreeWithHistory.new(levels, hasherInstance.address)
     snapshotId = await takeSnapshot()
@@ -59,94 +56,15 @@ contract('MerkleTreeWithHistory', (accounts) => {
     })
   })
 
-  describe('merkleTreeLib', () => {
-    it('index_to_key', () => {
-      assert.equal(MerkleTree.index_to_key('test', 5, 20), 'test_tree_5_20')
-    })
-
-    it('tests insert', async () => {
-      hasher = new hasherImpl()
-      tree = new MerkleTree(2, null, prefix)
-      await tree.insert(toFixedHex('5'))
-      let { root, path_elements } = await tree.path(0)
-      const calculated_root = hasher.hash(null, hasher.hash(null, '5', path_elements[0]), path_elements[1])
-      // console.log(root)
-      assert.equal(root, calculated_root)
-    })
-    it('creation odd elements count', async () => {
-      const elements = [12, 13, 14, 15, 16, 17, 18, 19, 20]
-      for (const [, el] of Object.entries(elements)) {
-        await tree.insert(el)
-      }
-
-      const batchTree = new MerkleTree(levels, elements, prefix)
-      for (const [i] of Object.entries(elements)) {
-        const pathViaConstructor = await batchTree.path(i)
-        const pathViaUpdate = await tree.path(i)
-        pathViaConstructor.should.be.deep.equal(pathViaUpdate)
-      }
-    })
-
-    it('should find an element', async () => {
-      const elements = [12, 13, 14, 15, 16, 17, 18, 19, 20]
-      for (const [, el] of Object.entries(elements)) {
-        await tree.insert(el)
-      }
-      let index = tree.getIndexByElement(13)
-      index.should.be.equal(1)
-
-      index = tree.getIndexByElement(19)
-      index.should.be.equal(7)
-
-      index = tree.getIndexByElement(12)
-      index.should.be.equal(0)
-
-      index = tree.getIndexByElement(20)
-      index.should.be.equal(8)
-
-      index = tree.getIndexByElement(42)
-      index.should.be.equal(false)
-    })
-
-    it('creation even elements count', async () => {
-      const elements = [12, 13, 14, 15, 16, 17]
-      for (const [, el] of Object.entries(elements)) {
-        await tree.insert(el)
-      }
-
-      const batchTree = new MerkleTree(levels, elements, prefix)
-      for (const [i] of Object.entries(elements)) {
-        const pathViaConstructor = await batchTree.path(i)
-        const pathViaUpdate = await tree.path(i)
-        pathViaConstructor.should.be.deep.equal(pathViaUpdate)
-      }
-    })
-
-    it.skip('creation using 30000 elements', () => {
-      const elements = []
-      for (let i = 1000; i < 31001; i++) {
-        elements.push(i)
-      }
-      console.time('MerkleTree')
-      tree = new MerkleTree(levels, elements, prefix)
-      console.timeEnd('MerkleTree')
-      // 2,7 GHz Intel Core i7
-      // 1000 : 1949.084ms
-      // 10000: 19456.220ms
-      // 30000: 63406.679ms
-    })
-  })
-
   describe('#insert', () => {
     it('should insert', async () => {
       let rootFromContract
 
       for (let i = 1; i < 11; i++) {
         await merkleTreeWithHistory.insert(toFixedHex(i), { from: sender })
-        await tree.insert(i)
-        let { root } = await tree.path(i - 1)
+        tree.insert(i)
         rootFromContract = await merkleTreeWithHistory.getLastRoot()
-        toFixedHex(root).should.be.equal(rootFromContract.toString())
+        toFixedHex(tree.root()).should.be.equal(rootFromContract.toString())
       }
     })
 
@@ -177,19 +95,16 @@ contract('MerkleTreeWithHistory', (accounts) => {
 
   describe('#isKnownRoot', () => {
     it('should work', async () => {
-      let path
-
       for (let i = 1; i < 5; i++) {
         await merkleTreeWithHistory.insert(toFixedHex(i), { from: sender }).should.be.fulfilled
         await tree.insert(i)
-        path = await tree.path(i - 1)
-        let isKnown = await merkleTreeWithHistory.isKnownRoot(toFixedHex(path.root))
+        let isKnown = await merkleTreeWithHistory.isKnownRoot(toFixedHex(tree.root()))
         isKnown.should.be.equal(true)
       }
 
       await merkleTreeWithHistory.insert(toFixedHex(42), { from: sender }).should.be.fulfilled
       // check outdated root
-      let isKnown = await merkleTreeWithHistory.isKnownRoot(toFixedHex(path.root))
+      let isKnown = await merkleTreeWithHistory.isKnownRoot(toFixedHex(tree.root()))
       isKnown.should.be.equal(true)
     })
 
@@ -204,7 +119,6 @@ contract('MerkleTreeWithHistory', (accounts) => {
     await revertSnapshot(snapshotId.result)
     // eslint-disable-next-line require-atomic-updates
     snapshotId = await takeSnapshot()
-    hasher = new hasherImpl()
-    tree = new MerkleTree(levels, null, prefix, null, hasher)
+    tree = new MerkleTree(levels)
   })
 })

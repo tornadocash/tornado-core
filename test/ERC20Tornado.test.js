@@ -18,7 +18,7 @@ const snarkjs = require('snarkjs')
 const bigInt = snarkjs.bigInt
 const crypto = require('crypto')
 const circomlib = require('circomlib')
-const MerkleTree = require('../lib/MerkleTree')
+const MerkleTree = require('fixed-merkle-tree')
 
 const rbigint = (nbytes) => snarkjs.bigInt.leBuff2int(crypto.randomBytes(nbytes))
 const pedersenHash = (data) => circomlib.babyJub.unpackPoint(circomlib.pedersenHash.hash(data))[0]
@@ -49,7 +49,6 @@ contract('ERC20Tornado', (accounts) => {
   const levels = MERKLE_TREE_HEIGHT || 16
   let tokenDenomination = TOKEN_AMOUNT || '1000000000000000000' // 1 ether
   let snapshotId
-  let prefix = 'test'
   let tree
   const fee = bigInt(ETH_AMOUNT).shr(1) || bigInt(1e17)
   const refund = ETH_AMOUNT || '1000000000000000000' // 1 ether
@@ -60,7 +59,7 @@ contract('ERC20Tornado', (accounts) => {
   let proving_key
 
   before(async () => {
-    tree = new MerkleTree(levels, null, prefix)
+    tree = new MerkleTree(levels)
     tornado = await Tornado.deployed()
     if (ERC20_TOKEN) {
       token = await Token.at(ERC20_TOKEN)
@@ -108,7 +107,7 @@ contract('ERC20Tornado', (accounts) => {
     it('should work', async () => {
       const deposit = generateDeposit()
       const user = accounts[4]
-      await tree.insert(deposit.commitment)
+      tree.insert(deposit.commitment)
       await token.mint(user, tokenDenomination)
 
       const balanceUserBefore = await token.balanceOf(user)
@@ -121,11 +120,11 @@ contract('ERC20Tornado', (accounts) => {
       const balanceUserAfter = await token.balanceOf(user)
       balanceUserAfter.should.be.eq.BN(toBN(balanceUserBefore).sub(toBN(tokenDenomination)))
 
-      const { root, path_elements, path_index } = await tree.path(0)
+      const { pathElements, pathIndices } = tree.path(0)
       // Circuit input
       const input = stringifyBigInts({
         // public
-        root,
+        root: tree.root(),
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         relayer,
         recipient,
@@ -135,8 +134,8 @@ contract('ERC20Tornado', (accounts) => {
         // private
         nullifier: deposit.nullifier,
         secret: deposit.secret,
-        pathElements: path_elements,
-        pathIndices: path_index,
+        pathElements: pathElements,
+        pathIndices: pathIndices,
       })
 
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
@@ -193,7 +192,7 @@ contract('ERC20Tornado', (accounts) => {
       const deposit = generateDeposit()
       const user = accounts[4]
       recipient = bigInt(badRecipient.address)
-      await tree.insert(deposit.commitment)
+      tree.insert(deposit.commitment)
       await token.mint(user, tokenDenomination)
 
       const balanceUserBefore = await token.balanceOf(user)
@@ -203,11 +202,11 @@ contract('ERC20Tornado', (accounts) => {
       const balanceUserAfter = await token.balanceOf(user)
       balanceUserAfter.should.be.eq.BN(toBN(balanceUserBefore).sub(toBN(tokenDenomination)))
 
-      const { root, path_elements, path_index } = await tree.path(0)
+      const { pathElements, pathIndices } = tree.path(0)
       // Circuit input
       const input = stringifyBigInts({
         // public
-        root,
+        root: tree.root(),
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         relayer,
         recipient,
@@ -217,8 +216,8 @@ contract('ERC20Tornado', (accounts) => {
         // private
         nullifier: deposit.nullifier,
         secret: deposit.secret,
-        pathElements: path_elements,
-        pathIndices: path_index,
+        pathElements: pathElements,
+        pathIndices: pathIndices,
       })
 
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
@@ -272,16 +271,16 @@ contract('ERC20Tornado', (accounts) => {
     it('should reject with wrong refund value', async () => {
       const deposit = generateDeposit()
       const user = accounts[4]
-      await tree.insert(deposit.commitment)
+      tree.insert(deposit.commitment)
       await token.mint(user, tokenDenomination)
       await token.approve(tornado.address, tokenDenomination, { from: user })
       await tornado.deposit(toFixedHex(deposit.commitment), { from: user, gasPrice: '0' })
 
-      const { root, path_elements, path_index } = await tree.path(0)
+      const { pathElements, pathIndices } = tree.path(0)
       // Circuit input
       const input = stringifyBigInts({
         // public
-        root,
+        root: tree.root(),
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         relayer,
         recipient,
@@ -291,8 +290,8 @@ contract('ERC20Tornado', (accounts) => {
         // private
         nullifier: deposit.nullifier,
         secret: deposit.secret,
-        pathElements: path_elements,
-        pathIndices: path_index,
+        pathElements: pathElements,
+        pathIndices: pathIndices,
       })
 
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
@@ -329,7 +328,7 @@ contract('ERC20Tornado', (accounts) => {
       console.log('userBal', userBal.toString())
       const senderBal = await usdtToken.balanceOf(sender)
       console.log('senderBal', senderBal.toString())
-      await tree.insert(deposit.commitment)
+      tree.insert(deposit.commitment)
       await usdtToken.transfer(user, tokenDenomination, { from: sender })
       console.log('transfer done')
 
@@ -345,12 +344,12 @@ contract('ERC20Tornado', (accounts) => {
       const balanceUserAfter = await usdtToken.balanceOf(user)
       balanceUserAfter.should.be.eq.BN(toBN(balanceUserBefore).sub(toBN(tokenDenomination)))
 
-      const { root, path_elements, path_index } = await tree.path(0)
+      const { pathElements, pathIndices } = tree.path(0)
 
       // Circuit input
       const input = stringifyBigInts({
         // public
-        root,
+        root: tree.root(),
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         relayer: operator,
         recipient,
@@ -360,8 +359,8 @@ contract('ERC20Tornado', (accounts) => {
         // private
         nullifier: deposit.nullifier,
         secret: deposit.secret,
-        pathElements: path_elements,
-        pathIndices: path_index,
+        pathElements: pathElements,
+        pathIndices: pathIndices,
       })
 
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
@@ -418,7 +417,7 @@ contract('ERC20Tornado', (accounts) => {
       console.log('userBal', userBal.toString())
       const senderBal = await token.balanceOf(sender)
       console.log('senderBal', senderBal.toString())
-      await tree.insert(deposit.commitment)
+      tree.insert(deposit.commitment)
       await token.transfer(user, tokenDenomination, { from: sender })
       console.log('transfer done')
 
@@ -432,12 +431,12 @@ contract('ERC20Tornado', (accounts) => {
       const balanceUserAfter = await token.balanceOf(user)
       balanceUserAfter.should.be.eq.BN(toBN(balanceUserBefore).sub(toBN(tokenDenomination)))
 
-      const { root, path_elements, path_index } = await tree.path(0)
+      const { pathElements, pathIndices } = tree.path(0)
 
       // Circuit input
       const input = stringifyBigInts({
         // public
-        root,
+        root: tree.root(),
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         relayer: operator,
         recipient,
@@ -447,8 +446,8 @@ contract('ERC20Tornado', (accounts) => {
         // private
         nullifier: deposit.nullifier,
         secret: deposit.secret,
-        pathElements: path_elements,
-        pathIndices: path_index,
+        pathElements: pathElements,
+        pathIndices: pathIndices,
       })
 
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
@@ -501,6 +500,6 @@ contract('ERC20Tornado', (accounts) => {
     await revertSnapshot(snapshotId.result)
     // eslint-disable-next-line require-atomic-updates
     snapshotId = await takeSnapshot()
-    tree = new MerkleTree(levels, null, prefix)
+    tree = new MerkleTree(levels)
   })
 })

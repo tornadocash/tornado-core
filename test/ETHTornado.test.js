@@ -16,7 +16,7 @@ const snarkjs = require('snarkjs')
 const bigInt = snarkjs.bigInt
 const crypto = require('crypto')
 const circomlib = require('circomlib')
-const MerkleTree = require('../lib/MerkleTree')
+const MerkleTree = require('fixed-merkle-tree')
 
 const rbigint = (nbytes) => snarkjs.bigInt.leBuff2int(crypto.randomBytes(nbytes))
 const pedersenHash = (data) => circomlib.babyJub.unpackPoint(circomlib.pedersenHash.hash(data))[0]
@@ -59,7 +59,6 @@ contract('ETHTornado', (accounts) => {
   const levels = MERKLE_TREE_HEIGHT || 16
   const value = ETH_AMOUNT || '1000000000000000000' // 1 ether
   let snapshotId
-  let prefix = 'test'
   let tree
   const fee = bigInt(ETH_AMOUNT).shr(1) || bigInt(1e17)
   const refund = bigInt(0)
@@ -70,7 +69,7 @@ contract('ETHTornado', (accounts) => {
   let proving_key
 
   before(async () => {
-    tree = new MerkleTree(levels, null, prefix)
+    tree = new MerkleTree(levels)
     tornado = await Tornado.deployed()
     snapshotId = await takeSnapshot()
     groth16 = await buildGroth16()
@@ -113,11 +112,11 @@ contract('ETHTornado', (accounts) => {
   describe('snark proof verification on js side', () => {
     it('should detect tampering', async () => {
       const deposit = generateDeposit()
-      await tree.insert(deposit.commitment)
-      const { root, path_elements, path_index } = await tree.path(0)
+      tree.insert(deposit.commitment)
+      const { pathElements, pathIndices } = tree.path(0)
 
       const input = stringifyBigInts({
-        root,
+        root: tree.root(),
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         nullifier: deposit.nullifier,
         relayer: operator,
@@ -125,8 +124,8 @@ contract('ETHTornado', (accounts) => {
         fee,
         refund,
         secret: deposit.secret,
-        pathElements: path_elements,
-        pathIndices: path_index,
+        pathElements: pathElements,
+        pathIndices: pathIndices,
       })
 
       let proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
@@ -159,7 +158,7 @@ contract('ETHTornado', (accounts) => {
     it('should work', async () => {
       const deposit = generateDeposit()
       const user = accounts[4]
-      await tree.insert(deposit.commitment)
+      tree.insert(deposit.commitment)
 
       const balanceUserBefore = await web3.eth.getBalance(user)
 
@@ -171,12 +170,12 @@ contract('ETHTornado', (accounts) => {
       const balanceUserAfter = await web3.eth.getBalance(user)
       balanceUserAfter.should.be.eq.BN(toBN(balanceUserBefore).sub(toBN(value)))
 
-      const { root, path_elements, path_index } = await tree.path(0)
+      const { pathElements, pathIndices } = tree.path(0)
 
       // Circuit input
       const input = stringifyBigInts({
         // public
-        root,
+        root: tree.root(),
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         relayer: operator,
         recipient,
@@ -186,8 +185,8 @@ contract('ETHTornado', (accounts) => {
         // private
         nullifier: deposit.nullifier,
         secret: deposit.secret,
-        pathElements: path_elements,
-        pathIndices: path_index,
+        pathElements: pathElements,
+        pathIndices: pathIndices,
       })
 
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
@@ -233,13 +232,13 @@ contract('ETHTornado', (accounts) => {
 
     it('should prevent double spend', async () => {
       const deposit = generateDeposit()
-      await tree.insert(deposit.commitment)
+      tree.insert(deposit.commitment)
       await tornado.deposit(toFixedHex(deposit.commitment), { value, from: sender })
 
-      const { root, path_elements, path_index } = await tree.path(0)
+      const { pathElements, pathIndices } = tree.path(0)
 
       const input = stringifyBigInts({
-        root,
+        root: tree.root(),
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         nullifier: deposit.nullifier,
         relayer: operator,
@@ -247,8 +246,8 @@ contract('ETHTornado', (accounts) => {
         fee,
         refund,
         secret: deposit.secret,
-        pathElements: path_elements,
-        pathIndices: path_index,
+        pathElements: pathElements,
+        pathIndices: pathIndices,
       })
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
       const { proof } = websnarkUtils.toSolidityInput(proofData)
@@ -267,13 +266,13 @@ contract('ETHTornado', (accounts) => {
 
     it('should prevent double spend with overflow', async () => {
       const deposit = generateDeposit()
-      await tree.insert(deposit.commitment)
+      tree.insert(deposit.commitment)
       await tornado.deposit(toFixedHex(deposit.commitment), { value, from: sender })
 
-      const { root, path_elements, path_index } = await tree.path(0)
+      const { pathElements, pathIndices } = tree.path(0)
 
       const input = stringifyBigInts({
-        root,
+        root: tree.root(),
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         nullifier: deposit.nullifier,
         relayer: operator,
@@ -281,8 +280,8 @@ contract('ETHTornado', (accounts) => {
         fee,
         refund,
         secret: deposit.secret,
-        pathElements: path_elements,
-        pathIndices: path_index,
+        pathElements: pathElements,
+        pathIndices: pathIndices,
       })
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
       const { proof } = websnarkUtils.toSolidityInput(proofData)
@@ -304,13 +303,13 @@ contract('ETHTornado', (accounts) => {
 
     it('fee should be less or equal transfer value', async () => {
       const deposit = generateDeposit()
-      await tree.insert(deposit.commitment)
+      tree.insert(deposit.commitment)
       await tornado.deposit(toFixedHex(deposit.commitment), { value, from: sender })
 
-      const { root, path_elements, path_index } = await tree.path(0)
+      const { pathElements, pathIndices } = tree.path(0)
       const largeFee = bigInt(value).add(bigInt(1))
       const input = stringifyBigInts({
-        root,
+        root: tree.root(),
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         nullifier: deposit.nullifier,
         relayer: operator,
@@ -318,8 +317,8 @@ contract('ETHTornado', (accounts) => {
         fee: largeFee,
         refund,
         secret: deposit.secret,
-        pathElements: path_elements,
-        pathIndices: path_index,
+        pathElements: pathElements,
+        pathIndices: pathIndices,
       })
 
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
@@ -338,22 +337,22 @@ contract('ETHTornado', (accounts) => {
 
     it('should throw for corrupted merkle tree root', async () => {
       const deposit = generateDeposit()
-      await tree.insert(deposit.commitment)
+      tree.insert(deposit.commitment)
       await tornado.deposit(toFixedHex(deposit.commitment), { value, from: sender })
 
-      const { root, path_elements, path_index } = await tree.path(0)
+      const { pathElements, pathIndices } = tree.path(0)
 
       const input = stringifyBigInts({
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
-        root,
+        root: tree.root(),
         nullifier: deposit.nullifier,
         relayer: operator,
         recipient,
         fee,
         refund,
         secret: deposit.secret,
-        pathElements: path_elements,
-        pathIndices: path_index,
+        pathElements: pathElements,
+        pathIndices: pathIndices,
       })
 
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
@@ -373,13 +372,13 @@ contract('ETHTornado', (accounts) => {
 
     it('should reject with tampered public inputs', async () => {
       const deposit = generateDeposit()
-      await tree.insert(deposit.commitment)
+      tree.insert(deposit.commitment)
       await tornado.deposit(toFixedHex(deposit.commitment), { value, from: sender })
 
-      let { root, path_elements, path_index } = await tree.path(0)
+      let { pathElements, pathIndices } = tree.path(0)
 
       const input = stringifyBigInts({
-        root,
+        root: tree.root(),
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
         nullifier: deposit.nullifier,
         relayer: operator,
@@ -387,8 +386,8 @@ contract('ETHTornado', (accounts) => {
         fee,
         refund,
         secret: deposit.secret,
-        pathElements: path_elements,
-        pathIndices: path_index,
+        pathElements: pathElements,
+        pathIndices: pathIndices,
       })
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
       let { proof } = websnarkUtils.toSolidityInput(proofData)
@@ -449,22 +448,22 @@ contract('ETHTornado', (accounts) => {
 
     it('should reject with non zero refund', async () => {
       const deposit = generateDeposit()
-      await tree.insert(deposit.commitment)
+      tree.insert(deposit.commitment)
       await tornado.deposit(toFixedHex(deposit.commitment), { value, from: sender })
 
-      const { root, path_elements, path_index } = await tree.path(0)
+      const { pathElements, pathIndices } = tree.path(0)
 
       const input = stringifyBigInts({
         nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
-        root,
+        root: tree.root(),
         nullifier: deposit.nullifier,
         relayer: operator,
         recipient,
         fee,
         refund: bigInt(1),
         secret: deposit.secret,
-        pathElements: path_elements,
-        pathIndices: path_index,
+        pathElements: pathElements,
+        pathIndices: pathIndices,
       })
 
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
@@ -487,17 +486,17 @@ contract('ETHTornado', (accounts) => {
     it('should work', async () => {
       const deposit1 = generateDeposit()
       const deposit2 = generateDeposit()
-      await tree.insert(deposit1.commitment)
-      await tree.insert(deposit2.commitment)
+      tree.insert(deposit1.commitment)
+      tree.insert(deposit2.commitment)
       await tornado.deposit(toFixedHex(deposit1.commitment), { value, gasPrice: '0' })
       await tornado.deposit(toFixedHex(deposit2.commitment), { value, gasPrice: '0' })
 
-      const { root, path_elements, path_index } = await tree.path(1)
+      const { pathElements, pathIndices } = tree.path(1)
 
       // Circuit input
       const input = stringifyBigInts({
         // public
-        root,
+        root: tree.root(),
         nullifierHash: pedersenHash(deposit2.nullifier.leInt2Buff(31)),
         relayer: operator,
         recipient,
@@ -507,8 +506,8 @@ contract('ETHTornado', (accounts) => {
         // private
         nullifier: deposit2.nullifier,
         secret: deposit2.secret,
-        pathElements: path_elements,
-        pathIndices: path_index,
+        pathElements: pathElements,
+        pathIndices: pathIndices,
       })
 
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
@@ -536,6 +535,6 @@ contract('ETHTornado', (accounts) => {
     await revertSnapshot(snapshotId.result)
     // eslint-disable-next-line require-atomic-updates
     snapshotId = await takeSnapshot()
-    tree = new MerkleTree(levels, null, prefix)
+    tree = new MerkleTree(levels)
   })
 })

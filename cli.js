@@ -10,7 +10,7 @@ const snarkjs = require('snarkjs')
 const crypto = require('crypto')
 const circomlib = require('circomlib')
 const bigInt = snarkjs.bigInt
-const merkleTree = require('./lib/MerkleTree')
+const merkleTree = require('fixed-merkle-tree')
 const Web3 = require('web3')
 const buildGroth16 = require('websnark/src/groth16')
 const websnarkUtils = require('websnark/src/utils')
@@ -126,7 +126,7 @@ async function generateMerkleProof(deposit) {
   const leafIndex = depositEvent ? depositEvent.returnValues.leafIndex : -1
 
   // Validate that our data is correct
-  const root = await tree.root()
+  const root = tree.root()
   const isValidRoot = await tornado.methods.isKnownRoot(toHex(root)).call()
   const isSpent = await tornado.methods.isSpent(toHex(deposit.nullifierHash)).call()
   assert(isValidRoot === true, 'Merkle tree is corrupted')
@@ -147,7 +147,7 @@ async function generateMerkleProof(deposit) {
  */
 async function generateProof({ deposit, recipient, relayerAddress = 0, fee = 0, refund = 0 }) {
   // Compute merkle proof of our commitment
-  const { root, path_elements, path_index } = await generateMerkleProof(deposit)
+  const { root, pathElements, pathIndices } = await generateMerkleProof(deposit)
 
   // Prepare circuit input
   const input = {
@@ -162,8 +162,8 @@ async function generateProof({ deposit, recipient, relayerAddress = 0, fee = 0, 
     // Private snark inputs
     nullifier: deposit.nullifier,
     secret: deposit.secret,
-    pathElements: path_elements,
-    pathIndices: path_index,
+    pathElements: pathElements,
+    pathIndices: pathIndices,
   }
 
   console.log('Generating SNARK proof')
