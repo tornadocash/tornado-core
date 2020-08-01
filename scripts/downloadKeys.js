@@ -2,8 +2,8 @@ const axios = require('axios')
 const path = require('path')
 const fs = require('fs')
 const files = ['withdraw.json', 'withdraw_proving_key.bin', 'Verifier.sol', 'withdraw_verification_key.json']
-const circuitsPath = 'build/circuits'
-const contractsPath = 'build/contracts'
+const circuitsPath = __dirname + '/../build/circuits'
+const contractsPath = __dirname + '/../build/contracts'
 
 async function downloadFile({ url, path }) {
   const writer = fs.createWriteStream(path)

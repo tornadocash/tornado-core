@@ -106,7 +106,8 @@ async function generateMerkleProof(deposit) {
   assert(leafIndex >= 0, 'The deposit is not found in the tree')
 
   // Compute merkle proof of our commitment
-  return tree.path(leafIndex)
+  const { pathElements, pathIndices } = tree.path(leafIndex)
+  return { pathElements, pathIndices, root: tree.root() }
 }
 
 /**
@@ -116,7 +117,7 @@ async function generateMerkleProof(deposit) {
  */
 async function generateSnarkProof(deposit, recipient) {
   // Compute merkle proof of our commitment
-  const { root, pathElements, pathIndices } = generateMerkleProof(deposit)
+  const { root, pathElements, pathIndices } = await generateMerkleProof(deposit)
 
   // Prepare circuit input
   const input = {
@@ -155,11 +156,11 @@ async function main() {
   web3 = new Web3(new Web3.providers.HttpProvider(RPC_URL, { timeout: 5 * 60 * 1000 }), null, {
     transactionConfirmationBlocks: 1,
   })
-  circuit = require('./build/circuits/withdraw.json')
-  proving_key = fs.readFileSync('build/circuits/withdraw_proving_key.bin').buffer
+  circuit = require(__dirname + '/../build/circuits/withdraw.json')
+  proving_key = fs.readFileSync(__dirname + '/../build/circuits/withdraw_proving_key.bin').buffer
   groth16 = await buildGroth16()
   netId = await web3.eth.net.getId()
-  contract = new web3.eth.Contract(require('./build/contracts/ETHTornado.json').abi, CONTRACT_ADDRESS)
+  contract = new web3.eth.Contract(require('../build/contracts/ETHTornado.json').abi, CONTRACT_ADDRESS)
   const account = web3.eth.accounts.privateKeyToAccount('0x' + PRIVATE_KEY)
   web3.eth.accounts.wallet.add('0x' + PRIVATE_KEY)
   // eslint-disable-next-line require-atomic-updates

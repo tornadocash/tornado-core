@@ -3,7 +3,7 @@ require('chai').use(require('bn-chai')(web3.utils.BN)).use(require('chai-as-prom
 const fs = require('fs')
 
 const { toBN } = require('web3-utils')
-const { takeSnapshot, revertSnapshot } = require('../lib/ganacheHelper')
+const { takeSnapshot, revertSnapshot } = require('../scripts/ganacheHelper')
 
 const Tornado = artifacts.require('./ERC20Tornado.sol')
 const BadRecipient = artifacts.require('./BadRecipient.sol')

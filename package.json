@@ -10,7 +10,7 @@
     "build:circuit:contract": "npx snarkjs generateverifier -v build/circuits/Verifier.sol --vk build/circuits/withdraw_verification_key.json",
     "build:circuit": "mkdir -p build/circuits && npm run build:circuit:compile && npm run build:circuit:setup && npm run build:circuit:bin && npm run build:circuit:contract",
     "build:contract": "npx truffle compile",
-    "build:browserify": "npx browserify cli.js -o index.js --exclude worker_threads",
+    "build:browserify": "npx browserify src/cli.js -o index.js --exclude worker_threads",
     "build": "npm run build:circuit && npm run build:contract && npm run build:browserify",
     "browserify": "npm run build:browserify",
     "test": "npx truffle test",
@@ -24,7 +24,7 @@
     "prettier:fix": "prettier --write . --config .prettierrc",
     "lint": "yarn eslint && yarn prettier:check",
     "flat": "npx truffle-flattener contracts/ETHTornado.sol > ETHTornado_flat.sol && npx truffle-flattener contracts/ERC20Tornado.sol > ERC20Tornado_flat.sol",
-    "download": "node downloadKeys.js"
+    "download": "node scripts/downloadKeys.js"
   },
   "keywords": [],
   "author": "",

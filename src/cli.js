@@ -134,7 +134,8 @@ async function generateMerkleProof(deposit) {
   assert(leafIndex >= 0, 'The deposit is not found in the tree')
 
   // Compute merkle proof of our commitment
-  return tree.path(leafIndex)
+  const { pathElements, pathIndices } = tree.path(leafIndex)
+  return { pathElements, pathIndices, root: tree.root() }
 }
 
 /**
@@ -439,7 +440,7 @@ async function loadDepositData({ deposit }) {
 }
 async function loadWithdrawalData({ amount, currency, deposit }) {
   try {
-    const events = await await tornado.getPastEvents('Withdrawal', {
+    const events = await tornado.getPastEvents('Withdrawal', {
       fromBlock: 0,
       toBlock: 'latest',
     })
@@ -487,9 +488,9 @@ async function init({ rpc, noteNetId, currency = 'dai', amount = '100' }) {
   } else {
     // Initialize from local node
     web3 = new Web3(rpc, null, { transactionConfirmationBlocks: 1 })
-    contractJson = require('./build/contracts/ETHTornado.json')
-    circuit = require('./build/circuits/withdraw.json')
-    proving_key = fs.readFileSync('build/circuits/withdraw_proving_key.bin').buffer
+    contractJson = require(__dirname + '/../build/contracts/ETHTornado.json')
+    circuit = require(__dirname + '/../build/circuits/withdraw.json')
+    proving_key = fs.readFileSync(__dirname + '/../build/circuits/withdraw_proving_key.bin').buffer
     MERKLE_TREE_HEIGHT = process.env.MERKLE_TREE_HEIGHT || 20
     ETH_AMOUNT = process.env.ETH_AMOUNT
     TOKEN_AMOUNT = process.env.TOKEN_AMOUNT
@@ -502,8 +503,8 @@ async function init({ rpc, noteNetId, currency = 'dai', amount = '100' }) {
     } else {
       console.log('Warning! PRIVATE_KEY not found. Please provide PRIVATE_KEY in .env file if you deposit')
     }
-    erc20ContractJson = require('./build/contracts/ERC20Mock.json')
-    erc20tornadoJson = require('./build/contracts/ERC20Tornado.json')
+    erc20ContractJson = require(__dirname + '/../build/contracts/ERC20Mock.json')
+    erc20tornadoJson = require(__dirname + '/../build/contracts/ERC20Tornado.json')
   }
   // groth16 initialises a lot of Promises that will never be resolved, that's why we need to use process.exit to terminate the CLI
   groth16 = await buildGroth16()
