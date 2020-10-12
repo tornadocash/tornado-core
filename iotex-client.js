@@ -16,10 +16,10 @@ const websnarkUtils = require('websnark/src/utils')
 const { sha3, toWei, fromWei, toBN, BN, hexToBytes } = require('web3-utils')
 const config = require('./config')
 const program = require('commander')
-const linker = require('solc/linker');
+const linker = require('solc/linker')
 const Antenna = require('iotex-antenna')
 const Address = require('iotex-antenna/lib/crypto/address')
-const Web3EthAbi = require('web3-eth-abi');
+const Web3EthAbi = require('web3-eth-abi')
 
 let circuit, proving_key, groth16, senderAccount, netId, tornadoAddress, deloyedBlkHeight, currency, amount
 let MERKLE_TREE_HEIGHT, IOTX_AMOUNT
@@ -62,7 +62,7 @@ function createDeposit({ nullifier, secret }) {
  */
 async function deposit() {
   const deposit = createDeposit({ nullifier: rbigint(31), secret: rbigint(31) })
-  console.log("commitment:", toHex(deposit.commitment));
+  console.log("commitment:", toHex(deposit.commitment))
   console.log('Submitting deposit transaction')
   actionHash = await IOTXTornado.methods.deposit(toHex(deposit.commitment), {
     account: senderAccount, 
@@ -143,14 +143,14 @@ async function generateMerkleProof(deposit) {
     contractAddress: tornadoAddress,
     abi: ContractJson.abi, 
     method: "isKnownRoot",
-  }, toHex(root));
+  }, toHex(root))
 
   const isSpent = await Provider.readContractByMethod({
     from: senderAccount.address,
     contractAddress: tornadoAddress,
     abi: ContractJson.abi, 
     method: "isSpent",
-  }, toHex(deposit.nullifierHash));
+  }, toHex(deposit.nullifierHash))
 
   assert(isValidRoot === true, 'Merkle tree is corrupted')
   assert(isSpent === false, 'The note is already spent')
@@ -214,11 +214,14 @@ async function generateProof({ deposit, recipient, relayerAddress = 0, fee = 0, 
   return { args }
 }
 
+
 /**
  * Do an ETH withdrawal
  * @param noteString Note to withdraw
  * @param recipient Recipient address
  */
+
+ /*
 async function withdraw({ deposit, currency, amount, recipient, relayerURL, refund = '0' }) {
   if (currency === 'eth' && refund !== '0') {
     throw new Error('The ETH purchase is supposted to be 0 for ETH withdrawals')
@@ -389,11 +392,11 @@ function calculateFee({ gasPrices, currency, amount, refund, ethPrices, relayerS
   return desiredFee
 }
 
-
+*/ 
 function sleep(ms) {
   return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
+    setTimeout(resolve, ms)
+  })
 } 
 
 /**
@@ -426,7 +429,7 @@ async function init() {
   ContractJson = require('./build/contracts/ETHTornado.json')
   circuit = require('./build/circuits/withdraw.json')
   proving_key = fs.readFileSync('build/circuits/withdraw_proving_key.bin').buffer
-  Provider = new Antenna.default.modules.Iotx("http://api.testnet.iotex.one:80");
+  Provider = new Antenna.default.modules.Iotx("http://api.testnet.iotex.one:80")
   IOTXTornado = new Antenna.default.modules.Contract (
     ContractJson.abi, 
     tornadoAddress,
@@ -441,7 +444,7 @@ async function init() {
   IOTX_AMOUNT = process.env.IOTX_AMOUNT || 1000000000000000000
   senderAccount = Provider.accounts.privateKeyToAccount(
     "51b7ef3cb87f73d8c5b65858ecfac791239c33103c2968dd5ec6716e62ae8ea1"
-  );
+  )
 }
 
 async function deploy() {
@@ -457,7 +460,7 @@ async function deploy() {
     from: senderAccount.address,
     abi: ContractJson.abi,
     data: Buffer.from(byteCode.substring(2, byteCode.length), "hex"),
-  }, verifierContractAddress , IOTX_AMOUNT, MERKLE_TREE_HEIGHT, senderAccount.address);
+  }, verifierContractAddress , IOTX_AMOUNT, MERKLE_TREE_HEIGHT, senderAccount.address)
   console.log("action hash:", actionHash)
 }
 
@@ -467,19 +470,19 @@ async function main() {
     .option('-R, --relayer <URL>', 'Withdraw via relayer')
   program
     .command('deploy')
-    .description('Submit a deposit of specified currency and amount from default eth account and return the resulting note. The currency is one of (ETH|DAI|cDAI|USDC|cUSDC|USDT). The amount depends on currency, see config.js file or visit https://tornado.cash.')
+    .description('deploy ETHTornado contract by given hasher and verfier contract')
     .action(async () => {
-      await init();
-      await deploy();
+      await init()
+      await deploy()
       process.exit(0)
     }) 
   program
     .command('test')
-    .description('dd')
+    .description('test for submitting deposit and withdraw')
     .action(async () => {
-      await init();
-      noteString = await deposit();
-      await sleep(15000);
+      await init()
+      noteString = await deposit()
+      await sleep(15000)
 
       let parsedNote = parseNote(noteString)
       recipient = '0x53FBC28FAF9a52dFe5F591948A23189E900381B5'
@@ -491,7 +494,6 @@ async function main() {
         account: senderAccount, 
         gasLimit: "1000000",
         gasPrice: "1000000000000",
-        amount: "0",
       })
       console.log(actionHash)
       console.log("done")
