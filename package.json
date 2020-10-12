@@ -42,10 +42,13 @@
     "eslint": "^6.6.0",
     "eth-json-rpc-filters": "^4.1.1",
     "ganache-cli": "^6.7.0",
+    "iotex-antenna": "^0.30.1",
     "snarkjs": "git+https://github.com/tornadocash/snarkjs.git#869181cfaf7526fe8972073d31655493a04326d5",
+    "solc": "^0.7.2",
     "truffle": "^5.0.44",
     "truffle-flattener": "^1.4.2",
     "web3": "^1.2.2",
+    "web3-eth-abi": "^1.3.0",
     "web3-utils": "^1.2.2",
     "websnark": "git+https://github.com/tornadocash/websnark.git#2041cfa5fa0b71cd5cca9022a4eeea4afe28c9f7"
   }
