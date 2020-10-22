@@ -47,6 +47,6 @@
     "truffle-flattener": "^1.4.2",
     "web3": "^1.2.2",
     "web3-utils": "^1.2.2",
-    "websnark": "git+https://github.com/tornadocash/websnark.git#4c0af6a8b65aabea3c09f377f63c44e7a58afa6d"
+    "websnark": "git+https://github.com/tornadocash/websnark.git#2041cfa5fa0b71cd5cca9022a4eeea4afe28c9f7"
   }
 }
