@@ -20,7 +20,7 @@ You can read more about it in [this medium article](https://medium.com/@tornado.
 
 ## Whitepaper
 
-**[https://tornado.cash/Tornado.cash_whitepaper_v1.4.pdf](https://tornado.cash/Tornado.cash_whitepaper_v1.4.pdf)**
+**[https://tornado.cash/Tornado.cash_whitepaper_v1.4.pdf](https://app.tornado.cash/Tornado.cash_whitepaper_v1.4.pdf)**
 
 ## Was it audited?
 
@@ -28,9 +28,9 @@ Tornado.cash protocols, circuits, and smart contracts were audited by a group of
 
 During the audit no critical issues were found and all outstanding issues were fixed. The results can be found here:
 
-- Cryptographic review https://tornado.cash/Tornado_cryptographic_review.pdf
-- Smart contract audit https://tornado.cash/Tornado_solidity_audit.pdf
-- Zk-SNARK circuits audit https://tornado.cash/Tornado_circuit_audit.pdf
+- Cryptographic review https://app.tornado.cash/Tornado_cryptographic_review.pdf
+- Smart contract audit https://app.tornado.cash/Tornado_solidity_audit.pdf
+- Zk-SNARK circuits audit https://app.tornado.cash/Tornado_circuit_audit.pdf
 
 Underlying circomlib dependency is currently being audited, and the team already published most of the fixes for found issues
 
