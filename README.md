@@ -1,16 +1,16 @@
 # Tornado Cash Privacy Solution [![Build Status](https://travis-ci.org/tornadocash/tornado-core.svg?branch=master)](https://travis-ci.org/tornadocash/tornado-core)
 
-Tornado Cash is a non-custodial Ethereum and ERC20 privacy solution based on zkSNARKs. It improves transaction privacy by breaking the on-chain link between recipient and destination addresses. It uses a smart contract that accepts ETH deposits that can be withdrawn by a different address. Whenever ETH is withdrawn by the new address, there is no way to link the withdrawal to the deposit, ensuring complete privacy.
+Tornado Cash is a non-custodial Ethereum and ERC20 privacy solution based on zkSNARKs. It improves transaction privacy by breaking the on-chain link between the recipient and destination addresses. It uses a smart contract that accepts ETH deposits that can be withdrawn by a different address. Whenever ETH is withdrawn by the new address, there is no way to link the withdrawal to the deposit, ensuring complete privacy.
 
 To make a deposit user generates a secret and sends its hash (called a commitment) along with the deposit amount to the Tornado smart contract. The contract accepts the deposit and adds the commitment to its list of deposits.
 
-Later, the user decides to make a withdrawal. In order to do that, the user should provide a proof that he or she possesses a secret to an unspent commitment from the smart contract’s list of deposits. zkSnark technology allows that to happen without revealing which exact deposit corresponds to this secret. The smart contract will check the proof, and transfer deposited funds to the address specified for withdrawal. An external observer will be unable to determine which deposit this withdrawal came from.
+Later, the user decides to make a withdrawal. To do that, the user should provide a proof that he or she possesses a secret to an unspent commitment from the smart contract’s list of deposits. zkSnark technology allows that to happen without revealing which exact deposit corresponds to this secret. The smart contract will check the proof, and transfer deposited funds to the address specified for withdrawal. An external observer will be unable to determine which deposit this withdrawal came from.
 
 You can read more about it in [this medium article](https://medium.com/@tornado.cash/introducing-private-transactions-on-ethereum-now-42ee915babe0)
 
 ## Specs
 
-- Deposit gas const: 1088354 (43381 + 50859 \* tree_depth)
+- Deposit gas cost: 1088354 (43381 + 50859 \* tree_depth)
 - Withdraw gas cost: 301233
 - Circuit Constraints = 28271 (1869 + 1325 \* tree_depth)
 - Circuit Proof time = 10213ms (1071 + 347 \* tree_depth)
@@ -24,9 +24,9 @@ You can read more about it in [this medium article](https://medium.com/@tornado.
 
 ## Was it audited?
 
-Tornado.cash protocols, circuits, and smart contracts were audited by a group of experts from [ABDK Consulting](https://www.abdk.consulting), specializing in zero knowledge, cryptography, and smart contracts.
+Tornado.cash protocols, circuits, and smart contracts were audited by a group of experts from [ABDK Consulting](https://www.abdk.consulting), specializing in zero-knowledge, cryptography, and smart contracts.
 
-During the audit no critical issues were found and all outstanding issues were fixed. The results can be found here:
+During the audit, no critical issues were found and all outstanding issues were fixed. The results can be found here:
 
 - Cryptographic review https://tornado.cash/audits/TornadoCash_cryptographic_review_ABDK.pdf
 - Smart contract audit https://tornado.cash/audits/TornadoCash_contract_audit_ABDK.pdf
@@ -41,7 +41,7 @@ Underlying circomlib dependency is currently being audited, and the team already
 
 ## Usage
 
-You can see example usage in cli.js, it works both in console and in browser.
+You can see example usage in cli.js, it works both in the console and in the browser.
 
 1. `npm install`
 1. `cp .env.example .env`
@@ -56,7 +56,7 @@ Use browser version on Kovan:
 1. `npx http-server` - serve current dir, you can use any other static http server
 1. Open `localhost:8080`
 
-Use with command line version. Works for Ganache, Kovan and Mainnet:
+Use the command-line version. Works for Ganache, Kovan, and Mainnet:
 
 ### Initialization
 
@@ -98,7 +98,7 @@ Example:
 > Getting current state from tornado contract
 > Generating SNARK proof
 > Proof time: 9117.051ms
-> Sending withdraw transaction through relay
+> Sending withdraw transaction through the relay
 > Transaction submitted through the relay. View transaction on etherscan https://kovan.etherscan.io/tx/0xcb21ae8cad723818c6bc7273e83e00c8393fcdbe74802ce5d562acad691a2a7b
 > Transaction mined in block 17036120
 > Done
@@ -116,14 +116,14 @@ Example:
 1. `npx truffle migrate --network kovan --reset --f 2 --to 3`
 1. `npx truffle migrate --network kovan --reset --f 5`
 
-**Note**. If you want to reuse the same verifier for all the instances, then after you deployed one of the instances you should only run 4th or 5th migration for ETH or ERC20 contracts respectively (`--f 4 --to 4` or `--f 5`).
+**Note**. If you want to reuse the same verifier for all the instances, then after you deployed one of the instances you should only run the 4th or 5th migration for ETH or ERC20 contracts respectively (`--f 4 --to 4` or `--f 5`).
 
 ## How to resolve ENS name to DNS name for a relayer
 
 1. Visit https://etherscan.io/enslookup and put relayer ENS name to the form.
 2. Copy the namehash (1) and click on the `Resolver` link (2)
    ![enslookup](docs/enslookup.png)
-3. Go to `Contract` tab. Click on `Read Contract` and scrolldown to the `5. text` method.
+3. Go to the `Contract` tab. Click on `Read Contract` and scroll down to the `5. text` method.
 4. Put the values:
    ![resolver](docs/resolver.png)
 5. Click `Query` and you will get the DNS name. Just add `https://` to it and use it as `relayer url`
@@ -131,7 +131,7 @@ Example:
 ## Credits
 
 Special thanks to @barryWhiteHat and @kobigurk for valuable input,
-and to @jbaylina for awesome [Circom](https://github.com/iden3/circom) & [Websnark](https://github.com/iden3/websnark) framework
+and @jbaylina for awesome [Circom](https://github.com/iden3/circom) & [Websnark](https://github.com/iden3/websnark) framework
 
 ## Minimal demo example
 
