@@ -5,7 +5,7 @@ const Verifier = artifacts.require('Verifier')
 const Hasher = artifacts.require('Hasher')
 const ERC20Mock = artifacts.require('ERC20Mock')
 
-module.exports = function (deployer, network, accounts) {
+module.exports = function (deployer) {
   return deployer.then(async () => {
     const { MERKLE_TREE_HEIGHT, ERC20_TOKEN, TOKEN_AMOUNT } = process.env
     const verifier = await Verifier.deployed()
