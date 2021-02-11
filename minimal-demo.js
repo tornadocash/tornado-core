@@ -18,13 +18,15 @@ const AMOUNT = '1'
 // CURRENCY = 'ETH'
 
 /** Generate random number of specified byte length */
-const rbigint = nbytes => bigInt.leBuff2int(crypto.randomBytes(nbytes))
+const rbigint = (nbytes) => bigInt.leBuff2int(crypto.randomBytes(nbytes))
 
 /** Compute pedersen hash */
-const pedersenHash = data => circomlib.babyJub.unpackPoint(circomlib.pedersenHash.hash(data))[0]
+const pedersenHash = (data) => circomlib.babyJub.unpackPoint(circomlib.pedersenHash.hash(data))[0]
 
 /** BigNumber to hex string of specified length */
-const toHex = (number, length = 32) => '0x' + (number instanceof Buffer ? number.toString('hex') : bigInt(number).toString(16)).padStart(length * 2, '0')
+const toHex = (number, length = 32) =>
+  '0x' +
+  (number instanceof Buffer ? number.toString('hex') : bigInt(number).toString(16)).padStart(length * 2, '0')
 
 /**
  * Create deposit object from secret and nullifier
@@ -43,7 +45,9 @@ function createDeposit(nullifier, secret) {
 async function deposit() {
   const deposit = createDeposit(rbigint(31), rbigint(31))
   console.log('Sending deposit transaction...')
-  const tx = await contract.methods.deposit(toHex(deposit.commitment)).send({ value: toWei(AMOUNT), from: web3.eth.defaultAccount, gas:2e6 })
+  const tx = await contract.methods
+    .deposit(toHex(deposit.commitment))
+    .send({ value: toWei(AMOUNT), from: web3.eth.defaultAccount, gas: 2e6 })
   console.log(`https://kovan.etherscan.io/tx/${tx.transactionHash}`)
   return `tornado-eth-${AMOUNT}-${netId}-${toHex(deposit.preimage, 62)}`
 }
@@ -87,11 +91,11 @@ async function generateMerkleProof(deposit) {
   const events = await contract.getPastEvents('Deposit', { fromBlock: 0, toBlock: 'latest' })
   const leaves = events
     .sort((a, b) => a.returnValues.leafIndex - b.returnValues.leafIndex) // Sort events in chronological order
-    .map(e => e.returnValues.commitment)
+    .map((e) => e.returnValues.commitment)
   const tree = new merkleTree(MERKLE_TREE_HEIGHT, leaves)
 
   // Find current commitment in the tree
-  let depositEvent = events.find(e => e.returnValues.commitment === toHex(deposit.commitment))
+  let depositEvent = events.find((e) => e.returnValues.commitment === toHex(deposit.commitment))
   let leafIndex = depositEvent ? depositEvent.returnValues.leafIndex : -1
 
   // Validate that our data is correct (optional)
@@ -141,14 +145,16 @@ async function generateSnarkProof(deposit, recipient) {
     toHex(input.recipient, 20),
     toHex(input.relayer, 20),
     toHex(input.fee),
-    toHex(input.refund)
+    toHex(input.refund),
   ]
 
   return { proof, args }
 }
 
 async function main() {
-  web3 = new Web3(new Web3.providers.HttpProvider(RPC_URL, { timeout: 5 * 60 * 1000 }), null, { transactionConfirmationBlocks: 1 })
+  web3 = new Web3(new Web3.providers.HttpProvider(RPC_URL, { timeout: 5 * 60 * 1000 }), null, {
+    transactionConfirmationBlocks: 1,
+  })
   circuit = require('./build/circuits/withdraw.json')
   proving_key = fs.readFileSync('build/circuits/withdraw_proving_key.bin').buffer
   groth16 = await buildGroth16()

@@ -1,8 +1,5 @@
 /* global artifacts, web3, contract */
-require('chai')
-  .use(require('bn-chai')(web3.utils.BN))
-  .use(require('chai-as-promised'))
-  .should()
+require('chai').use(require('bn-chai')(web3.utils.BN)).use(require('chai-as-promised')).should()
 const fs = require('fs')
 
 const { toBN, randomHex } = require('web3-utils')
@@ -23,7 +20,11 @@ const MerkleTree = require('../lib/MerkleTree')
 
 const rbigint = (nbytes) => snarkjs.bigInt.leBuff2int(crypto.randomBytes(nbytes))
 const pedersenHash = (data) => circomlib.babyJub.unpackPoint(circomlib.pedersenHash.hash(data))[0]
-const toFixedHex = (number, length = 32) =>  '0x' + bigInt(number).toString(16).padStart(length * 2, '0')
+const toFixedHex = (number, length = 32) =>
+  '0x' +
+  bigInt(number)
+    .toString(16)
+    .padStart(length * 2, '0')
 const getRandomRecipient = () => rbigint(20)
 
 function generateDeposit() {
@@ -39,7 +40,7 @@ function generateDeposit() {
 // eslint-disable-next-line no-unused-vars
 function BNArrayToStringArray(array) {
   const arrayToPrint = []
-  array.forEach(item => {
+  array.forEach((item) => {
     arrayToPrint.push(item.toString())
   })
   return arrayToPrint
@@ -51,7 +52,7 @@ function snarkVerify(proof) {
   return snarkjs['groth'].isValid(verification_key, proof, proof.publicSignals)
 }
 
-contract('ETHTornado', accounts => {
+contract('ETHTornado', (accounts) => {
   let tornado
   const sender = accounts[0]
   const operator = accounts[0]
@@ -69,11 +70,7 @@ contract('ETHTornado', accounts => {
   let proving_key
 
   before(async () => {
-    tree = new MerkleTree(
-      levels,
-      null,
-      prefix,
-    )
+    tree = new MerkleTree(levels, null, prefix)
     tornado = await Tornado.deployed()
     snapshotId = await takeSnapshot()
     groth16 = await buildGroth16()
@@ -97,8 +94,8 @@ contract('ETHTornado', accounts => {
       logs[0].args.commitment.should.be.equal(commitment)
       logs[0].args.leafIndex.should.be.eq.BN(0)
 
-      commitment = toFixedHex(12);
-      ({ logs } = await tornado.deposit(commitment, { value, from: accounts[2] }))
+      commitment = toFixedHex(12)
+      ;({ logs } = await tornado.deposit(commitment, { value, from: accounts[2] }))
 
       logs[0].event.should.be.equal('Deposit')
       logs[0].args.commitment.should.be.equal(commitment)
@@ -138,7 +135,8 @@ contract('ETHTornado', accounts => {
       result.should.be.equal(true)
 
       // nullifier
-      proofData.publicSignals[1] = '133792158246920651341275668520530514036799294649489851421007411546007850802'
+      proofData.publicSignals[1] =
+        '133792158246920651341275668520530514036799294649489851421007411546007850802'
       result = snarkVerify(proofData)
       result.should.be.equal(false)
       proofData = originalProof
@@ -192,7 +190,6 @@ contract('ETHTornado', accounts => {
         pathIndices: path_index,
       })
 
-
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
       const { proof } = websnarkUtils.toSolidityInput(proofData)
 
@@ -212,7 +209,7 @@ contract('ETHTornado', accounts => {
         toFixedHex(input.recipient, 20),
         toFixedHex(input.relayer, 20),
         toFixedHex(input.fee),
-        toFixedHex(input.refund)
+        toFixedHex(input.refund),
       ]
       const { logs } = await tornado.withdraw(proof, ...args, { from: relayer, gasPrice: '0' })
 
@@ -225,7 +222,6 @@ contract('ETHTornado', accounts => {
       balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore))
       balanceOperatorAfter.should.be.eq.BN(toBN(balanceOperatorBefore).add(feeBN))
       balanceRecieverAfter.should.be.eq.BN(toBN(balanceRecieverBefore).add(toBN(value)).sub(feeBN))
-
 
       logs[0].event.should.be.equal('Withdrawal')
       logs[0].args.nullifierHash.should.be.equal(toFixedHex(input.nullifierHash))
@@ -262,7 +258,7 @@ contract('ETHTornado', accounts => {
         toFixedHex(input.recipient, 20),
         toFixedHex(input.relayer, 20),
         toFixedHex(input.fee),
-        toFixedHex(input.refund)
+        toFixedHex(input.refund),
       ]
       await tornado.withdraw(proof, ...args, { from: relayer }).should.be.fulfilled
       const error = await tornado.withdraw(proof, ...args, { from: relayer }).should.be.rejected
@@ -292,11 +288,15 @@ contract('ETHTornado', accounts => {
       const { proof } = websnarkUtils.toSolidityInput(proofData)
       const args = [
         toFixedHex(input.root),
-        toFixedHex(toBN(input.nullifierHash).add(toBN('21888242871839275222246405745257275088548364400416034343698204186575808495617'))),
+        toFixedHex(
+          toBN(input.nullifierHash).add(
+            toBN('21888242871839275222246405745257275088548364400416034343698204186575808495617'),
+          ),
+        ),
         toFixedHex(input.recipient, 20),
         toFixedHex(input.relayer, 20),
         toFixedHex(input.fee),
-        toFixedHex(input.refund)
+        toFixedHex(input.refund),
       ]
       const error = await tornado.withdraw(proof, ...args, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('verifier-gte-snark-scalar-field')
@@ -330,7 +330,7 @@ contract('ETHTornado', accounts => {
         toFixedHex(input.recipient, 20),
         toFixedHex(input.relayer, 20),
         toFixedHex(input.fee),
-        toFixedHex(input.refund)
+        toFixedHex(input.refund),
       ]
       const error = await tornado.withdraw(proof, ...args, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('Fee exceeds transfer value')
@@ -365,7 +365,7 @@ contract('ETHTornado', accounts => {
         toFixedHex(input.recipient, 20),
         toFixedHex(input.relayer, 20),
         toFixedHex(input.fee),
-        toFixedHex(input.refund)
+        toFixedHex(input.refund),
       ]
       const error = await tornado.withdraw(proof, ...args, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('Cannot find your merkle root')
@@ -398,7 +398,7 @@ contract('ETHTornado', accounts => {
         toFixedHex(input.recipient, 20),
         toFixedHex(input.relayer, 20),
         toFixedHex(input.fee),
-        toFixedHex(input.refund)
+        toFixedHex(input.refund),
       ]
       let incorrectArgs
       const originalProof = proof.slice()
@@ -410,7 +410,7 @@ contract('ETHTornado', accounts => {
         toFixedHex('0x0000000000000000000000007a1f9131357404ef86d7c38dbffed2da70321337', 20),
         toFixedHex(input.relayer, 20),
         toFixedHex(input.fee),
-        toFixedHex(input.refund)
+        toFixedHex(input.refund),
       ]
       let error = await tornado.withdraw(proof, ...incorrectArgs, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('Invalid withdraw proof')
@@ -422,7 +422,7 @@ contract('ETHTornado', accounts => {
         toFixedHex(input.recipient, 20),
         toFixedHex(input.relayer, 20),
         toFixedHex('0x000000000000000000000000000000000000000000000000015345785d8a0000'),
-        toFixedHex(input.refund)
+        toFixedHex(input.refund),
       ]
       error = await tornado.withdraw(proof, ...incorrectArgs, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('Invalid withdraw proof')
@@ -434,7 +434,7 @@ contract('ETHTornado', accounts => {
         toFixedHex(input.recipient, 20),
         toFixedHex(input.relayer, 20),
         toFixedHex(input.fee),
-        toFixedHex(input.refund)
+        toFixedHex(input.refund),
       ]
       error = await tornado.withdraw(proof, ...incorrectArgs, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('Invalid withdraw proof')
@@ -476,7 +476,7 @@ contract('ETHTornado', accounts => {
         toFixedHex(input.recipient, 20),
         toFixedHex(input.relayer, 20),
         toFixedHex(input.fee),
-        toFixedHex(input.refund)
+        toFixedHex(input.refund),
       ]
       const error = await tornado.withdraw(proof, ...args, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('Refund value is supposed to be zero for ETH instance')
@@ -500,9 +500,8 @@ contract('ETHTornado', accounts => {
       operator.should.be.equal(sender)
 
       const newOperator = accounts[7]
-      const error = await tornado.changeOperator(newOperator, { from:  accounts[7] }).should.be.rejected
+      const error = await tornado.changeOperator(newOperator, { from: accounts[7] }).should.be.rejected
       error.reason.should.be.equal('Only operator can call this function.')
-
     })
   })
 
@@ -523,9 +522,8 @@ contract('ETHTornado', accounts => {
       operator.should.be.equal(sender)
 
       const newVerifier = accounts[7]
-      const error = await tornado.updateVerifier(newVerifier, { from:  accounts[7] }).should.be.rejected
+      const error = await tornado.updateVerifier(newVerifier, { from: accounts[7] }).should.be.rejected
       error.reason.should.be.equal('Only operator can call this function.')
-
     })
   })
 
@@ -557,7 +555,6 @@ contract('ETHTornado', accounts => {
         pathIndices: path_index,
       })
 
-
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
       const { proof } = websnarkUtils.toSolidityInput(proofData)
 
@@ -567,7 +564,7 @@ contract('ETHTornado', accounts => {
         toFixedHex(input.recipient, 20),
         toFixedHex(input.relayer, 20),
         toFixedHex(input.fee),
-        toFixedHex(input.refund)
+        toFixedHex(input.refund),
       ]
 
       await tornado.withdraw(proof, ...args, { from: relayer, gasPrice: '0' })
@@ -583,10 +580,6 @@ contract('ETHTornado', accounts => {
     await revertSnapshot(snapshotId.result)
     // eslint-disable-next-line require-atomic-updates
     snapshotId = await takeSnapshot()
-    tree = new MerkleTree(
-      levels,
-      null,
-      prefix,
-    )
+    tree = new MerkleTree(levels, null, prefix)
   })
 })

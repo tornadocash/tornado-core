@@ -178,7 +178,7 @@ async function generateProof({ deposit, recipient, relayerAddress = 0, fee = 0, 
     toHex(input.recipient, 20),
     toHex(input.relayer, 20),
     toHex(input.fee),
-    toHex(input.refund)
+    toHex(input.refund),
   ]
 
   return { proof, args }
@@ -265,7 +265,7 @@ function fromDecimals({ amount, decimals }) {
   const comps = ether.split('.')
   if (comps.length > 2) {
     throw new Error(
-      '[ethjs-unit] while converting number ' + amount + ' to wei,  too many decimal points'
+      '[ethjs-unit] while converting number ' + amount + ' to wei,  too many decimal points',
     )
   }
 
@@ -280,7 +280,7 @@ function fromDecimals({ amount, decimals }) {
   }
   if (fraction.length > baseLength) {
     throw new Error(
-      '[ethjs-unit] while converting number ' + amount + ' to wei, too many decimal places'
+      '[ethjs-unit] while converting number ' + amount + ' to wei, too many decimal places',
     )
   }
 
@@ -417,10 +417,10 @@ async function loadDepositData({ deposit }) {
   try {
     const eventWhenHappened = await tornado.getPastEvents('Deposit', {
       filter: {
-        commitment: deposit.commitmentHex
+        commitment: deposit.commitmentHex,
       },
       fromBlock: 0,
-      toBlock: 'latest'
+      toBlock: 'latest',
     })
     if (eventWhenHappened.length === 0) {
       throw new Error('There is no related deposit, the note is invalid')
@@ -441,7 +441,7 @@ async function loadWithdrawalData({ amount, currency, deposit }) {
   try {
     const events = await await tornado.getPastEvents('Withdrawal', {
       fromBlock: 0,
-      toBlock: 'latest'
+      toBlock: 'latest',
     })
 
     const withdrawEvent = events.filter((event) => {
@@ -451,7 +451,7 @@ async function loadWithdrawalData({ amount, currency, deposit }) {
     const fee = withdrawEvent.returnValues.fee
     const decimals = config.deployments[`netId${netId}`][currency].decimals
     const withdrawalAmount = toBN(fromDecimals({ amount, decimals })).sub(
-      toBN(fee)
+      toBN(fee),
     )
     const { timestamp } = await web3.eth.getBlock(withdrawEvent.blockHash)
     return {
@@ -460,7 +460,7 @@ async function loadWithdrawalData({ amount, currency, deposit }) {
       to: withdrawEvent.returnValues.to,
       timestamp,
       nullifier: deposit.nullifierHex,
-      fee: toDecimals(fee, decimals, 9)
+      fee: toDecimals(fee, decimals, 9),
     }
   } catch (e) {
     console.error('loadWithdrawalData', e)

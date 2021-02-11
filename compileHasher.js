@@ -8,11 +8,11 @@ const genContract = require('circomlib/src/mimcsponge_gencontract.js')
 // command
 const outputPath = path.join(__dirname, 'build', 'Hasher.json')
 
-function main () {
+function main() {
   const contract = {
     contractName: 'Hasher',
     abi: genContract.abi,
-    bytecode: genContract.createCode('mimcsponge', 220)
+    bytecode: genContract.createCode('mimcsponge', 220),
   }
 
   fs.writeFileSync(outputPath, JSON.stringify(contract))

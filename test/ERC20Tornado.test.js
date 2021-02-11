@@ -1,8 +1,5 @@
 /* global artifacts, web3, contract */
-require('chai')
-  .use(require('bn-chai')(web3.utils.BN))
-  .use(require('chai-as-promised'))
-  .should()
+require('chai').use(require('bn-chai')(web3.utils.BN)).use(require('chai-as-promised')).should()
 const fs = require('fs')
 
 const { toBN } = require('web3-utils')
@@ -25,7 +22,11 @@ const MerkleTree = require('../lib/MerkleTree')
 
 const rbigint = (nbytes) => snarkjs.bigInt.leBuff2int(crypto.randomBytes(nbytes))
 const pedersenHash = (data) => circomlib.babyJub.unpackPoint(circomlib.pedersenHash.hash(data))[0]
-const toFixedHex = (number, length = 32) =>  '0x' + bigInt(number).toString(16).padStart(length * 2, '0')
+const toFixedHex = (number, length = 32) =>
+  '0x' +
+  bigInt(number)
+    .toString(16)
+    .padStart(length * 2, '0')
 const getRandomRecipient = () => rbigint(20)
 
 function generateDeposit() {
@@ -38,7 +39,7 @@ function generateDeposit() {
   return deposit
 }
 
-contract('ERC20Tornado', accounts => {
+contract('ERC20Tornado', (accounts) => {
   let tornado
   let token
   let usdtToken
@@ -59,11 +60,7 @@ contract('ERC20Tornado', accounts => {
   let proving_key
 
   before(async () => {
-    tree = new MerkleTree(
-      levels,
-      null,
-      prefix,
-    )
+    tree = new MerkleTree(levels, null, prefix)
     tornado = await Tornado.deployed()
     if (ERC20_TOKEN) {
       token = await Token.at(ERC20_TOKEN)
@@ -142,7 +139,6 @@ contract('ERC20Tornado', accounts => {
         pathIndices: path_index,
       })
 
-
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
       const { proof } = websnarkUtils.toSolidityInput(proofData)
 
@@ -164,7 +160,7 @@ contract('ERC20Tornado', accounts => {
         toFixedHex(input.recipient, 20),
         toFixedHex(input.relayer, 20),
         toFixedHex(input.fee),
-        toFixedHex(input.refund)
+        toFixedHex(input.refund),
       ]
       const { logs } = await tornado.withdraw(proof, ...args, { value: refund, from: relayer, gasPrice: '0' })
 
@@ -177,7 +173,9 @@ contract('ERC20Tornado', accounts => {
       const feeBN = toBN(fee.toString())
       balanceTornadoAfter.should.be.eq.BN(toBN(balanceTornadoBefore).sub(toBN(tokenDenomination)))
       balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore).add(feeBN))
-      balanceRecieverAfter.should.be.eq.BN(toBN(balanceRecieverBefore).add(toBN(tokenDenomination).sub(feeBN)))
+      balanceRecieverAfter.should.be.eq.BN(
+        toBN(balanceRecieverBefore).add(toBN(tokenDenomination).sub(feeBN)),
+      )
 
       ethBalanceOperatorAfter.should.be.eq.BN(toBN(ethBalanceOperatorBefore))
       ethBalanceRecieverAfter.should.be.eq.BN(toBN(ethBalanceRecieverBefore).add(toBN(refund)))
@@ -223,7 +221,6 @@ contract('ERC20Tornado', accounts => {
         pathIndices: path_index,
       })
 
-
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
       const { proof } = websnarkUtils.toSolidityInput(proofData)
 
@@ -243,7 +240,7 @@ contract('ERC20Tornado', accounts => {
         toFixedHex(input.recipient, 20),
         toFixedHex(input.relayer, 20),
         toFixedHex(input.fee),
-        toFixedHex(input.refund)
+        toFixedHex(input.refund),
       ]
       const { logs } = await tornado.withdraw(proof, ...args, { value: refund, from: relayer, gasPrice: '0' })
 
@@ -256,7 +253,9 @@ contract('ERC20Tornado', accounts => {
       const feeBN = toBN(fee.toString())
       balanceTornadoAfter.should.be.eq.BN(toBN(balanceTornadoBefore).sub(toBN(tokenDenomination)))
       balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore).add(feeBN))
-      balanceRecieverAfter.should.be.eq.BN(toBN(balanceRecieverBefore).add(toBN(tokenDenomination).sub(feeBN)))
+      balanceRecieverAfter.should.be.eq.BN(
+        toBN(balanceRecieverBefore).add(toBN(tokenDenomination).sub(feeBN)),
+      )
 
       ethBalanceOperatorAfter.should.be.eq.BN(toBN(ethBalanceOperatorBefore))
       ethBalanceRecieverAfter.should.be.eq.BN(toBN(ethBalanceRecieverBefore))
@@ -278,7 +277,6 @@ contract('ERC20Tornado', accounts => {
       await token.approve(tornado.address, tokenDenomination, { from: user })
       await tornado.deposit(toFixedHex(deposit.commitment), { from: user, gasPrice: '0' })
 
-
       const { root, path_elements, path_index } = await tree.path(0)
       // Circuit input
       const input = stringifyBigInts({
@@ -297,7 +295,6 @@ contract('ERC20Tornado', accounts => {
         pathIndices: path_index,
       })
 
-
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
       const { proof } = websnarkUtils.toSolidityInput(proofData)
 
@@ -307,13 +304,16 @@ contract('ERC20Tornado', accounts => {
         toFixedHex(input.recipient, 20),
         toFixedHex(input.relayer, 20),
         toFixedHex(input.fee),
-        toFixedHex(input.refund)
+        toFixedHex(input.refund),
       ]
-      let { reason } = await tornado.withdraw(proof, ...args, { value: 1, from: relayer, gasPrice: '0' }).should.be.rejected
+      let { reason } = await tornado.withdraw(proof, ...args, { value: 1, from: relayer, gasPrice: '0' })
+        .should.be.rejected
       reason.should.be.equal('Incorrect refund amount received by the contract')
-
-
-      ;({ reason } = await tornado.withdraw(proof, ...args, { value: toBN(refund).mul(toBN(2)), from: relayer, gasPrice: '0' }).should.be.rejected)
+      ;({ reason } = await tornado.withdraw(proof, ...args, {
+        value: toBN(refund).mul(toBN(2)),
+        from: relayer,
+        gasPrice: '0',
+      }).should.be.rejected)
       reason.should.be.equal('Incorrect refund amount received by the contract')
     })
 
@@ -364,7 +364,6 @@ contract('ERC20Tornado', accounts => {
         pathIndices: path_index,
       })
 
-
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
       const { proof } = websnarkUtils.toSolidityInput(proofData)
 
@@ -385,7 +384,7 @@ contract('ERC20Tornado', accounts => {
         toFixedHex(input.recipient, 20),
         toFixedHex(input.relayer, 20),
         toFixedHex(input.fee),
-        toFixedHex(input.refund)
+        toFixedHex(input.refund),
       ]
       const { logs } = await tornado.withdraw(proof, ...args, { value: refund, from: relayer, gasPrice: '0' })
 
@@ -400,7 +399,6 @@ contract('ERC20Tornado', accounts => {
       ethBalanceOperatorAfter.should.be.eq.BN(toBN(ethBalanceOperatorBefore).add(feeBN))
       balanceRecieverAfter.should.be.eq.BN(toBN(balanceRecieverBefore).add(toBN(tokenDenomination)))
       ethBalanceRecieverAfter.should.be.eq.BN(toBN(ethBalanceRecieverBefore).add(toBN(refund)).sub(feeBN))
-
 
       logs[0].event.should.be.equal('Withdrawal')
       logs[0].args.nullifierHash.should.be.eq.BN(toBN(input.nullifierHash.toString()))
@@ -453,7 +451,6 @@ contract('ERC20Tornado', accounts => {
         pathIndices: path_index,
       })
 
-
       const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
       const { proof } = websnarkUtils.toSolidityInput(proofData)
 
@@ -474,7 +471,7 @@ contract('ERC20Tornado', accounts => {
         toFixedHex(input.recipient, 20),
         toFixedHex(input.relayer, 20),
         toFixedHex(input.fee),
-        toFixedHex(input.refund)
+        toFixedHex(input.refund),
       ]
       const { logs } = await tornado.withdraw(proof, ...args, { value: refund, from: relayer, gasPrice: '0' })
       console.log('withdraw done')
@@ -491,7 +488,6 @@ contract('ERC20Tornado', accounts => {
       balanceRecieverAfter.should.be.eq.BN(toBN(balanceRecieverBefore).add(toBN(tokenDenomination)))
       ethBalanceRecieverAfter.should.be.eq.BN(toBN(ethBalanceRecieverBefore).add(toBN(refund)).sub(feeBN))
 
-
       logs[0].event.should.be.equal('Withdrawal')
       logs[0].args.nullifierHash.should.be.eq.BN(toBN(input.nullifierHash.toString()))
       logs[0].args.relayer.should.be.eq.BN(operator)
@@ -505,10 +501,6 @@ contract('ERC20Tornado', accounts => {
     await revertSnapshot(snapshotId.result)
     // eslint-disable-next-line require-atomic-updates
     snapshotId = await takeSnapshot()
-    tree = new MerkleTree(
-      levels,
-      null,
-      prefix,
-    )
+    tree = new MerkleTree(levels, null, prefix)
   })
 })

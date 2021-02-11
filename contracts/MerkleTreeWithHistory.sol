@@ -1,13 +1,13 @@
 // https://tornado.cash
 /*
-* d888888P                                           dP              a88888b.                   dP
-*    88                                              88             d8'   `88                   88
-*    88    .d8888b. 88d888b. 88d888b. .d8888b. .d888b88 .d8888b.    88        .d8888b. .d8888b. 88d888b.
-*    88    88'  `88 88'  `88 88'  `88 88'  `88 88'  `88 88'  `88    88        88'  `88 Y8ooooo. 88'  `88
-*    88    88.  .88 88       88    88 88.  .88 88.  .88 88.  .88 dP Y8.   .88 88.  .88       88 88    88
-*    dP    `88888P' dP       dP    dP `88888P8 `88888P8 `88888P' 88  Y88888P' `88888P8 `88888P' dP    dP
-* ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
-*/
+ * d888888P                                           dP              a88888b.                   dP
+ *    88                                              88             d8'   `88                   88
+ *    88    .d8888b. 88d888b. 88d888b. .d8888b. .d888b88 .d8888b.    88        .d8888b. .d8888b. 88d888b.
+ *    88    88'  `88 88'  `88 88'  `88 88'  `88 88'  `88 88'  `88    88        88'  `88 Y8ooooo. 88'  `88
+ *    88    88.  .88 88       88    88 88.  .88 88.  .88 88.  .88 dP Y8.   .88 88.  .88       88 88    88
+ *    dP    `88888P' dP       dP    dP `88888P8 `88888P8 `88888P' 88  Y88888P' `88888P8 `88888P' dP    dP
+ * ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+ */
 
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.0;
@@ -55,7 +55,11 @@ contract MerkleTreeWithHistory {
   /**
     @dev Hash 2 tree leaves, returns MiMC(_left, _right)
   */
-  function hashLeftRight(Hasher _hasher, bytes32 _left, bytes32 _right) public pure returns (bytes32) {
+  function hashLeftRight(
+    Hasher _hasher,
+    bytes32 _left,
+    bytes32 _right
+  ) public pure returns (bytes32) {
     require(uint256(_left) < FIELD_SIZE, "_left should be inside the field");
     require(uint256(_right) < FIELD_SIZE, "_right should be inside the field");
     uint256 R = uint256(_left);
@@ -66,7 +70,7 @@ contract MerkleTreeWithHistory {
     return bytes32(R);
   }
 
-  function _insert(bytes32 _leaf) internal returns(uint32 index) {
+  function _insert(bytes32 _leaf) internal returns (uint32 index) {
     uint32 currentIndex = nextIndex;
     require(currentIndex != uint32(2)**levels, "Merkle tree is full. No more leafs can be added");
     nextIndex += 1;
@@ -98,7 +102,7 @@ contract MerkleTreeWithHistory {
   /**
     @dev Whether the root is present in the root history
   */
-  function isKnownRoot(bytes32 _root) public view returns(bool) {
+  function isKnownRoot(bytes32 _root) public view returns (bool) {
     if (_root == 0) {
       return false;
     }
@@ -118,7 +122,7 @@ contract MerkleTreeWithHistory {
   /**
     @dev Returns the last root
   */
-  function getLastRoot() public view returns(bytes32) {
+  function getLastRoot() public view returns (bytes32) {
     return roots[currentRootIndex];
   }
 }

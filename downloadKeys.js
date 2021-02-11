@@ -11,7 +11,7 @@ async function downloadFile({ url, path }) {
   const response = await axios({
     url,
     method: 'GET',
-    responseType: 'stream'
+    responseType: 'stream',
   })
 
   response.data.pipe(writer)
@@ -25,16 +25,16 @@ async function downloadFile({ url, path }) {
 async function main() {
   const release = await axios.get('https://api.github.com/repos/tornadocash/tornado-core/releases/latest')
   const { assets } = release.data
-  if (!fs.existsSync(circuitsPath)){
+  if (!fs.existsSync(circuitsPath)) {
     fs.mkdirSync(circuitsPath, { recursive: true })
     fs.mkdirSync(contractsPath, { recursive: true })
   }
-  for(let asset of assets) {
+  for (let asset of assets) {
     if (files.includes(asset.name)) {
       console.log(`Downloading ${asset.name} ...`)
       await downloadFile({
         url: asset.browser_download_url,
-        path: path.resolve(__dirname, circuitsPath, asset.name)
+        path: path.resolve(__dirname, circuitsPath, asset.name),
       })
     }
   }
