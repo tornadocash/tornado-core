@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
+
 // https://tornado.cash
 /*
 * d888888P                                           dP              a88888b.                   dP
@@ -9,9 +12,9 @@
 * ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
 */
 
-pragma solidity 0.5.17;
+pragma solidity 0.6.12;
 
-library Hasher {
+interface Hasher {
   function MiMCSponge(uint256 in_xL, uint256 in_xR) public pure returns (uint256 xL, uint256 xR);
 }
 
@@ -29,11 +32,14 @@ contract MerkleTreeWithHistory {
   uint32 public nextIndex = 0;
   uint32 public constant ROOT_HISTORY_SIZE = 100;
   bytes32[ROOT_HISTORY_SIZE] public roots;
+  Hasher public immutable hasher;
 
-  constructor(uint32 _treeLevels) public {
+  constructor(uint32 _treeLevels, Hasher _hasher) public {
     require(_treeLevels > 0, "_treeLevels should be greater than zero");
     require(_treeLevels < 32, "_treeLevels should be less than 32");
     levels = _treeLevels;
+
+    hasher = _hasher;
 
     bytes32 currentZero = bytes32(ZERO_VALUE);
     zeros.push(currentZero);
@@ -56,9 +62,9 @@ contract MerkleTreeWithHistory {
     require(uint256(_right) < FIELD_SIZE, "_right should be inside the field");
     uint256 R = uint256(_left);
     uint256 C = 0;
-    (R, C) = Hasher.MiMCSponge(R, C);
+    (R, C) = hasher.MiMCSponge(R, C);
     R = addmod(R, uint256(_right), FIELD_SIZE);
-    (R, C) = Hasher.MiMCSponge(R, C);
+    (R, C) = hasher.MiMCSponge(R, C);
     return bytes32(R);
   }
 

@@ -1,10 +1,10 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: MIT
+
+pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20Mintable.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol";
 
-contract ERC20Mock is ERC20Detailed, ERC20Mintable {
-  constructor() ERC20Detailed("DAIMock", "DAIM", 18) public {
+contract ERC20Mock is ERC20 {
+  constructor() ERC20("DAIMock", "DAIM") public {
   }
 }

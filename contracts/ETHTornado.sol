@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
+
 // https://tornado.cash
 /*
 * d888888P                                           dP              a88888b.                   dP
@@ -9,17 +12,17 @@
 * ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
 */
 
-pragma solidity 0.5.17;
+pragma solidity 0.6.12;
 
 import "./Tornado.sol";
 
 contract ETHTornado is Tornado {
   constructor(
     IVerifier _verifier,
+    Hasher _hasher,
     uint256 _denomination,
-    uint32 _merkleTreeHeight,
-    address _operator
-  ) Tornado(_verifier, _denomination, _merkleTreeHeight, _operator) public {
+    uint32 _merkleTreeHeight
+  ) Tornado(_verifier, _hasher, _denomination, _merkleTreeHeight) public {
   }
 
   function _processDeposit() internal {

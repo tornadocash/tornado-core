@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 // https://tornado.cash
 /*
 * d888888P                                           dP              a88888b.                   dP
@@ -9,7 +11,7 @@
 * ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
 */
 
-pragma solidity 0.5.17;
+pragma solidity 0.6.12;
 
 import "./MerkleTreeWithHistory.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
@@ -23,7 +25,7 @@ contract Tornado is MerkleTreeWithHistory, ReentrancyGuard {
   mapping(bytes32 => bool) public nullifierHashes;
   // we store all commitments just to prevent accidental deposits with the same commitment
   mapping(bytes32 => bool) public commitments;
-  IVerifier public verifier;
+  IVerifier public immutable verifier;
 
   // operator can update snark verification key
   // after the final trusted setup ceremony operator rights are supposed to be transferred to zero address
@@ -45,13 +47,12 @@ contract Tornado is MerkleTreeWithHistory, ReentrancyGuard {
   */
   constructor(
     IVerifier _verifier,
+    Hasher _hasher,
     uint256 _denomination,
-    uint32 _merkleTreeHeight,
-    address _operator
-  ) MerkleTreeWithHistory(_merkleTreeHeight) public {
+    uint32 _merkleTreeHeight
+  ) MerkleTreeWithHistory(_merkleTreeHeight, _hasher) public {
     require(_denomination > 0, "denomination should be greater than 0");
     verifier = _verifier;
-    operator = _operator;
     denomination = _denomination;
   }
 
@@ -70,7 +71,7 @@ contract Tornado is MerkleTreeWithHistory, ReentrancyGuard {
   }
 
   /** @dev this function is defined in a child contract */
-  function _processDeposit() internal;
+  function _processDeposit() internal virtual;
 
   /**
     @dev Withdraw a deposit from the contract. `proof` is a zkSNARK proof data, and input is an array of circuit public inputs
@@ -92,7 +93,7 @@ contract Tornado is MerkleTreeWithHistory, ReentrancyGuard {
   }
 
   /** @dev this function is defined in a child contract */
-  function _processWithdraw(address payable _recipient, address payable _relayer, uint256 _fee, uint256 _refund) internal;
+  function _processWithdraw(address payable _recipient, address payable _relayer, uint256 _fee, uint256 _refund) internal virtual;
 
   /** @dev whether a note is already spent */
   function isSpent(bytes32 _nullifierHash) public view returns(bool) {
@@ -109,16 +110,4 @@ contract Tornado is MerkleTreeWithHistory, ReentrancyGuard {
     }
   }
 
-  /**
-    @dev allow operator to update SNARK verification keys. This is needed to update keys after the final trusted setup ceremony is held.
-    After that operator rights are supposed to be transferred to zero address
-  */
-  function updateVerifier(address _newVerifier) external onlyOperator {
-    verifier = IVerifier(_newVerifier);
-  }
-
-  /** @dev operator can change his address */
-  function changeOperator(address _newOperator) external onlyOperator {
-    operator = _newOperator;
-  }
 }
