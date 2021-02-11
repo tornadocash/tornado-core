@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 // https://tornado.cash
 /*
 * d888888P                                           dP              a88888b.                   dP
@@ -11,16 +9,17 @@
 * ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
 */
 
-pragma solidity 0.6.12;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.6.0;
 
 import "./MerkleTreeWithHistory.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-contract IVerifier {
-  function verifyProof(bytes memory _proof, uint256[6] memory _input) public returns(bool);
+interface IVerifier {
+  function verifyProof(bytes memory _proof, uint256[6] memory _input) external returns(bool);
 }
 
-contract Tornado is MerkleTreeWithHistory, ReentrancyGuard {
+abstract contract Tornado is MerkleTreeWithHistory, ReentrancyGuard {
   uint256 public denomination;
   mapping(bytes32 => bool) public nullifierHashes;
   // we store all commitments just to prevent accidental deposits with the same commitment
@@ -41,9 +40,9 @@ contract Tornado is MerkleTreeWithHistory, ReentrancyGuard {
   /**
     @dev The constructor
     @param _verifier the address of SNARK verifier for this contract
+    @param _hasher the address of MiMC hash contract
     @param _denomination transfer amount for each deposit
     @param _merkleTreeHeight the height of deposits' Merkle Tree
-    @param _operator operator address (see operator comment above)
   */
   constructor(
     IVerifier _verifier,

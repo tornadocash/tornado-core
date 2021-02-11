@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 // https://tornado.cash
 /*
 * d888888P                                           dP              a88888b.                   dP
@@ -11,7 +9,8 @@
 * ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
 */
 
-pragma solidity 0.6.12;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.6.0;
 
 import "./Tornado.sol";
 
@@ -28,12 +27,12 @@ contract ERC20Tornado is Tornado {
     token = _token;
   }
 
-  function _processDeposit() internal {
+  function _processDeposit() internal override {
     require(msg.value == 0, "ETH value is supposed to be 0 for ERC20 instance");
     _safeErc20TransferFrom(msg.sender, address(this), denomination);
   }
 
-  function _processWithdraw(address payable _recipient, address payable _relayer, uint256 _fee, uint256 _refund) internal {
+  function _processWithdraw(address payable _recipient, address payable _relayer, uint256 _fee, uint256 _refund) internal override {
     require(msg.value == _refund, "Incorrect refund amount received by the contract");
 
     _safeErc20Transfer(_recipient, denomination - _fee);
@@ -42,7 +41,7 @@ contract ERC20Tornado is Tornado {
     }
 
     if (_refund > 0) {
-      (bool success, ) = _recipient.call.value(_refund)("");
+      (bool success, ) = _recipient.call{ value: _refund }("");
       if (!success) {
         // let's return _refund back to the relayer
         _relayer.transfer(_refund);

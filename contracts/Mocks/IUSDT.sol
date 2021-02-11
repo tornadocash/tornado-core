@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.6.12;
+pragma solidity ^0.6.0;
 
 interface ERC20Basic {
-    uint public _totalSupply;
+    function _totalSupply() external returns(uint);
     function totalSupply() external view returns (uint);
     function balanceOf(address who) external view returns (uint);
     function transfer(address to, uint value) external;
