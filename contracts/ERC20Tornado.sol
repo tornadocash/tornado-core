@@ -19,7 +19,7 @@ contract ERC20Tornado is Tornado {
 
   constructor(
     IVerifier _verifier,
-    Hasher _hasher,
+    IHasher _hasher,
     uint256 _denomination,
     uint32 _merkleTreeHeight,
     address _token

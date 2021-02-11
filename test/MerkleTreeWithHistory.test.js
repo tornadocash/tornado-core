@@ -45,8 +45,7 @@ contract('MerkleTreeWithHistory', (accounts) => {
   before(async () => {
     tree = new MerkleTree(levels, null, prefix)
     hasherInstance = await hasherContract.deployed()
-    await MerkleTreeWithHistory.link(hasherContract, hasherInstance.address)
-    merkleTreeWithHistory = await MerkleTreeWithHistory.new(levels)
+    merkleTreeWithHistory = await MerkleTreeWithHistory.new(levels, hasherInstance.address)
     snapshotId = await takeSnapshot()
   })
 
@@ -153,7 +152,7 @@ contract('MerkleTreeWithHistory', (accounts) => {
 
     it('should reject if tree is full', async () => {
       const levels = 6
-      const merkleTreeWithHistory = await MerkleTreeWithHistory.new(levels)
+      const merkleTreeWithHistory = await MerkleTreeWithHistory.new(levels, hasherInstance.address)
 
       for (let i = 0; i < 2 ** levels; i++) {
         await merkleTreeWithHistory.insert(toFixedHex(i + 42)).should.be.fulfilled

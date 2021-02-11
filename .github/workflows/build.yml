@@ -1,0 +1,33 @@
+name: build
+
+on:
+  push:
+    branches: ['*']
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      - run: yarn install
+      - run: yarn download
+      - run: cp .env.example .env
+      - run: npx ganache-cli > /dev/null &
+      - run: npm run migrate:dev
+      - run: yarn test
+      - run: node cli.js test
+      - run: yarn lint
+      - name: Telegram Failure Notification
+        uses: appleboy/telegram-action@0.0.7
+        if: failure()
+        with:
+          message: ❗ Build failed for [${{ github.repository }}](https://github.com/${{ github.repository }}/actions) because of ${{ github.actor }}
+          format: markdown
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}

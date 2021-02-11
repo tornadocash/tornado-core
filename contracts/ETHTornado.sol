@@ -17,7 +17,7 @@ import "./Tornado.sol";
 contract ETHTornado is Tornado {
   constructor(
     IVerifier _verifier,
-    Hasher _hasher,
+    IHasher _hasher,
     uint256 _denomination,
     uint32 _merkleTreeHeight
   ) public Tornado(_verifier, _hasher, _denomination, _merkleTreeHeight) {}

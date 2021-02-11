@@ -12,7 +12,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.0;
 
-interface Hasher {
+interface IHasher {
   function MiMCSponge(uint256 in_xL, uint256 in_xR) external pure returns (uint256 xL, uint256 xR);
 }
 
@@ -30,9 +30,9 @@ contract MerkleTreeWithHistory {
   uint32 public nextIndex = 0;
   uint32 public constant ROOT_HISTORY_SIZE = 100;
   bytes32[ROOT_HISTORY_SIZE] public roots;
-  Hasher public immutable hasher;
+  IHasher public immutable hasher;
 
-  constructor(uint32 _treeLevels, Hasher _hasher) public {
+  constructor(uint32 _treeLevels, IHasher _hasher) public {
     require(_treeLevels > 0, "_treeLevels should be greater than zero");
     require(_treeLevels < 32, "_treeLevels should be less than 32");
     levels = _treeLevels;
@@ -56,7 +56,7 @@ contract MerkleTreeWithHistory {
     @dev Hash 2 tree leaves, returns MiMC(_left, _right)
   */
   function hashLeftRight(
-    Hasher _hasher,
+    IHasher _hasher,
     bytes32 _left,
     bytes32 _right
   ) public pure returns (bytes32) {

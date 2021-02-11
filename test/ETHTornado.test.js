@@ -299,7 +299,7 @@ contract('ETHTornado', (accounts) => {
         toFixedHex(input.refund),
       ]
       const error = await tornado.withdraw(proof, ...args, { from: relayer }).should.be.rejected
-      error.reason.should.be.equal('verifier-gte-snark-scalar-field')
+      error.reason.should.be.equal('verifier-input-gte-snark-scalar-field')
     })
 
     it('fee should be less or equal transfer value', async () => {
@@ -480,50 +480,6 @@ contract('ETHTornado', (accounts) => {
       ]
       const error = await tornado.withdraw(proof, ...args, { from: relayer }).should.be.rejected
       error.reason.should.be.equal('Refund value is supposed to be zero for ETH instance')
-    })
-  })
-
-  describe('#changeOperator', () => {
-    it('should work', async () => {
-      let operator = await tornado.operator()
-      operator.should.be.equal(sender)
-
-      const newOperator = accounts[7]
-      await tornado.changeOperator(newOperator).should.be.fulfilled
-
-      operator = await tornado.operator()
-      operator.should.be.equal(newOperator)
-    })
-
-    it('cannot change from different address', async () => {
-      let operator = await tornado.operator()
-      operator.should.be.equal(sender)
-
-      const newOperator = accounts[7]
-      const error = await tornado.changeOperator(newOperator, { from: accounts[7] }).should.be.rejected
-      error.reason.should.be.equal('Only operator can call this function.')
-    })
-  })
-
-  describe('#updateVerifier', () => {
-    it('should work', async () => {
-      let operator = await tornado.operator()
-      operator.should.be.equal(sender)
-
-      const newVerifier = accounts[7]
-      await tornado.updateVerifier(newVerifier).should.be.fulfilled
-
-      const verifier = await tornado.verifier()
-      verifier.should.be.equal(newVerifier)
-    })
-
-    it('cannot change from different address', async () => {
-      let operator = await tornado.operator()
-      operator.should.be.equal(sender)
-
-      const newVerifier = accounts[7]
-      const error = await tornado.updateVerifier(newVerifier, { from: accounts[7] }).should.be.rejected
-      error.reason.should.be.equal('Only operator can call this function.')
     })
   })
 

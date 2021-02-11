@@ -46,7 +46,7 @@ abstract contract Tornado is MerkleTreeWithHistory, ReentrancyGuard {
   */
   constructor(
     IVerifier _verifier,
-    Hasher _hasher,
+    IHasher _hasher,
     uint256 _denomination,
     uint32 _merkleTreeHeight
   ) public MerkleTreeWithHistory(_merkleTreeHeight, _hasher) {
