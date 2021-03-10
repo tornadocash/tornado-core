@@ -12,28 +12,27 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.0;
 
-interface IComptroller {
-    function claimComp(address holder) external;
-}
+import "./ERC20Tornado.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-interface IComptroller {
-    function transfer(address dst, uint rawAmount) external returns (bool);
-    function balanceOf(address owner) external;
-}
-
-contract ERC20Tornado is Tornado {
-  IComptroller public comptroller;
+contract cPool is ERC20Tornado {
   address public immutable governance = 0x5efda50f22d34F262c29268506C5Fa42cB56A1Ce;
-  ICOMP public immutable COMP = 0xc00e94Cb662C3520282E6f5717214004A7f26888;
+  IERC20 public immutable comp;
 
-  constructor(IComptroller _comptroller, ICOMP _comp) public {
-    comptroller = _comptroller;
-    COMP = _comp;
+  constructor(
+    IERC20 _comp,
+    IVerifier _verifier,
+    IHasher _hasher,
+    uint256 _denomination,
+    uint32 _merkleTreeHeight,
+    IERC20 _token
+  ) ERC20Tornado(_verifier, _hasher, _denomination, _merkleTreeHeight, _token) public {
+    comp = _comp;
   }
 
-  function moveYeild() {
-    comp.claimComp(address(this));
-    uint balance = COMP.balanceOf(address(this));
-    COMP.transfer(governance, balance);
+  /// @dev Moves earned yield of the COMP token to the tornado governance contract
+  /// To make it work you may need to call `comptroller.claimComp(cPoolAddress)` before
+  function claimComp() external {
+    comp.transfer(governance, comp.balanceOf(address(this)));
   }
 }
