@@ -299,7 +299,7 @@ contract('ETHTornado', (accounts) => {
         toFixedHex(input.refund),
       ]
       const error = await tornado.withdraw(proof, ...args, { from: relayer }).should.be.rejected
-      error.reason.should.be.equal('verifier-input-gte-snark-scalar-field')
+      error.reason.should.be.equal('verifier-gte-snark-scalar-field')
     })
 
     it('fee should be less or equal transfer value', async () => {

@@ -52,7 +52,7 @@
     "prettier-plugin-solidity": "^1.0.0-beta.3",
     "snarkjs": "git+https://github.com/tornadocash/snarkjs.git#869181cfaf7526fe8972073d31655493a04326d5",
     "solhint-plugin-prettier": "^0.0.5",
-    "truffle": "^5.1.65",
+    "truffle": "^5.1.67",
     "truffle-flattener": "^1.4.2",
     "web3": "^1.3.4",
     "web3-utils": "^1.3.4",
