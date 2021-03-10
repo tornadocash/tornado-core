@@ -26,7 +26,7 @@ contract cPool is ERC20Tornado {
     uint256 _denomination,
     uint32 _merkleTreeHeight,
     IERC20 _token
-  ) ERC20Tornado(_verifier, _hasher, _denomination, _merkleTreeHeight, _token) public {
+  ) public ERC20Tornado(_verifier, _hasher, _denomination, _merkleTreeHeight, _token) {
     comp = _comp;
   }
 
