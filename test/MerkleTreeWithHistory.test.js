@@ -159,10 +159,10 @@ contract('MerkleTreeWithHistory', (accounts) => {
       }
 
       let error = await merkleTreeWithHistory.insert(toFixedHex(1337)).should.be.rejected
-      error.reason.should.be.equal('Merkle tree is full. No more leafs can be added')
+      error.reason.should.be.equal('Merkle tree is full. No more leaves can be added')
 
       error = await merkleTreeWithHistory.insert(toFixedHex(1)).should.be.rejected
-      error.reason.should.be.equal('Merkle tree is full. No more leafs can be added')
+      error.reason.should.be.equal('Merkle tree is full. No more leaves can be added')
     })
 
     it.skip('hasher gas', async () => {

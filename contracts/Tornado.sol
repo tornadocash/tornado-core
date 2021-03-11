@@ -20,19 +20,12 @@ interface IVerifier {
 }
 
 abstract contract Tornado is MerkleTreeWithHistory, ReentrancyGuard {
-  uint256 public denomination;
+  IVerifier public immutable verifier;
+  uint256 public immutable denomination;
+
   mapping(bytes32 => bool) public nullifierHashes;
   // we store all commitments just to prevent accidental deposits with the same commitment
   mapping(bytes32 => bool) public commitments;
-  IVerifier public immutable verifier;
-
-  // operator can update snark verification key
-  // after the final trusted setup ceremony operator rights are supposed to be transferred to zero address
-  address public operator;
-  modifier onlyOperator {
-    require(msg.sender == operator, "Only operator can call this function.");
-    _;
-  }
 
   event Deposit(bytes32 indexed commitment, uint32 leafIndex, uint256 timestamp);
   event Withdrawal(address to, bytes32 nullifierHash, address indexed relayer, uint256 fee);
