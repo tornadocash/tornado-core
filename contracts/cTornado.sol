@@ -10,7 +10,7 @@
  */
 
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.6.0;
+pragma solidity ^0.7.0;
 
 import "./ERC20Tornado.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -26,7 +26,7 @@ contract cTornado is ERC20Tornado {
     uint256 _denomination,
     uint32 _merkleTreeHeight,
     IERC20 _token
-  ) public ERC20Tornado(_verifier, _hasher, _denomination, _merkleTreeHeight, _token) {
+  ) ERC20Tornado(_verifier, _hasher, _denomination, _merkleTreeHeight, _token) {
     require(address(_comp) != address(0), "Invalid COMP token address");
     comp = _comp;
   }

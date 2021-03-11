@@ -10,7 +10,7 @@
  */
 
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.6.0;
+pragma solidity ^0.7.0;
 
 import "./Tornado.sol";
 
@@ -20,7 +20,7 @@ contract ETHTornado is Tornado {
     IHasher _hasher,
     uint256 _denomination,
     uint32 _merkleTreeHeight
-  ) public Tornado(_verifier, _hasher, _denomination, _merkleTreeHeight) {}
+  ) Tornado(_verifier, _hasher, _denomination, _merkleTreeHeight) {}
 
   function _processDeposit() internal override {
     require(msg.value == denomination, "Please send `mixDenomination` ETH along with transaction");

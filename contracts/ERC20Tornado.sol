@@ -10,7 +10,7 @@
  */
 
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.6.0;
+pragma solidity ^0.7.0;
 
 import "./Tornado.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -26,7 +26,7 @@ contract ERC20Tornado is Tornado {
     uint256 _denomination,
     uint32 _merkleTreeHeight,
     IERC20 _token
-  ) public Tornado(_verifier, _hasher, _denomination, _merkleTreeHeight) {
+  ) Tornado(_verifier, _hasher, _denomination, _merkleTreeHeight) {
     token = _token;
   }
 

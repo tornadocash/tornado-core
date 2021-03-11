@@ -10,7 +10,7 @@
  */
 
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.6.0;
+pragma solidity ^0.7.0;
 
 import "./MerkleTreeWithHistory.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
@@ -42,7 +42,7 @@ abstract contract Tornado is MerkleTreeWithHistory, ReentrancyGuard {
     IHasher _hasher,
     uint256 _denomination,
     uint32 _merkleTreeHeight
-  ) public MerkleTreeWithHistory(_merkleTreeHeight, _hasher) {
+  ) MerkleTreeWithHistory(_merkleTreeHeight, _hasher) {
     require(_denomination > 0, "denomination should be greater than 0");
     verifier = _verifier;
     denomination = _denomination;

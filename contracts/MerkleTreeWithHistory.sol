@@ -10,7 +10,7 @@
  */
 
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.6.0;
+pragma solidity ^0.7.0;
 
 interface IHasher {
   function MiMCSponge(uint256 in_xL, uint256 in_xR) external pure returns (uint256 xL, uint256 xR);
@@ -35,7 +35,7 @@ contract MerkleTreeWithHistory {
   uint32 public currentRootIndex = 0;
   uint32 public nextIndex = 0;
 
-  constructor(uint32 _levels, IHasher _hasher) public {
+  constructor(uint32 _levels, IHasher _hasher) {
     require(_levels > 0, "_levels should be greater than zero");
     require(_levels < 32, "_levels should be less than 32");
     levels = _levels;
