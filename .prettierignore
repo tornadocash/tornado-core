@@ -4,3 +4,4 @@ circuits
 contracts/Verifier.sol
 lib/ganacheHelper.js
 cli.js
+index.js
