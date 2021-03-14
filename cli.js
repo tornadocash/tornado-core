@@ -14,11 +14,12 @@ const merkleTree = require('./lib/MerkleTree')
 const Web3 = require('web3')
 const buildGroth16 = require('websnark/src/groth16')
 const websnarkUtils = require('websnark/src/utils')
-const { toWei, fromWei, toBN, BN } = require('web3-utils')
+const {toWei, fromWei, toBN, BN} = require('web3-utils')
 const config = require('./config')
 const program = require('commander')
+const ContractKit = require('@celo/contractkit')
 
-let web3, tornado, circuit, proving_key, groth16, erc20, senderAccount, netId
+let kit, web3, tornado, circuit, proving_key, groth16, erc20, senderAccount, netId
 let MERKLE_TREE_HEIGHT, ETH_AMOUNT, TOKEN_AMOUNT, PRIVATE_KEY
 
 /** Whether we are in a browser or node.js */
@@ -38,22 +39,27 @@ function toHex(number, length = 32) {
 }
 
 /** Display ETH account balance */
-async function printETHBalance({ address, name }) {
-  console.log(`${name} ETH balance is`, web3.utils.fromWei(await web3.eth.getBalance(address)))
+async function printCELOBalance({address, name}) {
+  const goldToken = await kit.contracts.getGoldToken()
+  const balance = await goldToken.balanceOf(address)
+  console.log(`${name} CELO balance is`, balance.toString())
 }
 
 /** Display ERC20 account balance */
-async function printERC20Balance({ address, name, tokenAddress }) {
+async function printERC20Balance({address, name, tokenAddress}, currency) {
+  if (currency === 'celo') {
+    await printCELOBalance({address, name})
+    return
+  }
   const erc20ContractJson = require('./build/contracts/ERC20Mock.json')
-  erc20 = tokenAddress ? new web3.eth.Contract(erc20ContractJson.abi, tokenAddress) : erc20
-  console.log(`${name} Token Balance is`, web3.utils.fromWei(await erc20.methods.balanceOf(address).call()))
+  console.log(`${name} Token Balance is`, await erc20.methods.balanceOf(address).call())
 }
 
 /**
  * Create deposit object from secret and nullifier
  */
-function createDeposit({ nullifier, secret }) {
-  const deposit = { nullifier, secret }
+function createDeposit({nullifier, secret}) {
+  const deposit = {nullifier, secret}
   deposit.preimage = Buffer.concat([deposit.nullifier.leInt2Buff(31), deposit.secret.leInt2Buff(31)])
   deposit.commitment = pedersenHash(deposit.preimage)
   deposit.commitmentHex = toHex(deposit.commitment)
@@ -67,41 +73,35 @@ function createDeposit({ nullifier, secret }) {
  * @param currency Сurrency
  * @param amount Deposit amount
  */
-async function deposit({ currency, amount }) {
-  const deposit = createDeposit({ nullifier: rbigint(31), secret: rbigint(31) })
+async function deposit({currency, amount}) {
+  const deposit = createDeposit({nullifier: rbigint(31), secret: rbigint(31)})
   const note = toHex(deposit.preimage, 62)
   const noteString = `tornado-${currency}-${amount}-${netId}-${note}`
   console.log(`Your note: ${noteString}`)
-  if (currency === 'eth') {
-    await printETHBalance({ address: tornado._address, name: 'Tornado' })
-    await printETHBalance({ address: senderAccount, name: 'Sender account' })
-    const value = isLocalRPC ? ETH_AMOUNT : fromDecimals({ amount, decimals: 18 })
-    console.log('Submitting deposit transaction')
-    await tornado.methods.deposit(toHex(deposit.commitment)).send({ value, from: senderAccount, gas: 2e6 })
-    await printETHBalance({ address: tornado._address, name: 'Tornado' })
-    await printETHBalance({ address: senderAccount, name: 'Sender account' })
-  } else { // a token
-    await printERC20Balance({ address: tornado._address, name: 'Tornado' })
-    await printERC20Balance({ address: senderAccount, name: 'Sender account' })
-    const decimals = isLocalRPC ? 18 : config.deployments[`netId${netId}`][currency].decimals
-    const tokenAmount = isLocalRPC ? TOKEN_AMOUNT : fromDecimals({ amount, decimals })
-    if (isLocalRPC) {
-      console.log('Minting some test tokens to deposit')
-      await erc20.methods.mint(senderAccount, tokenAmount).send({ from: senderAccount, gas: 2e6 })
-    }
-
-    const allowance = await erc20.methods.allowance(senderAccount, tornado._address).call({ from: senderAccount })
-    console.log('Current allowance is', fromWei(allowance))
-    if (toBN(allowance).lt(toBN(tokenAmount))) {
-      console.log('Approving tokens for deposit')
-      await erc20.methods.approve(tornado._address, tokenAmount).send({ from: senderAccount, gas: 1e6 })
-    }
-
-    console.log('Submitting deposit transaction')
-    await tornado.methods.deposit(toHex(deposit.commitment)).send({ from: senderAccount, gas: 2e6 })
-    await printERC20Balance({ address: tornado._address, name: 'Tornado' })
-    await printERC20Balance({ address: senderAccount, name: 'Sender account' })
+  await printERC20Balance({address: tornado._address, name: 'Tornado'}, currency)
+  await printERC20Balance({address: senderAccount, name: 'Sender account'}, currency)
+  const decimals = isLocalRPC ? 18 : config.deployments[`netId${netId}`][currency].decimals
+  const tokenAmount = isLocalRPC ? TOKEN_AMOUNT : fromDecimals({amount, decimals})
+  if (isLocalRPC) {
+    console.log('Minting some test tokens to deposit')
+    await erc20.methods.mint(senderAccount, tokenAmount).send({from: senderAccount, gas: 2e6})
   }
+
+  const allowance = await erc20.methods.allowance(senderAccount, tornado._address).call({from: senderAccount})
+  console.log('Current allowance is', fromWei(allowance))
+  if (toBN(allowance).lt(toBN(tokenAmount))) {
+    console.log('Approving tokens for deposit')
+    const approveTx = await erc20.methods.approve(tornado._address, tokenAmount)
+    const approveTxRes = await kit.sendTransactionObject(approveTx, {from: senderAccount})
+    console.log("Approval txn:", await approveTxRes.getHash())
+  }
+
+  console.log('Submitting deposit transaction')
+  const depositTx = await tornado.methods.deposit(toHex(deposit.commitment))
+  const depositTxRes = await kit.sendTransactionObject(depositTx, {from: senderAccount, gas: 2e6})
+  console.log("Deposit txn:", await depositTxRes.getHash())
+  await printERC20Balance({address: tornado._address, name: 'Tornado'}, currency)
+  await printERC20Balance({address: senderAccount, name: 'Sender account'}, currency)
 
   return noteString
 }
@@ -115,7 +115,7 @@ async function deposit({ currency, amount }) {
 async function generateMerkleProof(deposit) {
   // Get all deposit events from smart contract and assemble merkle tree from them
   console.log('Getting current state from tornado contract')
-  const events = await tornado.getPastEvents('Deposit', { fromBlock: 0, toBlock: 'latest' })
+  const events = await tornado.getPastEvents('Deposit', {fromBlock: 0, toBlock: 'latest'})
   const leaves = events
     .sort((a, b) => a.returnValues.leafIndex - b.returnValues.leafIndex) // Sort events in chronological order
     .map(e => e.returnValues.commitment)
@@ -145,9 +145,9 @@ async function generateMerkleProof(deposit) {
  * @param fee Relayer fee
  * @param refund Receive ether for exchanged tokens
  */
-async function generateProof({ deposit, recipient, relayerAddress = 0, fee = 0, refund = 0 }) {
+async function generateProof({deposit, recipient, relayerAddress = 0, fee = 0, refund = 0}) {
   // Compute merkle proof of our commitment
-  const { root, path_elements, path_index } = await generateMerkleProof(deposit)
+  const {root, path_elements, path_index} = await generateMerkleProof(deposit)
 
   // Prepare circuit input
   const input = {
@@ -169,7 +169,7 @@ async function generateProof({ deposit, recipient, relayerAddress = 0, fee = 0, 
   console.log('Generating SNARK proof')
   console.time('Proof time')
   const proofData = await websnarkUtils.genWitnessAndProve(groth16, input, circuit, proving_key)
-  const { proof } = websnarkUtils.toSolidityInput(proofData)
+  const {proof} = websnarkUtils.toSolidityInput(proofData)
   console.timeEnd('Proof time')
 
   const args = [
@@ -181,7 +181,7 @@ async function generateProof({ deposit, recipient, relayerAddress = 0, fee = 0, 
     toHex(input.refund)
   ]
 
-  return { proof, args }
+  return {proof, args}
 }
 
 /**
@@ -189,8 +189,8 @@ async function generateProof({ deposit, recipient, relayerAddress = 0, fee = 0, 
  * @param noteString Note to withdraw
  * @param recipient Recipient address
  */
-async function withdraw({ deposit, currency, amount, recipient, relayerURL, refund = '0' }) {
-  if (currency === 'eth' && refund !== '0') {
+async function withdraw({deposit, currency, amount, recipient, relayerURL, refund = '0'}) {
+  if (currency === 'celo' && refund !== '0') {
     throw new Error('The ETH purchase is supposted to be 0 for ETH withdrawals')
   }
   refund = toWei(refund)
@@ -199,27 +199,27 @@ async function withdraw({ deposit, currency, amount, recipient, relayerURL, refu
       throw new Error('ENS name resolving is not supported. Please provide DNS name of the relayer. See instuctions in README.md')
     }
     const relayerStatus = await axios.get(relayerURL + '/status')
-    const { relayerAddress, netId, gasPrices, ethPrices, relayerServiceFee } = relayerStatus.data
+    const {relayerAddress, netId, gasPrices, ethPrices, relayerServiceFee} = relayerStatus.data
     assert(netId === await web3.eth.net.getId() || netId === '*', 'This relay is for different network')
     console.log('Relay address: ', relayerAddress)
 
     const decimals = isLocalRPC ? 18 : config.deployments[`netId${netId}`][currency].decimals
-    const fee = calculateFee({ gasPrices, currency, amount, refund, ethPrices, relayerServiceFee, decimals })
-    if (fee.gt(fromDecimals({ amount, decimals }))) {
+    const fee = calculateFee({gasPrices, currency, amount, refund, ethPrices, relayerServiceFee, decimals})
+    if (fee.gt(fromDecimals({amount, decimals}))) {
       throw new Error('Too high refund')
     }
-    const { proof, args } = await generateProof({ deposit, recipient, relayerAddress, fee, refund })
+    const {proof, args} = await generateProof({deposit, recipient, relayerAddress, fee, refund})
 
     console.log('Sending withdraw transaction through relay')
     try {
-      const relay = await axios.post(relayerURL + '/relay', { contract: tornado._address, proof, args })
+      const relay = await axios.post(relayerURL + '/relay', {contract: tornado._address, proof, args})
       if (netId === 1 || netId === 42) {
         console.log(`Transaction submitted through the relay. View transaction on etherscan https://${getCurrentNetworkName()}etherscan.io/tx/${relay.data.txHash}`)
       } else {
         console.log(`Transaction submitted through the relay. The transaction hash is ${relay.data.txHash}`)
       }
 
-      const receipt = await waitForTxReceipt({ txHash: relay.data.txHash })
+      const receipt = await waitForTxReceipt({txHash: relay.data.txHash})
       console.log('Transaction mined in block', receipt.blockNumber)
     } catch (e) {
       if (e.response) {
@@ -229,10 +229,10 @@ async function withdraw({ deposit, currency, amount, recipient, relayerURL, refu
       }
     }
   } else { // using private key
-    const { proof, args } = await generateProof({ deposit, recipient, refund })
+    const {proof, args} = await generateProof({deposit, recipient, refund})
 
     console.log('Submitting withdraw transaction')
-    await tornado.methods.withdraw(proof, ...args).send({ from: senderAccount, value: refund.toString(), gas: 1e6 })
+    await tornado.methods.withdraw(proof, ...args).send({from: senderAccount, value: refund.toString(), gas: 1e6})
       .on('transactionHash', function (txHash) {
         if (netId === 1 || netId === 42) {
           console.log(`View transaction on etherscan https://${getCurrentNetworkName()}etherscan.io/tx/${txHash}`)
@@ -246,7 +246,7 @@ async function withdraw({ deposit, currency, amount, recipient, relayerURL, refu
   console.log('Done')
 }
 
-function fromDecimals({ amount, decimals }) {
+function fromDecimals({amount, decimals}) {
   amount = amount.toString()
   let ether = amount.toString()
   const base = new BN('10').pow(new BN(decimals))
@@ -336,35 +336,37 @@ function toDecimals(value, decimals, fixed) {
 
 function getCurrentNetworkName() {
   switch (netId) {
-  case 1:
-    return ''
-  case 42:
-    return 'kovan.'
+    case 1:
+      return ''
+    case 42:
+      return 'kovan.'
+    case 44787:
+      return 'alfajores.'
   }
 
 }
 
-function calculateFee({ gasPrices, currency, amount, refund, ethPrices, relayerServiceFee, decimals }) {
+function calculateFee({gasPrices, currency, amount, refund, ethPrices, relayerServiceFee, decimals}) {
   const decimalsPoint = Math.floor(relayerServiceFee) === Number(relayerServiceFee) ?
     0 :
     relayerServiceFee.toString().split('.')[1].length
   const roundDecimal = 10 ** decimalsPoint
-  const total = toBN(fromDecimals({ amount, decimals }))
+  const total = toBN(fromDecimals({amount, decimals}))
   const feePercent = total.mul(toBN(relayerServiceFee * roundDecimal)).div(toBN(roundDecimal * 100))
   const expense = toBN(toWei(gasPrices.fast.toString(), 'gwei')).mul(toBN(5e5))
   let desiredFee
   switch (currency) {
-  case 'eth': {
-    desiredFee = expense.add(feePercent)
-    break
-  }
-  default: {
-    desiredFee = expense.add(toBN(refund))
-      .mul(toBN(10 ** decimals))
-      .div(toBN(ethPrices[currency]))
-    desiredFee = desiredFee.add(feePercent)
-    break
-  }
+    case 'celo': {
+      desiredFee = expense.add(feePercent)
+      break
+    }
+    default: {
+      desiredFee = expense.add(toBN(refund))
+        .mul(toBN(10 ** decimals))
+        .div(toBN(ethPrices[currency]))
+      desiredFee = desiredFee.add(feePercent)
+      break
+    }
   }
   return desiredFee
 }
@@ -375,7 +377,7 @@ function calculateFee({ gasPrices, currency, amount, refund, ethPrices, relayerS
  * @param attempts
  * @param delay
  */
-function waitForTxReceipt({ txHash, attempts = 60, delay = 1000 }) {
+function waitForTxReceipt({txHash, attempts = 60, delay = 1000}) {
   return new Promise((resolve, reject) => {
     const checkForTx = async (txHash, retryAttempt = 0) => {
       const result = await web3.eth.getTransactionReceipt(txHash)
@@ -407,13 +409,13 @@ function parseNote(noteString) {
   const buf = Buffer.from(match.groups.note, 'hex')
   const nullifier = bigInt.leBuff2int(buf.slice(0, 31))
   const secret = bigInt.leBuff2int(buf.slice(31, 62))
-  const deposit = createDeposit({ nullifier, secret })
+  const deposit = createDeposit({nullifier, secret})
   const netId = Number(match.groups.netId)
 
-  return { currency: match.groups.currency, amount: match.groups.amount, netId, deposit }
+  return {currency: match.groups.currency, amount: match.groups.amount, netId, deposit}
 }
 
-async function loadDepositData({ deposit }) {
+async function loadDepositData({deposit}) {
   try {
     const eventWhenHappened = await tornado.getPastEvents('Deposit', {
       filter: {
@@ -426,18 +428,18 @@ async function loadDepositData({ deposit }) {
       throw new Error('There is no related deposit, the note is invalid')
     }
 
-    const { timestamp } = eventWhenHappened[0].returnValues
+    const {timestamp} = eventWhenHappened[0].returnValues
     const txHash = eventWhenHappened[0].transactionHash
     const isSpent = await tornado.methods.isSpent(deposit.nullifierHex).call()
     const receipt = await web3.eth.getTransactionReceipt(txHash)
 
-    return { timestamp, txHash, isSpent, from: receipt.from, commitment: deposit.commitmentHex }
+    return {timestamp, txHash, isSpent, from: receipt.from, commitment: deposit.commitmentHex}
   } catch (e) {
     console.error('loadDepositData', e)
   }
   return {}
 }
-async function loadWithdrawalData({ amount, currency, deposit }) {
+async function loadWithdrawalData({amount, currency, deposit}) {
   try {
     const events = await await tornado.getPastEvents('Withdrawal', {
       fromBlock: 0,
@@ -450,10 +452,10 @@ async function loadWithdrawalData({ amount, currency, deposit }) {
 
     const fee = withdrawEvent.returnValues.fee
     const decimals = config.deployments[`netId${netId}`][currency].decimals
-    const withdrawalAmount = toBN(fromDecimals({ amount, decimals })).sub(
+    const withdrawalAmount = toBN(fromDecimals({amount, decimals})).sub(
       toBN(fee)
     )
-    const { timestamp } = await web3.eth.getBlock(withdrawEvent.blockHash)
+    const {timestamp} = await web3.eth.getBlock(withdrawEvent.blockHash)
     return {
       amount: toDecimals(withdrawalAmount, decimals, 9),
       txHash: withdrawEvent.transactionHash,
@@ -470,13 +472,13 @@ async function loadWithdrawalData({ amount, currency, deposit }) {
 /**
  * Init web3, contracts, and snark
  */
-async function init({ rpc, noteNetId, currency = 'dai', amount = '100' }) {
+async function init({rpc, noteNetId, currency = 'dai', amount = '100'}) {
   let contractJson, erc20ContractJson, erc20tornadoJson, tornadoAddress, tokenAddress
   // TODO do we need this? should it work in browser really?
   if (inBrowser) {
     // Initialize using injected web3 (Metamask)
     // To assemble web version run `npm run browserify`
-    web3 = new Web3(window.web3.currentProvider, null, { transactionConfirmationBlocks: 1 })
+    web3 = new Web3(window.web3.currentProvider, null, {transactionConfirmationBlocks: 1})
     contractJson = await (await fetch('build/contracts/ETHTornado.json')).json()
     circuit = await (await fetch('build/circuits/withdraw.json')).json()
     proving_key = await (await fetch('build/circuits/withdraw_proving_key.bin')).arrayBuffer()
@@ -486,7 +488,8 @@ async function init({ rpc, noteNetId, currency = 'dai', amount = '100' }) {
     senderAccount = (await web3.eth.getAccounts())[0]
   } else {
     // Initialize from local node
-    web3 = new Web3(rpc, null, { transactionConfirmationBlocks: 1 })
+    web3 = new Web3(rpc)
+    kit = ContractKit.newKitFromWeb3(web3)
     contractJson = require('./build/contracts/ETHTornado.json')
     circuit = require('./build/circuits/withdraw.json')
     proving_key = fs.readFileSync('build/circuits/withdraw_proving_key.bin').buffer
@@ -495,10 +498,10 @@ async function init({ rpc, noteNetId, currency = 'dai', amount = '100' }) {
     TOKEN_AMOUNT = process.env.TOKEN_AMOUNT
     PRIVATE_KEY = process.env.PRIVATE_KEY
     if (PRIVATE_KEY) {
-      const account = web3.eth.accounts.privateKeyToAccount('0x' + PRIVATE_KEY)
-      web3.eth.accounts.wallet.add('0x' + PRIVATE_KEY)
-      web3.eth.defaultAccount = account.address
-      senderAccount = account.address
+      kit.connection.addAccount(PRIVATE_KEY)
+      const accounts = await kit.web3.eth.getAccounts()
+      kit.defaultAccount = accounts[0]
+      senderAccount = accounts[0]
     } else {
       console.log('Warning! PRIVATE_KEY not found. Please provide PRIVATE_KEY in .env file if you deposit')
     }
@@ -511,11 +514,11 @@ async function init({ rpc, noteNetId, currency = 'dai', amount = '100' }) {
   if (noteNetId && Number(noteNetId) !== netId) {
     throw new Error('This note is for a different network. Specify the --rpc option explicitly')
   }
-  isLocalRPC = netId > 42
+  isLocalRPC = netId > 42 && netId !== 44787
 
   if (isLocalRPC) {
-    tornadoAddress = currency === 'eth' ? contractJson.networks[netId].address : erc20tornadoJson.networks[netId].address
-    tokenAddress = currency !== 'eth' ? erc20ContractJson.networks[netId].address : null
+    tornadoAddress = erc20tornadoJson.networks[netId].address
+    tokenAddress = erc20ContractJson.networks[netId].address
     senderAccount = (await web3.eth.getAccounts())[0]
   } else {
     try {
@@ -529,13 +532,13 @@ async function init({ rpc, noteNetId, currency = 'dai', amount = '100' }) {
       process.exit(1)
     }
   }
-  tornado = new web3.eth.Contract(contractJson.abi, tornadoAddress)
-  erc20 = currency !== 'eth' ? new web3.eth.Contract(erc20ContractJson.abi, tokenAddress) : {}
+  tornado = new kit.web3.eth.Contract(contractJson.abi, tornadoAddress)
+  erc20 = new kit.web3.eth.Contract(erc20ContractJson.abi, tokenAddress)
 }
 
 async function main() {
   if (inBrowser) {
-    const instance = { currency: 'eth', amount: '0.1' }
+    const instance = {currency: 'celo', amount: '0.1'}
     await init(instance)
     window.deposit = async () => {
       await deposit(instance)
@@ -544,9 +547,9 @@ async function main() {
       const noteString = prompt('Enter the note to withdraw')
       const recipient = (await web3.eth.getAccounts())[0]
 
-      const { currency, amount, netId, deposit } = parseNote(noteString)
-      await init({ noteNetId: netId, currency, amount })
-      await withdraw({ deposit, currency, amount, recipient })
+      const {currency, amount, netId, deposit} = parseNote(noteString)
+      await init({noteNetId: netId, currency, amount})
+      await withdraw({deposit, currency, amount, recipient})
     }
   } else {
     program
@@ -557,34 +560,34 @@ async function main() {
       .description('Submit a deposit of specified currency and amount from default eth account and return the resulting note. The currency is one of (ETH|DAI|cDAI|USDC|cUSDC|USDT). The amount depends on currency, see config.js file or visit https://tornado.cash.')
       .action(async (currency, amount) => {
         currency = currency.toLowerCase()
-        await init({ rpc: program.rpc, currency, amount })
-        await deposit({ currency, amount })
+        await init({rpc: program.rpc, currency, amount})
+        await deposit({currency, amount})
       })
     program
       .command('withdraw <note> <recipient> [ETH_purchase]')
       .description('Withdraw a note to a recipient account using relayer or specified private key. You can exchange some of your deposit`s tokens to ETH during the withdrawal by specifing ETH_purchase (e.g. 0.01) to pay for gas in future transactions. Also see the --relayer option.')
       .action(async (noteString, recipient, refund) => {
-        const { currency, amount, netId, deposit } = parseNote(noteString)
-        await init({ rpc: program.rpc, noteNetId: netId, currency, amount })
-        await withdraw({ deposit, currency, amount, recipient, refund, relayerURL: program.relayer })
+        const {currency, amount, netId, deposit} = parseNote(noteString)
+        await init({rpc: program.rpc, noteNetId: netId, currency, amount})
+        await withdraw({deposit, currency, amount, recipient, refund, relayerURL: program.relayer})
       })
     program
       .command('balance <address> [token_address]')
       .description('Check ETH and ERC20 balance')
       .action(async (address, tokenAddress) => {
-        await init({ rpc: program.rpc })
-        await printETHBalance({ address, name: '' })
+        await init({rpc: program.rpc})
+        await printCELOBalance({address, name: ''})
         if (tokenAddress) {
-          await printERC20Balance({ address, name: '', tokenAddress })
+          await printERC20Balance({address, name: '', tokenAddress}, currency)
         }
       })
     program
       .command('compliance <note>')
       .description('Shows the deposit and withdrawal of the provided note. This might be necessary to show the origin of assets held in your withdrawal address.')
       .action(async (noteString) => {
-        const { currency, amount, netId, deposit } = parseNote(noteString)
-        await init({ rpc: program.rpc, noteNetId: netId, currency, amount })
-        const depositInfo = await loadDepositData({ deposit })
+        const {currency, amount, netId, deposit} = parseNote(noteString)
+        await init({rpc: program.rpc, noteNetId: netId, currency, amount})
+        const depositInfo = await loadDepositData({deposit})
         const depositDate = new Date(depositInfo.timestamp * 1000)
         console.log('\n=============Deposit=================')
         console.log('Deposit     :', amount, currency)
@@ -596,7 +599,7 @@ async function main() {
           console.log('The note was not spent')
         }
 
-        const withdrawInfo = await loadWithdrawalData({ amount, currency, deposit })
+        const withdrawInfo = await loadWithdrawalData({amount, currency, deposit})
         const withdrawalDate = new Date(withdrawInfo.timestamp * 1000)
         console.log('\n=============Withdrawal==============')
         console.log('Withdrawal  :', withdrawInfo.amount, currency)
@@ -611,20 +614,20 @@ async function main() {
       .description('Perform an automated test. It deposits and withdraws one ETH and one ERC20 note. Uses ganache.')
       .action(async () => {
         console.log('Start performing ETH deposit-withdraw test')
-        let currency = 'eth'
+        let currency = 'celo'
         let amount = '0.1'
-        await init({ rpc: program.rpc, currency, amount })
-        let noteString = await deposit({ currency, amount })
+        await init({rpc: program.rpc, currency, amount})
+        let noteString = await deposit({currency, amount})
         let parsedNote = parseNote(noteString)
-        await withdraw({ deposit: parsedNote.deposit, currency, amount, recipient: senderAccount, relayerURL: program.relayer })
+        await withdraw({deposit: parsedNote.deposit, currency, amount, recipient: senderAccount, relayerURL: program.relayer})
 
         console.log('\nStart performing DAI deposit-withdraw test')
         currency = 'dai'
         amount = '100'
-        await init({ rpc: program.rpc, currency, amount })
-        noteString = await deposit({ currency, amount })
-        ; (parsedNote = parseNote(noteString))
-        await withdraw({ deposit: parsedNote.deposit, currency, amount, recipient: senderAccount, refund: '0.02', relayerURL: program.relayer })
+        await init({rpc: program.rpc, currency, amount})
+        noteString = await deposit({currency, amount})
+          ; (parsedNote = parseNote(noteString))
+        await withdraw({deposit: parsedNote.deposit, currency, amount, recipient: senderAccount, refund: '0.02', relayerURL: program.relayer})
       })
     try {
       await program.parseAsync(process.argv)
