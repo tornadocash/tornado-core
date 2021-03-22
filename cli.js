@@ -145,7 +145,7 @@ async function generateMerkleProof(deposit) {
  * @param fee Relayer fee
  * @param refund Receive ether for exchanged tokens
  */
-async function generateProof({deposit, recipient, relayerAddress = 0, fee = 0, refund = 0}) {
+async function generateProof({deposit, recipient, rewardAccount = 0, fee = 0, refund = 0}) {
   // Compute merkle proof of our commitment
   const {root, path_elements, path_index} = await generateMerkleProof(deposit)
 
@@ -155,7 +155,7 @@ async function generateProof({deposit, recipient, relayerAddress = 0, fee = 0, r
     root: root,
     nullifierHash: deposit.nullifierHash,
     recipient: bigInt(recipient),
-    relayer: bigInt(relayerAddress),
+    relayer: bigInt(rewardAccount),
     fee: bigInt(fee),
     refund: bigInt(refund),
 
@@ -199,16 +199,16 @@ async function withdraw({deposit, currency, amount, recipient, relayerURL, refun
       throw new Error('ENS name resolving is not supported. Please provide DNS name of the relayer. See instuctions in README.md')
     }
     const relayerStatus = await axios.get(relayerURL + '/status')
-    const {relayerAddress, netId, gasPrices, ethPrices, relayerServiceFee} = relayerStatus.data
+    const {rewardAccount, netId, gasPrices, celoPrices, tornadoServiceFee} = relayerStatus.data
     assert(netId === await web3.eth.net.getId() || netId === '*', 'This relay is for different network')
-    console.log('Relay address: ', relayerAddress)
+    console.log('Reward address:', rewardAccount)
 
     const decimals = isLocalRPC ? 18 : config.deployments[`netId${netId}`][currency].decimals
-    const fee = calculateFee({gasPrices, currency, amount, refund, ethPrices, relayerServiceFee, decimals})
+    const fee = calculateFee({gasPrices, currency, amount, refund, celoPrices, tornadoServiceFee, decimals})
     if (fee.gt(fromDecimals({amount, decimals}))) {
       throw new Error('Too high refund')
     }
-    const {proof, args} = await generateProof({deposit, recipient, relayerAddress, fee, refund})
+    const {proof, args} = await generateProof({deposit, recipient, rewardAccount, fee, refund})
 
     console.log('Sending withdraw transaction through relay')
     try {
@@ -346,14 +346,14 @@ function getCurrentNetworkName() {
 
 }
 
-function calculateFee({gasPrices, currency, amount, refund, ethPrices, relayerServiceFee, decimals}) {
-  const decimalsPoint = Math.floor(relayerServiceFee) === Number(relayerServiceFee) ?
+function calculateFee({gasPrices, currency, amount, refund, celoPrices, tornadoServiceFee, decimals}) {
+  const decimalsPoint = Math.floor(tornadoServiceFee) === Number(tornadoServiceFee) ?
     0 :
-    relayerServiceFee.toString().split('.')[1].length
+    tornadoServiceFee.toString().split('.')[1].length
   const roundDecimal = 10 ** decimalsPoint
   const total = toBN(fromDecimals({amount, decimals}))
-  const feePercent = total.mul(toBN(relayerServiceFee * roundDecimal)).div(toBN(roundDecimal * 100))
-  const expense = toBN(toWei(gasPrices.fast.toString(), 'gwei')).mul(toBN(5e5))
+  const feePercent = total.mul(toBN(tornadoServiceFee * roundDecimal)).div(toBN(roundDecimal * 100))
+  const expense = toBN(toWei(gasPrices[1.3].toString(), 'gwei')).mul(toBN(5e5))
   let desiredFee
   switch (currency) {
     case 'celo': {
@@ -363,7 +363,7 @@ function calculateFee({gasPrices, currency, amount, refund, ethPrices, relayerSe
     default: {
       desiredFee = expense.add(toBN(refund))
         .mul(toBN(10 ** decimals))
-        .div(toBN(ethPrices[currency]))
+        .div(toBN(celoPrices[currency]))
       desiredFee = desiredFee.add(feePercent)
       break
     }

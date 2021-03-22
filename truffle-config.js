@@ -7,7 +7,7 @@ const Web3 = require('web3')
 const path = require('path')
 
 // Connect to the desired network
-const web3 = new Web3('https://alfajores-forno.celo-testnet.org')
+const web3 = new Web3(process.env.RPC_URL)
 const kit = ContractKit.newKitFromWeb3(web3)
 kit.addAccount(process.env.PRIVATE_KEY)
 // const kit = Kit.newKit('https://forno.celo.org') // mainnet endpoint
