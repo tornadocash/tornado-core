@@ -8314,14 +8314,15 @@
     "42220": {
       "events": {},
       "links": {
-        "Hasher": "0xD75035293f552aB5c33483f321DBf0DfA1C7c71d"
+        "Hasher": "0x5666A6E07d7b991489b1D0f53d37B664B312a1fE"
       },
-      "address": "0x89c8BB50BBa5B15B5044bdA870d1c34322B66171",
-      "transactionHash": "0xa26063a78dbf50e366559e0eaefd298963a7176b318d163a926d199dc9a1268e"
+      "address": "0xC8980dcBc56F5CEdd5356D190cB42125e16486eb",
+      "transactionHash": "0xbbd8007eb57eeeb98a12b9807e7d23d46e64b834d929967a9abf6cd0984d34bd"
     }
   },
   "schemaVersion": "3.3.4",
-  "updatedAt": "2021-04-02T22:30:43.183Z",
+  "updatedAt": "2021-04-02T22:56:11.626Z",
+  "networkType": "ethereum",
   "devdoc": {
     "methods": {
       "changeOperator(address)": {
