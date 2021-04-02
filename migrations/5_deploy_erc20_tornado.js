@@ -1,25 +1,28 @@
 /* global artifacts */
-require('dotenv').config({ path: '../.env' })
+require('dotenv').config({path: '../.env'})
 const ERC20Tornado = artifacts.require('ERC20Tornado')
 const Verifier = artifacts.require('Verifier')
+const FeeManager = artifacts.require('FeeManager')
 const hasherContract = artifacts.require('Hasher')
 const ERC20Mock = artifacts.require('ERC20Mock')
 
 
-module.exports = function(deployer, network, accounts) {
+module.exports = function (deployer, network, accounts) {
   return deployer.then(async () => {
-    const { MERKLE_TREE_HEIGHT, ERC20_TOKEN, TOKEN_AMOUNT } = process.env
+    const {MERKLE_TREE_HEIGHT, ERC20_TOKEN, TOKEN_AMOUNT} = process.env
     const verifier = await Verifier.deployed()
+    const feeManager = await FeeManager.deployed()
     const hasherInstance = await hasherContract.deployed()
     await ERC20Tornado.link(hasherContract, hasherInstance.address)
     let token = ERC20_TOKEN
-    if(token === '') {
+    if (token === '') {
       const tokenInstance = await deployer.deploy(ERC20Mock)
       token = tokenInstance.address
     }
     const tornado = await deployer.deploy(
       ERC20Tornado,
       verifier.address,
+      feeManager.address,
       TOKEN_AMOUNT,
       MERKLE_TREE_HEIGHT,
       accounts[0],

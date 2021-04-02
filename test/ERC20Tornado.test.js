@@ -9,10 +9,11 @@ const { toBN } = require('web3-utils')
 const { takeSnapshot, revertSnapshot } = require('../lib/ganacheHelper')
 
 const Tornado = artifacts.require('./ERC20Tornado.sol')
+const FeeManager = artifacts.require('./FeeManager.sol')
 const BadRecipient = artifacts.require('./BadRecipient.sol')
 const Token = artifacts.require('./ERC20Mock.sol')
 const USDTToken = artifacts.require('./IUSDT.sol')
-const { ETH_AMOUNT, TOKEN_AMOUNT, MERKLE_TREE_HEIGHT, ERC20_TOKEN } = process.env
+const { CELO_AMOUNT, TOKEN_AMOUNT, MERKLE_TREE_HEIGHT, ERC20_TOKEN } = process.env
 
 const websnarkUtils = require('websnark/src/utils')
 const buildGroth16 = require('websnark/src/groth16')
@@ -40,6 +41,7 @@ function generateDeposit() {
 
 contract('ERC20Tornado', accounts => {
   let tornado
+  let feeManager
   let token
   let usdtToken
   let badRecipient
@@ -50,8 +52,8 @@ contract('ERC20Tornado', accounts => {
   let snapshotId
   let prefix = 'test'
   let tree
-  const fee = bigInt(ETH_AMOUNT).shr(1) || bigInt(1e17)
-  const refund = ETH_AMOUNT || '1000000000000000000' // 1 ether
+  const fee = bigInt(CELO_AMOUNT).shr(1) || bigInt(1e17)
+  const refund = CELO_AMOUNT || '1000000000000000000' // 1 ether
   let recipient = getRandomRecipient()
   const relayer = accounts[1]
   let groth16
@@ -72,6 +74,7 @@ contract('ERC20Tornado', accounts => {
       token = await Token.deployed()
       await token.mint(sender, tokenDenomination)
     }
+    feeManager = await FeeManager.deployed()
     badRecipient = await BadRecipient.new()
     snapshotId = await takeSnapshot()
     groth16 = await buildGroth16()
@@ -190,6 +193,131 @@ contract('ERC20Tornado', accounts => {
       isSpent = await tornado.isSpent(toFixedHex(input.nullifierHash))
       isSpent.should.be.equal(true)
     })
+
+    it("should give fees when feeTo is set", async () => {
+      await feeManager.setFeeTo(accounts[5]);
+      const balanceFeeToBefore = await token.balanceOf(accounts[5]);
+
+      const deposit = generateDeposit();
+      const user = accounts[4];
+      await tree.insert(deposit.commitment);
+      await token.mint(user, tokenDenomination);
+
+      const balanceUserBefore = await token.balanceOf(user);
+      await token.approve(tornado.address, tokenDenomination, { from: user });
+      // Uncomment to measure gas usage
+      // let gas = await tornado.deposit.estimateGas(toBN(deposit.commitment.toString()), { from: user, gasPrice: '0' })
+      // console.log('deposit gas:', gas)
+      await tornado.deposit(toFixedHex(deposit.commitment), {
+        from: user,
+        gasPrice: "0",
+      });
+
+      const balanceUserAfter = await token.balanceOf(user);
+      balanceUserAfter.should.be.eq.BN(
+        toBN(balanceUserBefore).sub(toBN(tokenDenomination))
+      );
+
+      const { root, path_elements, path_index } = await tree.path(0);
+      // Circuit input
+      const input = stringifyBigInts({
+        // public
+        root,
+        nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
+        relayer,
+        recipient,
+        fee,
+        refund,
+
+        // private
+        nullifier: deposit.nullifier,
+        secret: deposit.secret,
+        pathElements: path_elements,
+        pathIndices: path_index,
+      });
+
+      const proofData = await websnarkUtils.genWitnessAndProve(
+        groth16,
+        input,
+        circuit,
+        proving_key
+      );
+      const { proof } = websnarkUtils.toSolidityInput(proofData);
+
+      const balanceTornadoBefore = await token.balanceOf(tornado.address);
+      const balanceRelayerBefore = await token.balanceOf(relayer);
+      const balanceRecieverBefore = await token.balanceOf(
+        toFixedHex(recipient, 20)
+      );
+
+      const ethBalanceOperatorBefore = await web3.eth.getBalance(operator);
+      const ethBalanceRecieverBefore = await web3.eth.getBalance(
+        toFixedHex(recipient, 20)
+      );
+      const ethBalanceRelayerBefore = await web3.eth.getBalance(relayer);
+      let isSpent = await tornado.isSpent(toFixedHex(input.nullifierHash));
+      isSpent.should.be.equal(false);
+      // Uncomment to measure gas usage
+      // gas = await tornado.withdraw.estimateGas(proof, publicSignals, { from: relayer, gasPrice: '0' })
+      // console.log('withdraw gas:', gas)
+      const args = [
+        toFixedHex(input.root),
+        toFixedHex(input.nullifierHash),
+        toFixedHex(input.recipient, 20),
+        toFixedHex(input.relayer, 20),
+        toFixedHex(input.fee),
+        toFixedHex(input.refund),
+      ];
+      const { logs } = await tornado.withdraw(proof, ...args, {
+        value: refund,
+        from: relayer,
+        gasPrice: "0",
+      });
+
+      const balanceTornadoAfter = await token.balanceOf(tornado.address);
+      const balanceRelayerAfter = await token.balanceOf(relayer);
+      const ethBalanceOperatorAfter = await web3.eth.getBalance(operator);
+      const balanceRecieverAfter = await token.balanceOf(
+        toFixedHex(recipient, 20)
+      );
+      const ethBalanceRecieverAfter = await web3.eth.getBalance(
+        toFixedHex(recipient, 20)
+      );
+      const ethBalanceRelayerAfter = await web3.eth.getBalance(relayer);
+      const balanceFeeToAfter = await token.balanceOf(accounts[5]);
+      const feeBN = toBN(fee.toString());
+      const feeToFee = toBN(tokenDenomination).div(toBN(200));
+      balanceTornadoAfter.should.be.eq.BN(
+        toBN(balanceTornadoBefore).sub(toBN(tokenDenomination))
+      );
+      balanceRelayerAfter.should.be.eq.BN(
+        toBN(balanceRelayerBefore).add(feeBN)
+      );
+      balanceRecieverAfter.should.be.eq.BN(
+        toBN(balanceRecieverBefore).add(
+          toBN(tokenDenomination).sub(feeBN).sub(feeToFee)
+        )
+      );
+
+      ethBalanceOperatorAfter.should.be.eq.BN(toBN(ethBalanceOperatorBefore));
+      ethBalanceRecieverAfter.should.be.eq.BN(
+        toBN(ethBalanceRecieverBefore).add(toBN(refund))
+      );
+      ethBalanceRelayerAfter.should.be.eq.BN(
+        toBN(ethBalanceRelayerBefore).sub(toBN(refund))
+      );
+
+      balanceFeeToAfter.sub(balanceFeeToBefore).should.be.eq.BN(feeToFee);
+
+      logs[0].event.should.be.equal("Withdrawal");
+      logs[0].args.nullifierHash.should.be.equal(
+        toFixedHex(input.nullifierHash)
+      );
+      logs[0].args.relayer.should.be.eq.BN(relayer);
+      logs[0].args.fee.should.be.eq.BN(feeBN);
+      isSpent = await tornado.isSpent(toFixedHex(input.nullifierHash));
+      isSpent.should.be.equal(true);
+    });
 
     it('should return refund to the relayer is case of fail', async () => {
       const deposit = generateDeposit()

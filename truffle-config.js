@@ -10,6 +10,7 @@ const path = require('path')
 const web3 = new Web3(process.env.RPC_URL)
 const kit = ContractKit.newKitFromWeb3(web3)
 kit.addAccount(process.env.PRIVATE_KEY)
+// const kit = Kit.newKit('https://forno.celo.org') // mainnet endpoint
 
 // const infuraKey = "fj4jll3k.....";
 //
@@ -84,11 +85,15 @@ module.exports = {
     // CELO networks
     alfajores: {
       provider: kit.web3.currentProvider,
-      network_id: 44787
+      network_id: 44787,
+      gas: 6000000,
+      gasPrice: utils.toWei('0.1', 'gwei'),
     },
     mainnet: {
       provider: kit.web3.currentProvider,
-      network_id: 42220
+      network_id: 42220,
+      gas: 6000000,
+      gasPrice: utils.toWei('0.1', 'gwei'),
     }
 
     // Useful for private networks

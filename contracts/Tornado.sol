@@ -1,14 +1,3 @@
-// https://tornado.cash
-/*
-* d888888P                                           dP              a88888b.                   dP
-*    88                                              88             d8'   `88                   88
-*    88    .d8888b. 88d888b. 88d888b. .d8888b. .d888b88 .d8888b.    88        .d8888b. .d8888b. 88d888b.
-*    88    88'  `88 88'  `88 88'  `88 88'  `88 88'  `88 88'  `88    88        88'  `88 Y8ooooo. 88'  `88
-*    88    88.  .88 88       88    88 88.  .88 88.  .88 88.  .88 dP Y8.   .88 88.  .88       88 88    88
-*    dP    `88888P' dP       dP    dP `88888P8 `88888P8 `88888P' 88  Y88888P' `88888P8 `88888P' dP    dP
-* ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
-*/
-
 pragma solidity 0.5.17;
 
 import "./MerkleTreeWithHistory.sol";
@@ -18,12 +7,17 @@ contract IVerifier {
   function verifyProof(bytes memory _proof, uint256[6] memory _input) public returns(bool);
 }
 
+contract IFeeManager {
+  function feeTo() external view returns (address);
+}
+
 contract Tornado is MerkleTreeWithHistory, ReentrancyGuard {
   uint256 public denomination;
   mapping(bytes32 => bool) public nullifierHashes;
   // we store all commitments just to prevent accidental deposits with the same commitment
   mapping(bytes32 => bool) public commitments;
   IVerifier public verifier;
+  IFeeManager public feeManager;
 
   // operator can update snark verification key
   // after the final trusted setup ceremony operator rights are supposed to be transferred to zero address
@@ -45,12 +39,14 @@ contract Tornado is MerkleTreeWithHistory, ReentrancyGuard {
   */
   constructor(
     IVerifier _verifier,
+    IFeeManager _feeManager,
     uint256 _denomination,
     uint32 _merkleTreeHeight,
     address _operator
   ) MerkleTreeWithHistory(_merkleTreeHeight) public {
     require(_denomination > 0, "denomination should be greater than 0");
     verifier = _verifier;
+    feeManager = _feeManager;
     operator = _operator;
     denomination = _denomination;
   }
@@ -87,12 +83,12 @@ contract Tornado is MerkleTreeWithHistory, ReentrancyGuard {
     require(verifier.verifyProof(_proof, [uint256(_root), uint256(_nullifierHash), uint256(_recipient), uint256(_relayer), _fee, _refund]), "Invalid withdraw proof");
 
     nullifierHashes[_nullifierHash] = true;
-    _processWithdraw(_recipient, _relayer, _fee, _refund);
+    _processWithdraw(_recipient, _relayer, _fee, _refund, feeManager.feeTo());
     emit Withdrawal(_recipient, _nullifierHash, _relayer, _fee);
   }
 
   /** @dev this function is defined in a child contract */
-  function _processWithdraw(address payable _recipient, address payable _relayer, uint256 _fee, uint256 _refund) internal;
+  function _processWithdraw(address payable _recipient, address payable _relayer, uint256 _relayer_fee, uint256 _refund, address _feeTo) internal;
 
   /** @dev whether a note is already spent */
   function isSpent(bytes32 _nullifierHash) public view returns(bool) {

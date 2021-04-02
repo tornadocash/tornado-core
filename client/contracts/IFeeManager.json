@@ -1,34 +1,23 @@
 {
-  "contractName": "IVerifier",
+  "contractName": "IFeeManager",
   "abi": [
     {
-      "constant": false,
-      "inputs": [
-        {
-          "internalType": "bytes",
-          "name": "_proof",
-          "type": "bytes"
-        },
-        {
-          "internalType": "uint256[6]",
-          "name": "_input",
-          "type": "uint256[6]"
-        }
-      ],
-      "name": "verifyProof",
+      "constant": true,
+      "inputs": [],
+      "name": "feeTo",
       "outputs": [
         {
-          "internalType": "bool",
+          "internalType": "address",
           "name": "",
-          "type": "bool"
+          "type": "address"
         }
       ],
       "payable": false,
-      "stateMutability": "nonpayable",
+      "stateMutability": "view",
       "type": "function"
     }
   ],
-  "metadata": "{\"compiler\":{\"version\":\"0.5.17+commit.d19bba13\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"constant\":false,\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"_proof\",\"type\":\"bytes\"},{\"internalType\":\"uint256[6]\",\"name\":\"_input\",\"type\":\"uint256[6]\"}],\"name\":\"verifyProof\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"methods\":{}},\"userdoc\":{\"methods\":{}}},\"settings\":{\"compilationTarget\":{\"/Users/brianli/dotfiles/tornado-core/contracts/Tornado.sol\":\"IVerifier\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/Users/brianli/dotfiles/tornado-core/contracts/MerkleTreeWithHistory.sol\":{\"keccak256\":\"0x671cc9268dd70c47d18795f7e37fc4df11763fcbcca026edcf163f4239036254\",\"urls\":[\"bzz-raw://9c36a207ed164b60a514eae89bfb15e5b4de4b346c4a89a7a1cb50a940bc699d\",\"dweb:/ipfs/QmbPEqFJAGMpYduLEFsbPazyBsYWcjRtpth8X26wCHALwk\"]},\"/Users/brianli/dotfiles/tornado-core/contracts/Tornado.sol\":{\"keccak256\":\"0xe7db8acb3efcecf95c7364f447ed1764c571dbf5090fd4641fe4668a965332eb\",\"urls\":[\"bzz-raw://45e790c247c38ed8ae473e3165c1148ea10a753cf6e9f9c8742394019be2aef6\",\"dweb:/ipfs/QmaGfk1ndvqur2NvCY3TWoKuorfBVShXeykKei18GDY582\"]},\"@openzeppelin/contracts/utils/ReentrancyGuard.sol\":{\"keccak256\":\"0xb63221b23818d622bfd83d18e0968307e4fcb7a35536bdceded76e1cf8349acd\",\"urls\":[\"bzz-raw://44e1e8c22362c4708a8c3362735f1465f5b05e2f7315e16c7010d694ce019d73\",\"dweb:/ipfs/QmWj9g8X1hxkXRre2kwkEjLBetjuzmSbWHD81bsSojnBkS\"]}},\"version\":1}",
+  "metadata": "{\"compiler\":{\"version\":\"0.5.17+commit.d19bba13\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"constant\":true,\"inputs\":[],\"name\":\"feeTo\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"methods\":{}},\"userdoc\":{\"methods\":{}}},\"settings\":{\"compilationTarget\":{\"/Users/brianli/dotfiles/tornado-core/contracts/Tornado.sol\":\"IFeeManager\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/Users/brianli/dotfiles/tornado-core/contracts/MerkleTreeWithHistory.sol\":{\"keccak256\":\"0x671cc9268dd70c47d18795f7e37fc4df11763fcbcca026edcf163f4239036254\",\"urls\":[\"bzz-raw://9c36a207ed164b60a514eae89bfb15e5b4de4b346c4a89a7a1cb50a940bc699d\",\"dweb:/ipfs/QmbPEqFJAGMpYduLEFsbPazyBsYWcjRtpth8X26wCHALwk\"]},\"/Users/brianli/dotfiles/tornado-core/contracts/Tornado.sol\":{\"keccak256\":\"0xe7db8acb3efcecf95c7364f447ed1764c571dbf5090fd4641fe4668a965332eb\",\"urls\":[\"bzz-raw://45e790c247c38ed8ae473e3165c1148ea10a753cf6e9f9c8742394019be2aef6\",\"dweb:/ipfs/QmaGfk1ndvqur2NvCY3TWoKuorfBVShXeykKei18GDY582\"]},\"@openzeppelin/contracts/utils/ReentrancyGuard.sol\":{\"keccak256\":\"0xb63221b23818d622bfd83d18e0968307e4fcb7a35536bdceded76e1cf8349acd\",\"urls\":[\"bzz-raw://44e1e8c22362c4708a8c3362735f1465f5b05e2f7315e16c7010d694ce019d73\",\"dweb:/ipfs/QmWj9g8X1hxkXRre2kwkEjLBetjuzmSbWHD81bsSojnBkS\"]}},\"version\":1}",
   "bytecode": "0x",
   "deployedBytecode": "0x",
   "sourceMap": "",
@@ -9169,7 +9158,7 @@
   },
   "networks": {},
   "schemaVersion": "3.3.4",
-  "updatedAt": "2021-04-02T22:21:29.535Z",
+  "updatedAt": "2021-04-02T22:21:29.527Z",
   "devdoc": {
     "methods": {}
   },

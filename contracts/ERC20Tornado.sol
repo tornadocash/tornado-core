@@ -15,15 +15,19 @@ import "./Tornado.sol";
 
 contract ERC20Tornado is Tornado {
   address public token;
+  uint256 public protocolFee;
 
   constructor(
     IVerifier _verifier,
+    IFeeManager _feeManager,
     uint256 _denomination,
     uint32 _merkleTreeHeight,
     address _operator,
     address _token
-  ) Tornado(_verifier, _denomination, _merkleTreeHeight, _operator) public {
+  ) Tornado(_verifier, _feeManager, _denomination, _merkleTreeHeight, _operator) public {
     token = _token;
+    // 0.5% fee
+    protocolFee = _denomination / 200;
   }
 
   function _processDeposit() internal {
@@ -31,12 +35,19 @@ contract ERC20Tornado is Tornado {
     _safeErc20TransferFrom(msg.sender, address(this), denomination);
   }
 
-  function _processWithdraw(address payable _recipient, address payable _relayer, uint256 _fee, uint256 _refund) internal {
+  function _processWithdraw(address payable _recipient, address payable _relayer, uint256 _relayer_fee, uint256 _refund, address _feeTo) internal {
     require(msg.value == _refund, "Incorrect refund amount received by the contract");
 
-    _safeErc20Transfer(_recipient, denomination - _fee);
-    if (_fee > 0) {
-      _safeErc20Transfer(_relayer, _fee);
+    bool feeOn = _feeTo != address(0);
+    if (feeOn) {
+      _safeErc20Transfer(_recipient, denomination - _relayer_fee - protocolFee);
+      _safeErc20Transfer(_feeTo, protocolFee);
+    } else {
+      _safeErc20Transfer(_recipient, denomination - _relayer_fee);
+    }
+
+    if (_relayer_fee > 0) {
+      _safeErc20Transfer(_relayer, _relayer_fee);
     }
 
     if (_refund > 0) {
