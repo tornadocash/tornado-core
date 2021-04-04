@@ -7,25 +7,25 @@
       "type": "fallback"
     }
   ],
-  "metadata": "{\"compiler\":{\"version\":\"0.5.17+commit.d19bba13\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"fallback\"}],\"devdoc\":{\"methods\":{}},\"userdoc\":{\"methods\":{}}},\"settings\":{\"compilationTarget\":{\"/Users/brianli/dotfiles/tornado-core/contracts/Mocks/BadRecipient.sol\":\"BadRecipient\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/Users/brianli/dotfiles/tornado-core/contracts/Mocks/BadRecipient.sol\":{\"keccak256\":\"0x0329be02a9fec6e4fbd93d8c98887acd5d46bb09af18298232fc2fe72838ca03\",\"urls\":[\"bzz-raw://c4670e578c58b2326efebcba1a2dd2ee0bf6d70c26f84cdaa3e81f67bd0e360d\",\"dweb:/ipfs/QmbVoxKmmrWzjdnLfJkxhWe6UyjrpCFYjMxRP6uRCfGi7r\"]}},\"version\":1}",
-  "bytecode": "0x6080604052348015600f57600080fd5b50609c80601d6000396000f3fe6080604052348015600f57600080fd5b5060405162461bcd60e51b815260040180806020018281038252602181526020018060476021913960400191505060405180910390fdfe7468697320636f6e747261637420646f6573206e6f742061636365707420455448a265627a7a723158206626eee46135a11b00680288c5ee8c30dfbb35f740cb59e3c43a3c6e983a8cb764736f6c63430005110032",
-  "deployedBytecode": "0x6080604052348015600f57600080fd5b5060405162461bcd60e51b815260040180806020018281038252602181526020018060476021913960400191505060405180910390fdfe7468697320636f6e747261637420646f6573206e6f742061636365707420455448a265627a7a723158206626eee46135a11b00680288c5ee8c30dfbb35f740cb59e3c43a3c6e983a8cb764736f6c63430005110032",
+  "metadata": "{\"compiler\":{\"version\":\"0.5.17+commit.d19bba13\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"fallback\"}],\"devdoc\":{\"methods\":{}},\"userdoc\":{\"methods\":{}}},\"settings\":{\"compilationTarget\":{\"/home/home/dotfiles/tornado-core/contracts/Mocks/BadRecipient.sol\":\"BadRecipient\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/home/home/dotfiles/tornado-core/contracts/Mocks/BadRecipient.sol\":{\"keccak256\":\"0x0329be02a9fec6e4fbd93d8c98887acd5d46bb09af18298232fc2fe72838ca03\",\"urls\":[\"bzz-raw://c4670e578c58b2326efebcba1a2dd2ee0bf6d70c26f84cdaa3e81f67bd0e360d\",\"dweb:/ipfs/QmbVoxKmmrWzjdnLfJkxhWe6UyjrpCFYjMxRP6uRCfGi7r\"]}},\"version\":1}",
+  "bytecode": "0x6080604052348015600f57600080fd5b50609c80601d6000396000f3fe6080604052348015600f57600080fd5b5060405162461bcd60e51b815260040180806020018281038252602181526020018060476021913960400191505060405180910390fdfe7468697320636f6e747261637420646f6573206e6f742061636365707420455448a265627a7a7231582032df8468882a84a1577428256b3075571818622e500ee7132ec9e216f517c73064736f6c63430005110032",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b5060405162461bcd60e51b815260040180806020018281038252602181526020018060476021913960400191505060405180910390fdfe7468697320636f6e747261637420646f6573206e6f742061636365707420455448a265627a7a7231582032df8468882a84a1577428256b3075571818622e500ee7132ec9e216f517c73064736f6c63430005110032",
   "sourceMap": "25:110:4:-;;;;8:9:-1;5:2;;;30:1;27;20:12;5:2;25:110:4;;;;;;;",
   "deployedSourceMap": "25:110:4:-;;;;8:9:-1;5:2;;;30:1;27;20:12;5:2;-1:-1;77:51:4;;-1:-1:-1;;;77:51:4;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;",
   "source": "pragma solidity ^0.5.0;\n\ncontract BadRecipient {\n  function() external {\n    require(false, \"this contract does not accept ETH\");\n  }\n}\n",
-  "sourcePath": "/Users/brianli/dotfiles/tornado-core/contracts/Mocks/BadRecipient.sol",
+  "sourcePath": "/home/home/dotfiles/tornado-core/contracts/Mocks/BadRecipient.sol",
   "ast": {
-    "absolutePath": "/Users/brianli/dotfiles/tornado-core/contracts/Mocks/BadRecipient.sol",
+    "absolutePath": "/home/home/dotfiles/tornado-core/contracts/Mocks/BadRecipient.sol",
     "exportedSymbols": {
       "BadRecipient": [
-        763
+        754
       ]
     },
-    "id": 764,
+    "id": 755,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 753,
+        "id": 744,
         "literals": [
           "solidity",
           "^",
@@ -41,16 +41,16 @@
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": true,
-        "id": 763,
+        "id": 754,
         "linearizedBaseContracts": [
-          763
+          754
         ],
         "name": "BadRecipient",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "body": {
-              "id": 761,
+              "id": 752,
               "nodeType": "Block",
               "src": "71:62:4",
               "statements": [
@@ -61,7 +61,7 @@
                       {
                         "argumentTypes": null,
                         "hexValue": "66616c7365",
-                        "id": 757,
+                        "id": 748,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
@@ -79,7 +79,7 @@
                       {
                         "argumentTypes": null,
                         "hexValue": "7468697320636f6e747261637420646f6573206e6f742061636365707420455448",
-                        "id": 758,
+                        "id": 749,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
@@ -106,21 +106,21 @@
                           "typeString": "literal_string \"this contract does not accept ETH\""
                         }
                       ],
-                      "id": 756,
+                      "id": 747,
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        3263,
-                        3264
+                        3273,
+                        3274
                       ],
-                      "referencedDeclaration": 3264,
+                      "referencedDeclaration": 3274,
                       "src": "77:7:4",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
                         "typeString": "function (bool,string memory) pure"
                       }
                     },
-                    "id": 759,
+                    "id": 750,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -134,39 +134,39 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 760,
+                  "id": 751,
                   "nodeType": "ExpressionStatement",
                   "src": "77:51:4"
                 }
               ]
             },
             "documentation": null,
-            "id": 762,
+            "id": 753,
             "implemented": true,
             "kind": "fallback",
             "modifiers": [],
             "name": "",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 754,
+              "id": 745,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "59:2:4"
             },
             "returnParameters": {
-              "id": 755,
+              "id": 746,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "71:0:4"
             },
-            "scope": 763,
+            "scope": 754,
             "src": "51:82:4",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
           }
         ],
-        "scope": 764,
+        "scope": 755,
         "src": "25:110:4"
       }
     ],
@@ -174,10 +174,10 @@
   },
   "legacyAST": {
     "attributes": {
-      "absolutePath": "/Users/brianli/dotfiles/tornado-core/contracts/Mocks/BadRecipient.sol",
+      "absolutePath": "/home/home/dotfiles/tornado-core/contracts/Mocks/BadRecipient.sol",
       "exportedSymbols": {
         "BadRecipient": [
-          763
+          754
         ]
       }
     },
@@ -191,7 +191,7 @@
             ".0"
           ]
         },
-        "id": 753,
+        "id": 744,
         "name": "PragmaDirective",
         "src": "0:23:4"
       },
@@ -207,10 +207,10 @@
           "documentation": null,
           "fullyImplemented": true,
           "linearizedBaseContracts": [
-            763
+            754
           ],
           "name": "BadRecipient",
-          "scope": 764
+          "scope": 755
         },
         "children": [
           {
@@ -223,7 +223,7 @@
                 null
               ],
               "name": "",
-              "scope": 763,
+              "scope": 754,
               "stateMutability": "nonpayable",
               "superFunction": null,
               "visibility": "external"
@@ -236,7 +236,7 @@
                   ]
                 },
                 "children": [],
-                "id": 754,
+                "id": 745,
                 "name": "ParameterList",
                 "src": "59:2:4"
               },
@@ -247,7 +247,7 @@
                   ]
                 },
                 "children": [],
-                "id": 755,
+                "id": 746,
                 "name": "ParameterList",
                 "src": "71:0:4"
               },
@@ -283,14 +283,14 @@
                                 }
                               ],
                               "overloadedDeclarations": [
-                                3263,
-                                3264
+                                3273,
+                                3274
                               ],
-                              "referencedDeclaration": 3264,
+                              "referencedDeclaration": 3274,
                               "type": "function (bool,string memory) pure",
                               "value": "require"
                             },
-                            "id": 756,
+                            "id": 747,
                             "name": "Identifier",
                             "src": "77:7:4"
                           },
@@ -307,7 +307,7 @@
                               "type": "bool",
                               "value": "false"
                             },
-                            "id": 757,
+                            "id": 748,
                             "name": "Literal",
                             "src": "85:5:4"
                           },
@@ -324,37 +324,37 @@
                               "type": "literal_string \"this contract does not accept ETH\"",
                               "value": "this contract does not accept ETH"
                             },
-                            "id": 758,
+                            "id": 749,
                             "name": "Literal",
                             "src": "92:35:4"
                           }
                         ],
-                        "id": 759,
+                        "id": 750,
                         "name": "FunctionCall",
                         "src": "77:51:4"
                       }
                     ],
-                    "id": 760,
+                    "id": 751,
                     "name": "ExpressionStatement",
                     "src": "77:51:4"
                   }
                 ],
-                "id": 761,
+                "id": 752,
                 "name": "Block",
                 "src": "71:62:4"
               }
             ],
-            "id": 762,
+            "id": 753,
             "name": "FunctionDefinition",
             "src": "51:82:4"
           }
         ],
-        "id": 763,
+        "id": 754,
         "name": "ContractDefinition",
         "src": "25:110:4"
       }
     ],
-    "id": 764,
+    "id": 755,
     "name": "SourceUnit",
     "src": "0:136:4"
   },
@@ -364,7 +364,7 @@
   },
   "networks": {},
   "schemaVersion": "3.3.4",
-  "updatedAt": "2021-03-14T02:18:33.084Z",
+  "updatedAt": "2021-04-04T20:21:29.863Z",
   "devdoc": {
     "methods": {}
   },

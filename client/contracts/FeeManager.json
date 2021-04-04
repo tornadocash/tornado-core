@@ -74,15 +74,15 @@
       "type": "function"
     }
   ],
-  "metadata": "{\"compiler\":{\"version\":\"0.5.17+commit.d19bba13\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_feeToSetter\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"constant\":true,\"inputs\":[],\"name\":\"feeTo\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"feeToSetter\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_feeTo\",\"type\":\"address\"}],\"name\":\"setFeeTo\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_feeToSetter\",\"type\":\"address\"}],\"name\":\"setFeeToSetter\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"methods\":{}},\"userdoc\":{\"methods\":{}}},\"settings\":{\"compilationTarget\":{\"/Users/brianli/dotfiles/tornado-core/contracts/FeeManager.sol\":\"FeeManager\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/Users/brianli/dotfiles/tornado-core/contracts/FeeManager.sol\":{\"keccak256\":\"0x4d54892e74f27c38f1e40bcdaf44a67aa65e2692b30246850b8c32491f1b3d02\",\"urls\":[\"bzz-raw://ca5bd8d25a99b03a29a764ce6f887dd1022b50b9308ef705be0d71ad79687f08\",\"dweb:/ipfs/QmSYMnxLnn4HGNy32YHDEs8rNkNwV6h4xsvDbKCv3vAMMt\"]}},\"version\":1}",
-  "bytecode": "0x608060405234801561001057600080fd5b506040516102673803806102678339818101604052602081101561003357600080fd5b5051600180546001600160a01b0319166001600160a01b03909216919091179055610204806100636000396000f3fe608060405234801561001057600080fd5b506004361061004c5760003560e01c8063017e7e5814610051578063094b741514610075578063a2e74af61461007d578063f46901ed146100a5575b600080fd5b6100596100cb565b604080516001600160a01b039092168252519081900360200190f35b6100596100da565b6100a36004803603602081101561009357600080fd5b50356001600160a01b03166100e9565b005b6100a3600480360360208110156100bb57600080fd5b50356001600160a01b031661015c565b6000546001600160a01b031681565b6001546001600160a01b031681565b6001546001600160a01b0316331461013a576040805162461bcd60e51b815260206004820152600f60248201526e2837b7b31d102327a92124a22222a760891b604482015290519081900360640190fd5b600180546001600160a01b0319166001600160a01b0392909216919091179055565b6001546001600160a01b031633146101ad576040805162461bcd60e51b815260206004820152600f60248201526e2837b7b31d102327a92124a22222a760891b604482015290519081900360640190fd5b600080546001600160a01b0319166001600160a01b039290921691909117905556fea265627a7a72315820a0b1c5e2571525fdf052a571d7a5a1b3837ca98305095102ec0d6d1d879183b264736f6c63430005110032",
-  "deployedBytecode": "0x608060405234801561001057600080fd5b506004361061004c5760003560e01c8063017e7e5814610051578063094b741514610075578063a2e74af61461007d578063f46901ed146100a5575b600080fd5b6100596100cb565b604080516001600160a01b039092168252519081900360200190f35b6100596100da565b6100a36004803603602081101561009357600080fd5b50356001600160a01b03166100e9565b005b6100a3600480360360208110156100bb57600080fd5b50356001600160a01b031661015c565b6000546001600160a01b031681565b6001546001600160a01b031681565b6001546001600160a01b0316331461013a576040805162461bcd60e51b815260206004820152600f60248201526e2837b7b31d102327a92124a22222a760891b604482015290519081900360640190fd5b600180546001600160a01b0319166001600160a01b0392909216919091179055565b6001546001600160a01b031633146101ad576040805162461bcd60e51b815260206004820152600f60248201526e2837b7b31d102327a92124a22222a760891b604482015290519081900360640190fd5b600080546001600160a01b0319166001600160a01b039290921691909117905556fea265627a7a72315820a0b1c5e2571525fdf052a571d7a5a1b3837ca98305095102ec0d6d1d879183b264736f6c63430005110032",
+  "metadata": "{\"compiler\":{\"version\":\"0.5.17+commit.d19bba13\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_feeToSetter\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"constant\":true,\"inputs\":[],\"name\":\"feeTo\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"feeToSetter\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_feeTo\",\"type\":\"address\"}],\"name\":\"setFeeTo\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_feeToSetter\",\"type\":\"address\"}],\"name\":\"setFeeToSetter\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"methods\":{}},\"userdoc\":{\"methods\":{}}},\"settings\":{\"compilationTarget\":{\"/home/home/dotfiles/tornado-core/contracts/FeeManager.sol\":\"FeeManager\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/home/home/dotfiles/tornado-core/contracts/FeeManager.sol\":{\"keccak256\":\"0x4d54892e74f27c38f1e40bcdaf44a67aa65e2692b30246850b8c32491f1b3d02\",\"urls\":[\"bzz-raw://ca5bd8d25a99b03a29a764ce6f887dd1022b50b9308ef705be0d71ad79687f08\",\"dweb:/ipfs/QmSYMnxLnn4HGNy32YHDEs8rNkNwV6h4xsvDbKCv3vAMMt\"]}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b506040516102673803806102678339818101604052602081101561003357600080fd5b5051600180546001600160a01b0319166001600160a01b03909216919091179055610204806100636000396000f3fe608060405234801561001057600080fd5b506004361061004c5760003560e01c8063017e7e5814610051578063094b741514610075578063a2e74af61461007d578063f46901ed146100a5575b600080fd5b6100596100cb565b604080516001600160a01b039092168252519081900360200190f35b6100596100da565b6100a36004803603602081101561009357600080fd5b50356001600160a01b03166100e9565b005b6100a3600480360360208110156100bb57600080fd5b50356001600160a01b031661015c565b6000546001600160a01b031681565b6001546001600160a01b031681565b6001546001600160a01b0316331461013a576040805162461bcd60e51b815260206004820152600f60248201526e2837b7b31d102327a92124a22222a760891b604482015290519081900360640190fd5b600180546001600160a01b0319166001600160a01b0392909216919091179055565b6001546001600160a01b031633146101ad576040805162461bcd60e51b815260206004820152600f60248201526e2837b7b31d102327a92124a22222a760891b604482015290519081900360640190fd5b600080546001600160a01b0319166001600160a01b039290921691909117905556fea265627a7a723158206a757806aa409461ff72f1edf5093477492e6d063b792779acb98460ba01efdf64736f6c63430005110032",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b506004361061004c5760003560e01c8063017e7e5814610051578063094b741514610075578063a2e74af61461007d578063f46901ed146100a5575b600080fd5b6100596100cb565b604080516001600160a01b039092168252519081900360200190f35b6100596100da565b6100a36004803603602081101561009357600080fd5b50356001600160a01b03166100e9565b005b6100a3600480360360208110156100bb57600080fd5b50356001600160a01b031661015c565b6000546001600160a01b031681565b6001546001600160a01b031681565b6001546001600160a01b0316331461013a576040805162461bcd60e51b815260206004820152600f60248201526e2837b7b31d102327a92124a22222a760891b604482015290519081900360640190fd5b600180546001600160a01b0319166001600160a01b0392909216919091179055565b6001546001600160a01b031633146101ad576040805162461bcd60e51b815260206004820152600f60248201526e2837b7b31d102327a92124a22222a760891b604482015290519081900360640190fd5b600080546001600160a01b0319166001600160a01b039290921691909117905556fea265627a7a723158206a757806aa409461ff72f1edf5093477492e6d063b792779acb98460ba01efdf64736f6c63430005110032",
   "sourceMap": "25:453:1:-;;;104:78;8:9:-1;5:2;;;30:1;27;20:12;5:2;104:78:1;;;;;;;;;;;;;;;13:2:-1;8:3;5:11;2:2;;;29:1;26;19:12;2:2;-1:-1;104:78:1;151:11;:26;;-1:-1:-1;;;;;;151:26:1;-1:-1:-1;;;;;151:26:1;;;;;;;;;25:453;;;-1:-1:-1;25:453:1;;",
   "deployedSourceMap": "25:453:1:-;;;;8:9:-1;5:2;;;30:1;27;20:12;5:2;25:453:1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;49:20;;;:::i;:::-;;;;-1:-1:-1;;;;;49:20:1;;;;;;;;;;;;;;73:26;;;:::i;321:155::-;;;;;;13:2:-1;8:3;5:11;2:2;;;29:1;26;19:12;2:2;-1:-1;321:155:1;-1:-1:-1;;;;;321:155:1;;:::i;:::-;;186:131;;;;;;13:2:-1;8:3;5:11;2:2;;;29:1;26;19:12;2:2;-1:-1;186:131:1;-1:-1:-1;;;;;186:131:1;;:::i;49:20::-;;;-1:-1:-1;;;;;49:20:1;;:::o;73:26::-;;;-1:-1:-1;;;;;73:26:1;;:::o;321:155::-;406:11;;-1:-1:-1;;;;;406:11:1;392:10;:25;384:53;;;;;-1:-1:-1;;;384:53:1;;;;;;;;;;;;-1:-1:-1;;;384:53:1;;;;;;;;;;;;;;;445:11;:26;;-1:-1:-1;;;;;;445:26:1;-1:-1:-1;;;;;445:26:1;;;;;;;;;;321:155::o;186:131::-;259:11;;-1:-1:-1;;;;;259:11:1;245:10;:25;237:53;;;;;-1:-1:-1;;;237:53:1;;;;;;;;;;;;-1:-1:-1;;;237:53:1;;;;;;;;;;;;;;;298:5;:14;;-1:-1:-1;;;;;;298:14:1;-1:-1:-1;;;;;298:14:1;;;;;;;;;;186:131::o",
   "source": "pragma solidity 0.5.17;\n\ncontract FeeManager {\n  address public feeTo;\n  address public feeToSetter;\n\n  constructor(address _feeToSetter) public {\n    feeToSetter = _feeToSetter;\n  }\n\n  function setFeeTo(address _feeTo) external {\n      require(msg.sender == feeToSetter, 'Poof: FORBIDDEN');\n      feeTo = _feeTo;\n  }\n\n  function setFeeToSetter(address _feeToSetter) external {\n      require(msg.sender == feeToSetter, 'Poof: FORBIDDEN');\n      feeToSetter = _feeToSetter;\n  }\n}\n",
-  "sourcePath": "/Users/brianli/dotfiles/tornado-core/contracts/FeeManager.sol",
+  "sourcePath": "/home/home/dotfiles/tornado-core/contracts/FeeManager.sol",
   "ast": {
-    "absolutePath": "/Users/brianli/dotfiles/tornado-core/contracts/FeeManager.sol",
+    "absolutePath": "/home/home/dotfiles/tornado-core/contracts/FeeManager.sol",
     "exportedSymbols": {
       "FeeManager": [
         319
@@ -304,7 +304,7 @@
                             "name": "msg",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 1068,
+                            "referencedDeclaration": 3270,
                             "src": "245:3:1",
                             "typeDescriptions": {
                               "typeIdentifier": "t_magic_message",
@@ -380,10 +380,10 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        1071,
-                        1072
+                        3273,
+                        3274
                       ],
-                      "referencedDeclaration": 1072,
+                      "referencedDeclaration": 3274,
                       "src": "237:7:1",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
@@ -538,7 +538,7 @@
                             "name": "msg",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 1068,
+                            "referencedDeclaration": 3270,
                             "src": "392:3:1",
                             "typeDescriptions": {
                               "typeIdentifier": "t_magic_message",
@@ -614,10 +614,10 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        1071,
-                        1072
+                        3273,
+                        3274
                       ],
-                      "referencedDeclaration": 1072,
+                      "referencedDeclaration": 3274,
                       "src": "384:7:1",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
@@ -752,7 +752,7 @@
   },
   "legacyAST": {
     "attributes": {
-      "absolutePath": "/Users/brianli/dotfiles/tornado-core/contracts/FeeManager.sol",
+      "absolutePath": "/home/home/dotfiles/tornado-core/contracts/FeeManager.sol",
       "exportedSymbols": {
         "FeeManager": [
           319
@@ -1061,10 +1061,10 @@
                                 }
                               ],
                               "overloadedDeclarations": [
-                                1071,
-                                1072
+                                3273,
+                                3274
                               ],
-                              "referencedDeclaration": 1072,
+                              "referencedDeclaration": 3274,
                               "type": "function (bool,string memory) pure",
                               "value": "require"
                             },
@@ -1105,7 +1105,7 @@
                                       "overloadedDeclarations": [
                                         null
                                       ],
-                                      "referencedDeclaration": 1068,
+                                      "referencedDeclaration": 3270,
                                       "type": "msg",
                                       "value": "msg"
                                     },
@@ -1318,10 +1318,10 @@
                                 }
                               ],
                               "overloadedDeclarations": [
-                                1071,
-                                1072
+                                3273,
+                                3274
                               ],
-                              "referencedDeclaration": 1072,
+                              "referencedDeclaration": 3274,
                               "type": "function (bool,string memory) pure",
                               "value": "require"
                             },
@@ -1362,7 +1362,7 @@
                                       "overloadedDeclarations": [
                                         null
                                       ],
-                                      "referencedDeclaration": 1068,
+                                      "referencedDeclaration": 3270,
                                       "type": "msg",
                                       "value": "msg"
                                     },
@@ -1500,12 +1500,18 @@
     "42220": {
       "events": {},
       "links": {},
-      "address": "0x7d21531Adf9d029Acc8C5b225d77Ce2a819887B6",
-      "transactionHash": "0x1e7d99d96bbf8bce1e1fb870088e2cd6cbdc27a87e8274d3cdb72042686b285d"
+      "address": "0x4f5a2d44Cdd06fEcEF8BEb064d2F83dC35718AA6",
+      "transactionHash": "0xffcbb19dd7ae7801ba05d692c21f2e2ccc3622c46f6b8c186b0dfafae619dd92"
+    },
+    "44787": {
+      "events": {},
+      "links": {},
+      "address": "0x607f385971537CB71ec87C4592Cd1b7a6eaE73B9",
+      "transactionHash": "0x8097e52c23604831ededea9f0b5bd3b38fe4c4bebee56aaf42a7145c2a476767"
     }
   },
   "schemaVersion": "3.3.4",
-  "updatedAt": "2021-04-02T22:56:11.656Z",
+  "updatedAt": "2021-04-04T21:13:13.401Z",
   "networkType": "ethereum",
   "devdoc": {
     "methods": {}
