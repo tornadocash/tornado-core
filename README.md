@@ -1,6 +1,6 @@
 # Poof Cash 
 
-Poof Cash is a non-custodial Ethereum and ERC20 privacy solution based on zkSNARKs. It improves transaction privacy by breaking the on-chain link between the recipient and destination addresses. It uses a smart contract that accepts ERC20 deposits that can be withdrawn by a different address. Whenever ERC20 is withdrawn by the new address, there is no way to link the withdrawal to the deposit, ensuring complete privacy.
+Poof Cash is a non-custodial Celo and ERC20 privacy solution based on zkSNARKs. It improves transaction privacy by breaking the on-chain link between the recipient and destination addresses. It uses a smart contract that accepts ERC20 deposits that can be withdrawn by a different address. Whenever ERC20 is withdrawn by the new address, there is no way to link the withdrawal to the deposit, ensuring complete privacy.
 
 To make a deposit user generates a secret and sends its hash (called a commitment) along with the deposit amount to the Poof smart contract. The contract accepts the deposit and adds the commitment to its list of deposits.
 

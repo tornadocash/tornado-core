@@ -196,6 +196,7 @@ contract('ERC20Tornado', accounts => {
 
     it("should give fees when feeTo is set", async () => {
       await feeManager.setFeeTo(accounts[5]);
+      await feeManager.setProtocolFeeDivisor(200);
       const balanceFeeToBefore = await token.balanceOf(accounts[5]);
 
       const deposit = generateDeposit();

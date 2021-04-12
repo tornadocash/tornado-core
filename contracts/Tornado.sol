@@ -9,6 +9,7 @@ contract IVerifier {
 
 contract IFeeManager {
   function feeTo() external view returns (address);
+  function protocolFeeDivisor() external view returns (uint256);
 }
 
 contract Tornado is MerkleTreeWithHistory, ReentrancyGuard {
@@ -83,12 +84,12 @@ contract Tornado is MerkleTreeWithHistory, ReentrancyGuard {
     require(verifier.verifyProof(_proof, [uint256(_root), uint256(_nullifierHash), uint256(_recipient), uint256(_relayer), _fee, _refund]), "Invalid withdraw proof");
 
     nullifierHashes[_nullifierHash] = true;
-    _processWithdraw(_recipient, _relayer, _fee, _refund, feeManager.feeTo());
+    _processWithdraw(_recipient, _relayer, _fee, _refund);
     emit Withdrawal(_recipient, _nullifierHash, _relayer, _fee);
   }
 
   /** @dev this function is defined in a child contract */
-  function _processWithdraw(address payable _recipient, address payable _relayer, uint256 _relayer_fee, uint256 _refund, address _feeTo) internal;
+  function _processWithdraw(address payable _recipient, address payable _relayer, uint256 _relayer_fee, uint256 _refund) internal;
 
   /** @dev whether a note is already spent */
   function isSpent(bytes32 _nullifierHash) public view returns(bool) {

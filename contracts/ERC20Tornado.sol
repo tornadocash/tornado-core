@@ -12,10 +12,10 @@
 pragma solidity 0.5.17;
 
 import "./Tornado.sol";
+import "./SafeMath.sol";
 
 contract ERC20Tornado is Tornado {
   address public token;
-  uint256 public protocolFee;
 
   constructor(
     IVerifier _verifier,
@@ -26,8 +26,6 @@ contract ERC20Tornado is Tornado {
     address _token
   ) Tornado(_verifier, _feeManager, _denomination, _merkleTreeHeight, _operator) public {
     token = _token;
-    // 0.5% fee
-    protocolFee = _denomination / 200;
   }
 
   function _processDeposit() internal {
@@ -35,13 +33,17 @@ contract ERC20Tornado is Tornado {
     _safeErc20TransferFrom(msg.sender, address(this), denomination);
   }
 
-  function _processWithdraw(address payable _recipient, address payable _relayer, uint256 _relayer_fee, uint256 _refund, address _feeTo) internal {
+  function _processWithdraw(address payable _recipient, address payable _relayer, uint256 _relayer_fee, uint256 _refund) internal {
     require(msg.value == _refund, "Incorrect refund amount received by the contract");
 
-    bool feeOn = _feeTo != address(0);
+    address feeTo = feeManager.feeTo();
+    uint256 protocolFeeDivisor = feeManager.protocolFeeDivisor();
+
+    bool feeOn = feeTo != address(0) && protocolFeeDivisor != 0;
     if (feeOn) {
+      uint256 protocolFee = SafeMath.div(denomination, protocolFeeDivisor);
       _safeErc20Transfer(_recipient, denomination - _relayer_fee - protocolFee);
-      _safeErc20Transfer(_feeTo, protocolFee);
+      _safeErc20Transfer(feeTo, protocolFee);
     } else {
       _safeErc20Transfer(_recipient, denomination - _relayer_fee);
     }

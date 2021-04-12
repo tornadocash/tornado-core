@@ -16,6 +16,21 @@
     {
       "constant": true,
       "inputs": [],
+      "name": "MIN_PROTOCOL_FEE_DIVISOR",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
       "name": "feeTo",
       "outputs": [
         {
@@ -37,6 +52,21 @@
           "internalType": "address",
           "name": "",
           "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "protocolFeeDivisor",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
         }
       ],
       "payable": false,
@@ -72,34 +102,49 @@
       "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_protocolFeeDivisor",
+          "type": "uint256"
+        }
+      ],
+      "name": "setProtocolFeeDivisor",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
     }
   ],
-  "metadata": "{\"compiler\":{\"version\":\"0.5.17+commit.d19bba13\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_feeToSetter\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"constant\":true,\"inputs\":[],\"name\":\"feeTo\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"feeToSetter\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_feeTo\",\"type\":\"address\"}],\"name\":\"setFeeTo\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_feeToSetter\",\"type\":\"address\"}],\"name\":\"setFeeToSetter\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"methods\":{}},\"userdoc\":{\"methods\":{}}},\"settings\":{\"compilationTarget\":{\"/home/home/dotfiles/tornado-core/contracts/FeeManager.sol\":\"FeeManager\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/home/home/dotfiles/tornado-core/contracts/FeeManager.sol\":{\"keccak256\":\"0x4d54892e74f27c38f1e40bcdaf44a67aa65e2692b30246850b8c32491f1b3d02\",\"urls\":[\"bzz-raw://ca5bd8d25a99b03a29a764ce6f887dd1022b50b9308ef705be0d71ad79687f08\",\"dweb:/ipfs/QmSYMnxLnn4HGNy32YHDEs8rNkNwV6h4xsvDbKCv3vAMMt\"]}},\"version\":1}",
-  "bytecode": "0x608060405234801561001057600080fd5b506040516102673803806102678339818101604052602081101561003357600080fd5b5051600180546001600160a01b0319166001600160a01b03909216919091179055610204806100636000396000f3fe608060405234801561001057600080fd5b506004361061004c5760003560e01c8063017e7e5814610051578063094b741514610075578063a2e74af61461007d578063f46901ed146100a5575b600080fd5b6100596100cb565b604080516001600160a01b039092168252519081900360200190f35b6100596100da565b6100a36004803603602081101561009357600080fd5b50356001600160a01b03166100e9565b005b6100a3600480360360208110156100bb57600080fd5b50356001600160a01b031661015c565b6000546001600160a01b031681565b6001546001600160a01b031681565b6001546001600160a01b0316331461013a576040805162461bcd60e51b815260206004820152600f60248201526e2837b7b31d102327a92124a22222a760891b604482015290519081900360640190fd5b600180546001600160a01b0319166001600160a01b0392909216919091179055565b6001546001600160a01b031633146101ad576040805162461bcd60e51b815260206004820152600f60248201526e2837b7b31d102327a92124a22222a760891b604482015290519081900360640190fd5b600080546001600160a01b0319166001600160a01b039290921691909117905556fea265627a7a723158206a757806aa409461ff72f1edf5093477492e6d063b792779acb98460ba01efdf64736f6c63430005110032",
-  "deployedBytecode": "0x608060405234801561001057600080fd5b506004361061004c5760003560e01c8063017e7e5814610051578063094b741514610075578063a2e74af61461007d578063f46901ed146100a5575b600080fd5b6100596100cb565b604080516001600160a01b039092168252519081900360200190f35b6100596100da565b6100a36004803603602081101561009357600080fd5b50356001600160a01b03166100e9565b005b6100a3600480360360208110156100bb57600080fd5b50356001600160a01b031661015c565b6000546001600160a01b031681565b6001546001600160a01b031681565b6001546001600160a01b0316331461013a576040805162461bcd60e51b815260206004820152600f60248201526e2837b7b31d102327a92124a22222a760891b604482015290519081900360640190fd5b600180546001600160a01b0319166001600160a01b0392909216919091179055565b6001546001600160a01b031633146101ad576040805162461bcd60e51b815260206004820152600f60248201526e2837b7b31d102327a92124a22222a760891b604482015290519081900360640190fd5b600080546001600160a01b0319166001600160a01b039290921691909117905556fea265627a7a723158206a757806aa409461ff72f1edf5093477492e6d063b792779acb98460ba01efdf64736f6c63430005110032",
-  "sourceMap": "25:453:1:-;;;104:78;8:9:-1;5:2;;;30:1;27;20:12;5:2;104:78:1;;;;;;;;;;;;;;;13:2:-1;8:3;5:11;2:2;;;29:1;26;19:12;2:2;-1:-1;104:78:1;151:11;:26;;-1:-1:-1;;;;;;151:26:1;-1:-1:-1;;;;;151:26:1;;;;;;;;;25:453;;;-1:-1:-1;25:453:1;;",
-  "deployedSourceMap": "25:453:1:-;;;;8:9:-1;5:2;;;30:1;27;20:12;5:2;25:453:1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;49:20;;;:::i;:::-;;;;-1:-1:-1;;;;;49:20:1;;;;;;;;;;;;;;73:26;;;:::i;321:155::-;;;;;;13:2:-1;8:3;5:11;2:2;;;29:1;26;19:12;2:2;-1:-1;321:155:1;-1:-1:-1;;;;;321:155:1;;:::i;:::-;;186:131;;;;;;13:2:-1;8:3;5:11;2:2;;;29:1;26;19:12;2:2;-1:-1;186:131:1;-1:-1:-1;;;;;186:131:1;;:::i;49:20::-;;;-1:-1:-1;;;;;49:20:1;;:::o;73:26::-;;;-1:-1:-1;;;;;73:26:1;;:::o;321:155::-;406:11;;-1:-1:-1;;;;;406:11:1;392:10;:25;384:53;;;;;-1:-1:-1;;;384:53:1;;;;;;;;;;;;-1:-1:-1;;;384:53:1;;;;;;;;;;;;;;;445:11;:26;;-1:-1:-1;;;;;;445:26:1;-1:-1:-1;;;;;445:26:1;;;;;;;;;;321:155::o;186:131::-;259:11;;-1:-1:-1;;;;;259:11:1;245:10;:25;237:53;;;;;-1:-1:-1;;;237:53:1;;;;;;;;;;;;-1:-1:-1;;;237:53:1;;;;;;;;;;;;;;;298:5;:14;;-1:-1:-1;;;;;;298:14:1;-1:-1:-1;;;;;298:14:1;;;;;;;;;;186:131::o",
-  "source": "pragma solidity 0.5.17;\n\ncontract FeeManager {\n  address public feeTo;\n  address public feeToSetter;\n\n  constructor(address _feeToSetter) public {\n    feeToSetter = _feeToSetter;\n  }\n\n  function setFeeTo(address _feeTo) external {\n      require(msg.sender == feeToSetter, 'Poof: FORBIDDEN');\n      feeTo = _feeTo;\n  }\n\n  function setFeeToSetter(address _feeToSetter) external {\n      require(msg.sender == feeToSetter, 'Poof: FORBIDDEN');\n      feeToSetter = _feeToSetter;\n  }\n}\n",
+  "metadata": "{\"compiler\":{\"version\":\"0.5.17+commit.d19bba13\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_feeToSetter\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"constant\":true,\"inputs\":[],\"name\":\"MIN_PROTOCOL_FEE_DIVISOR\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"feeTo\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"feeToSetter\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"protocolFeeDivisor\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_feeTo\",\"type\":\"address\"}],\"name\":\"setFeeTo\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_feeToSetter\",\"type\":\"address\"}],\"name\":\"setFeeToSetter\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_protocolFeeDivisor\",\"type\":\"uint256\"}],\"name\":\"setProtocolFeeDivisor\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"methods\":{}},\"userdoc\":{\"methods\":{}}},\"settings\":{\"compilationTarget\":{\"/home/home/dotfiles/tornado-core/contracts/FeeManager.sol\":\"FeeManager\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/home/home/dotfiles/tornado-core/contracts/FeeManager.sol\":{\"keccak256\":\"0x8e8e5c1f677a907492945e9fb2417518c26f65d0adee9a752cbed7d114494e85\",\"urls\":[\"bzz-raw://54d89eac6b895cf779adb46160cfd1eb921911544d82eec6d4ac7fb0bdf6cd91\",\"dweb:/ipfs/QmTw8beeSWhYCAWohhQgHSwyg4AFoJmVhmmCn2h6S3NFD7\"]}},\"version\":1}",
+  "bytecode": "0x608060405260c860005534801561001557600080fd5b5060405161039c38038061039c8339818101604052602081101561003857600080fd5b5051600280546001600160a01b039092166001600160a01b0319909216919091179055600060035561032d8061006f6000396000f3fe608060405234801561001057600080fd5b506004361061007d5760003560e01c806370971aa71161005b57806370971aa7146100c8578063a2e74af6146100e7578063b72cd5121461010d578063f46901ed146101155761007d565b8063017e7e5814610082578063094b7415146100a65780633b46a6e7146100ae575b600080fd5b61008a61013b565b604080516001600160a01b039092168252519081900360200190f35b61008a61014a565b6100b6610159565b60408051918252519081900360200190f35b6100e5600480360360208110156100de57600080fd5b503561015f565b005b6100e5600480360360208110156100fd57600080fd5b50356001600160a01b031661020c565b6100b661027f565b6100e56004803603602081101561012b57600080fd5b50356001600160a01b0316610285565b6001546001600160a01b031681565b6002546001600160a01b031681565b60035481565b6002546001600160a01b031633146101b0576040805162461bcd60e51b815260206004820152600f60248201526e2837b7b31d102327a92124a22222a760891b604482015290519081900360640190fd5b600054811015610207576040805162461bcd60e51b815260206004820152601b60248201527f506f6f663a2050726f746f636f6c2066656520746f6f20686967680000000000604482015290519081900360640190fd5b600355565b6002546001600160a01b0316331461025d576040805162461bcd60e51b815260206004820152600f60248201526e2837b7b31d102327a92124a22222a760891b604482015290519081900360640190fd5b600280546001600160a01b0319166001600160a01b0392909216919091179055565b60005481565b6002546001600160a01b031633146102d6576040805162461bcd60e51b815260206004820152600f60248201526e2837b7b31d102327a92124a22222a760891b604482015290519081900360640190fd5b600180546001600160a01b0319166001600160a01b039290921691909117905556fea265627a7a72315820f540febae0ffa222749dcd2eb69b67411ddb6f3c1a3d8c13e0701743d180c3b064736f6c63430005110032",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b506004361061007d5760003560e01c806370971aa71161005b57806370971aa7146100c8578063a2e74af6146100e7578063b72cd5121461010d578063f46901ed146101155761007d565b8063017e7e5814610082578063094b7415146100a65780633b46a6e7146100ae575b600080fd5b61008a61013b565b604080516001600160a01b039092168252519081900360200190f35b61008a61014a565b6100b6610159565b60408051918252519081900360200190f35b6100e5600480360360208110156100de57600080fd5b503561015f565b005b6100e5600480360360208110156100fd57600080fd5b50356001600160a01b031661020c565b6100b661027f565b6100e56004803603602081101561012b57600080fd5b50356001600160a01b0316610285565b6001546001600160a01b031681565b6002546001600160a01b031681565b60035481565b6002546001600160a01b031633146101b0576040805162461bcd60e51b815260206004820152600f60248201526e2837b7b31d102327a92124a22222a760891b604482015290519081900360640190fd5b600054811015610207576040805162461bcd60e51b815260206004820152601b60248201527f506f6f663a2050726f746f636f6c2066656520746f6f20686967680000000000604482015290519081900360640190fd5b600355565b6002546001600160a01b0316331461025d576040805162461bcd60e51b815260206004820152600f60248201526e2837b7b31d102327a92124a22222a760891b604482015290519081900360640190fd5b600280546001600160a01b0319166001600160a01b0392909216919091179055565b60005481565b6002546001600160a01b031633146102d6576040805162461bcd60e51b815260206004820152600f60248201526e2837b7b31d102327a92124a22222a760891b604482015290519081900360640190fd5b600180546001600160a01b0319166001600160a01b039290921691909117905556fea265627a7a72315820f540febae0ffa222749dcd2eb69b67411ddb6f3c1a3d8c13e0701743d180c3b064736f6c63430005110032",
+  "sourceMap": "25:875:2:-;;;116:3;74:45;;216:106;8:9:-1;5:2;;;30:1;27;20:12;5:2;216:106:2;;;;;;;;;;;;;;;13:2:-1;8:3;5:11;2:2;;;29:1;26;19:12;2:2;-1:-1;216:106:2;263:11;:26;;-1:-1:-1;;;;;263:26:2;;;-1:-1:-1;;;;;;263:26:2;;;;;;;;;:11;295:18;:22;25:875;;;;;;",
+  "deployedSourceMap": "25:875:2:-;;;;8:9:-1;5:2;;;30:1;27;20:12;5:2;25:875:2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;124:20;;;:::i;:::-;;;;-1:-1:-1;;;;;124:20:2;;;;;;;;;;;;;;148:26;;;:::i;178:33::-;;;:::i;:::-;;;;;;;;;;;;;;;;620:278;;;;;;13:2:-1;8:3;5:11;2:2;;;29:1;26;19:12;2:2;-1:-1;620:278:2;;:::i;:::-;;461:155;;;;;;13:2:-1;8:3;5:11;2:2;;;29:1;26;19:12;2:2;-1:-1;461:155:2;-1:-1:-1;;;;;461:155:2;;:::i;74:45::-;;;:::i;326:131::-;;;;;;13:2:-1;8:3;5:11;2:2;;;29:1;26;19:12;2:2;-1:-1;326:131:2;-1:-1:-1;;;;;326:131:2;;:::i;124:20::-;;;-1:-1:-1;;;;;124:20:2;;:::o;148:26::-;;;-1:-1:-1;;;;;148:26:2;;:::o;178:33::-;;;;:::o;620:278::-;719:11;;-1:-1:-1;;;;;719:11:2;705:10;:25;697:53;;;;;-1:-1:-1;;;697:53:2;;;;;;;;;;;;-1:-1:-1;;;697:53:2;;;;;;;;;;;;;;;789:24;;766:19;:47;;758:87;;;;;-1:-1:-1;;;758:87:2;;;;;;;;;;;;;;;;;;;;;;;;;;;;853:18;:40;620:278::o;461:155::-;546:11;;-1:-1:-1;;;;;546:11:2;532:10;:25;524:53;;;;;-1:-1:-1;;;524:53:2;;;;;;;;;;;;-1:-1:-1;;;524:53:2;;;;;;;;;;;;;;;585:11;:26;;-1:-1:-1;;;;;;585:26:2;-1:-1:-1;;;;;585:26:2;;;;;;;;;;461:155::o;74:45::-;;;;:::o;326:131::-;399:11;;-1:-1:-1;;;;;399:11:2;385:10;:25;377:53;;;;;-1:-1:-1;;;377:53:2;;;;;;;;;;;;-1:-1:-1;;;377:53:2;;;;;;;;;;;;;;;438:5;:14;;-1:-1:-1;;;;;;438:14:2;-1:-1:-1;;;;;438:14:2;;;;;;;;;;326:131::o",
+  "source": "pragma solidity 0.5.17;\n\ncontract FeeManager {\n  // Maximum fee of 0.5%\n  uint256 public MIN_PROTOCOL_FEE_DIVISOR = 200;\n\n  address public feeTo;\n  address public feeToSetter;\n  uint256 public protocolFeeDivisor;\n\n  constructor(address _feeToSetter) public {\n    feeToSetter = _feeToSetter;\n    protocolFeeDivisor = 0;\n  }\n\n  function setFeeTo(address _feeTo) external {\n      require(msg.sender == feeToSetter, 'Poof: FORBIDDEN');\n      feeTo = _feeTo;\n  }\n\n  function setFeeToSetter(address _feeToSetter) external {\n      require(msg.sender == feeToSetter, 'Poof: FORBIDDEN');\n      feeToSetter = _feeToSetter;\n  }\n\n  function setProtocolFeeDivisor(uint256 _protocolFeeDivisor) external {\n      require(msg.sender == feeToSetter, 'Poof: FORBIDDEN');\n      require(_protocolFeeDivisor >= MIN_PROTOCOL_FEE_DIVISOR, 'Poof: Protocol fee too high');\n      protocolFeeDivisor = _protocolFeeDivisor;\n  }\n}\n",
   "sourcePath": "/home/home/dotfiles/tornado-core/contracts/FeeManager.sol",
   "ast": {
     "absolutePath": "/home/home/dotfiles/tornado-core/contracts/FeeManager.sol",
     "exportedSymbols": {
       "FeeManager": [
-        319
+        472
       ]
     },
-    "id": 320,
+    "id": 473,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 268,
+        "id": 387,
         "literals": [
           "solidity",
           "0.5",
           ".17"
         ],
         "nodeType": "PragmaDirective",
-        "src": "0:23:1"
+        "src": "0:23:2"
       },
       {
         "baseContracts": [],
@@ -107,20 +152,63 @@
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": true,
-        "id": 319,
+        "id": 472,
         "linearizedBaseContracts": [
-          319
+          472
         ],
         "name": "FeeManager",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "constant": false,
-            "id": 270,
+            "id": 390,
+            "name": "MIN_PROTOCOL_FEE_DIVISOR",
+            "nodeType": "VariableDeclaration",
+            "scope": 472,
+            "src": "74:45:2",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_uint256",
+              "typeString": "uint256"
+            },
+            "typeName": {
+              "id": 388,
+              "name": "uint256",
+              "nodeType": "ElementaryTypeName",
+              "src": "74:7:2",
+              "typeDescriptions": {
+                "typeIdentifier": "t_uint256",
+                "typeString": "uint256"
+              }
+            },
+            "value": {
+              "argumentTypes": null,
+              "hexValue": "323030",
+              "id": 389,
+              "isConstant": false,
+              "isLValue": false,
+              "isPure": true,
+              "kind": "number",
+              "lValueRequested": false,
+              "nodeType": "Literal",
+              "src": "116:3:2",
+              "subdenomination": null,
+              "typeDescriptions": {
+                "typeIdentifier": "t_rational_200_by_1",
+                "typeString": "int_const 200"
+              },
+              "value": "200"
+            },
+            "visibility": "public"
+          },
+          {
+            "constant": false,
+            "id": 392,
             "name": "feeTo",
             "nodeType": "VariableDeclaration",
-            "scope": 319,
-            "src": "49:20:1",
+            "scope": 472,
+            "src": "124:20:2",
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
@@ -128,10 +216,10 @@
               "typeString": "address"
             },
             "typeName": {
-              "id": 269,
+              "id": 391,
               "name": "address",
               "nodeType": "ElementaryTypeName",
-              "src": "49:7:1",
+              "src": "124:7:2",
               "stateMutability": "nonpayable",
               "typeDescriptions": {
                 "typeIdentifier": "t_address",
@@ -143,11 +231,11 @@
           },
           {
             "constant": false,
-            "id": 272,
+            "id": 394,
             "name": "feeToSetter",
             "nodeType": "VariableDeclaration",
-            "scope": 319,
-            "src": "73:26:1",
+            "scope": 472,
+            "src": "148:26:2",
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
@@ -155,10 +243,10 @@
               "typeString": "address"
             },
             "typeName": {
-              "id": 271,
+              "id": 393,
               "name": "address",
               "nodeType": "ElementaryTypeName",
-              "src": "73:7:1",
+              "src": "148:7:2",
               "stateMutability": "nonpayable",
               "typeDescriptions": {
                 "typeIdentifier": "t_address",
@@ -169,27 +257,53 @@
             "visibility": "public"
           },
           {
+            "constant": false,
+            "id": 396,
+            "name": "protocolFeeDivisor",
+            "nodeType": "VariableDeclaration",
+            "scope": 472,
+            "src": "178:33:2",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_uint256",
+              "typeString": "uint256"
+            },
+            "typeName": {
+              "id": 395,
+              "name": "uint256",
+              "nodeType": "ElementaryTypeName",
+              "src": "178:7:2",
+              "typeDescriptions": {
+                "typeIdentifier": "t_uint256",
+                "typeString": "uint256"
+              }
+            },
+            "value": null,
+            "visibility": "public"
+          },
+          {
             "body": {
-              "id": 281,
+              "id": 409,
               "nodeType": "Block",
-              "src": "145:37:1",
+              "src": "257:65:2",
               "statements": [
                 {
                   "expression": {
                     "argumentTypes": null,
-                    "id": 279,
+                    "id": 403,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "argumentTypes": null,
-                      "id": 277,
+                      "id": 401,
                       "name": "feeToSetter",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 272,
-                      "src": "151:11:1",
+                      "referencedDeclaration": 394,
+                      "src": "263:11:2",
                       "typeDescriptions": {
                         "typeIdentifier": "t_address",
                         "typeString": "address"
@@ -199,47 +313,98 @@
                     "operator": "=",
                     "rightHandSide": {
                       "argumentTypes": null,
-                      "id": 278,
+                      "id": 402,
                       "name": "_feeToSetter",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 274,
-                      "src": "165:12:1",
+                      "referencedDeclaration": 398,
+                      "src": "277:12:2",
                       "typeDescriptions": {
                         "typeIdentifier": "t_address",
                         "typeString": "address"
                       }
                     },
-                    "src": "151:26:1",
+                    "src": "263:26:2",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
                       "typeString": "address"
                     }
                   },
-                  "id": 280,
+                  "id": 404,
                   "nodeType": "ExpressionStatement",
-                  "src": "151:26:1"
+                  "src": "263:26:2"
+                },
+                {
+                  "expression": {
+                    "argumentTypes": null,
+                    "id": 407,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "argumentTypes": null,
+                      "id": 405,
+                      "name": "protocolFeeDivisor",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 396,
+                      "src": "295:18:2",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "argumentTypes": null,
+                      "hexValue": "30",
+                      "id": 406,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": true,
+                      "kind": "number",
+                      "lValueRequested": false,
+                      "nodeType": "Literal",
+                      "src": "316:1:2",
+                      "subdenomination": null,
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_rational_0_by_1",
+                        "typeString": "int_const 0"
+                      },
+                      "value": "0"
+                    },
+                    "src": "295:22:2",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "id": 408,
+                  "nodeType": "ExpressionStatement",
+                  "src": "295:22:2"
                 }
               ]
             },
             "documentation": null,
-            "id": 282,
+            "id": 410,
             "implemented": true,
             "kind": "constructor",
             "modifiers": [],
             "name": "",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 275,
+              "id": 399,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 274,
+                  "id": 398,
                   "name": "_feeToSetter",
                   "nodeType": "VariableDeclaration",
-                  "scope": 282,
-                  "src": "116:20:1",
+                  "scope": 410,
+                  "src": "228:20:2",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -247,10 +412,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 273,
+                    "id": 397,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "116:7:1",
+                    "src": "228:7:2",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -261,25 +426,25 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "115:22:1"
+              "src": "227:22:2"
             },
             "returnParameters": {
-              "id": 276,
+              "id": 400,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "145:0:1"
+              "src": "257:0:2"
             },
-            "scope": 319,
-            "src": "104:78:1",
+            "scope": 472,
+            "src": "216:106:2",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "public"
           },
           {
             "body": {
-              "id": 299,
+              "id": 427,
               "nodeType": "Block",
-              "src": "229:88:1",
+              "src": "369:88:2",
               "statements": [
                 {
                   "expression": {
@@ -291,7 +456,7 @@
                           "typeIdentifier": "t_address",
                           "typeString": "address"
                         },
-                        "id": 291,
+                        "id": 419,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -300,18 +465,18 @@
                           "argumentTypes": null,
                           "expression": {
                             "argumentTypes": null,
-                            "id": 288,
+                            "id": 416,
                             "name": "msg",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 3270,
-                            "src": "245:3:1",
+                            "referencedDeclaration": 1408,
+                            "src": "385:3:2",
                             "typeDescriptions": {
                               "typeIdentifier": "t_magic_message",
                               "typeString": "msg"
                             }
                           },
-                          "id": 289,
+                          "id": 417,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -319,7 +484,7 @@
                           "memberName": "sender",
                           "nodeType": "MemberAccess",
                           "referencedDeclaration": null,
-                          "src": "245:10:1",
+                          "src": "385:10:2",
                           "typeDescriptions": {
                             "typeIdentifier": "t_address_payable",
                             "typeString": "address payable"
@@ -329,18 +494,18 @@
                         "operator": "==",
                         "rightExpression": {
                           "argumentTypes": null,
-                          "id": 290,
+                          "id": 418,
                           "name": "feeToSetter",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 272,
-                          "src": "259:11:1",
+                          "referencedDeclaration": 394,
+                          "src": "399:11:2",
                           "typeDescriptions": {
                             "typeIdentifier": "t_address",
                             "typeString": "address"
                           }
                         },
-                        "src": "245:25:1",
+                        "src": "385:25:2",
                         "typeDescriptions": {
                           "typeIdentifier": "t_bool",
                           "typeString": "bool"
@@ -349,14 +514,14 @@
                       {
                         "argumentTypes": null,
                         "hexValue": "506f6f663a20464f5242494444454e",
-                        "id": 292,
+                        "id": 420,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
                         "kind": "string",
                         "lValueRequested": false,
                         "nodeType": "Literal",
-                        "src": "272:17:1",
+                        "src": "412:17:2",
                         "subdenomination": null,
                         "typeDescriptions": {
                           "typeIdentifier": "t_stringliteral_b0ea5653e0e519b050ef336c67727a3a431509a369a785f89e8479e85ce40165",
@@ -376,21 +541,21 @@
                           "typeString": "literal_string \"Poof: FORBIDDEN\""
                         }
                       ],
-                      "id": 287,
+                      "id": 415,
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        3273,
-                        3274
+                        1411,
+                        1412
                       ],
-                      "referencedDeclaration": 3274,
-                      "src": "237:7:1",
+                      "referencedDeclaration": 1412,
+                      "src": "377:7:2",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
                         "typeString": "function (bool,string memory) pure"
                       }
                     },
-                    "id": 293,
+                    "id": 421,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -398,32 +563,32 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "237:53:1",
+                    "src": "377:53:2",
                     "typeDescriptions": {
                       "typeIdentifier": "t_tuple$__$",
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 294,
+                  "id": 422,
                   "nodeType": "ExpressionStatement",
-                  "src": "237:53:1"
+                  "src": "377:53:2"
                 },
                 {
                   "expression": {
                     "argumentTypes": null,
-                    "id": 297,
+                    "id": 425,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "argumentTypes": null,
-                      "id": 295,
+                      "id": 423,
                       "name": "feeTo",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 270,
-                      "src": "298:5:1",
+                      "referencedDeclaration": 392,
+                      "src": "438:5:2",
                       "typeDescriptions": {
                         "typeIdentifier": "t_address",
                         "typeString": "address"
@@ -433,47 +598,47 @@
                     "operator": "=",
                     "rightHandSide": {
                       "argumentTypes": null,
-                      "id": 296,
+                      "id": 424,
                       "name": "_feeTo",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 284,
-                      "src": "306:6:1",
+                      "referencedDeclaration": 412,
+                      "src": "446:6:2",
                       "typeDescriptions": {
                         "typeIdentifier": "t_address",
                         "typeString": "address"
                       }
                     },
-                    "src": "298:14:1",
+                    "src": "438:14:2",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
                       "typeString": "address"
                     }
                   },
-                  "id": 298,
+                  "id": 426,
                   "nodeType": "ExpressionStatement",
-                  "src": "298:14:1"
+                  "src": "438:14:2"
                 }
               ]
             },
             "documentation": null,
-            "id": 300,
+            "id": 428,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
             "name": "setFeeTo",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 285,
+              "id": 413,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 284,
+                  "id": 412,
                   "name": "_feeTo",
                   "nodeType": "VariableDeclaration",
-                  "scope": 300,
-                  "src": "204:14:1",
+                  "scope": 428,
+                  "src": "344:14:2",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -481,10 +646,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 283,
+                    "id": 411,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "204:7:1",
+                    "src": "344:7:2",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -495,25 +660,25 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "203:16:1"
+              "src": "343:16:2"
             },
             "returnParameters": {
-              "id": 286,
+              "id": 414,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "229:0:1"
+              "src": "369:0:2"
             },
-            "scope": 319,
-            "src": "186:131:1",
+            "scope": 472,
+            "src": "326:131:2",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
           },
           {
             "body": {
-              "id": 317,
+              "id": 445,
               "nodeType": "Block",
-              "src": "376:100:1",
+              "src": "516:100:2",
               "statements": [
                 {
                   "expression": {
@@ -525,7 +690,7 @@
                           "typeIdentifier": "t_address",
                           "typeString": "address"
                         },
-                        "id": 309,
+                        "id": 437,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -534,18 +699,18 @@
                           "argumentTypes": null,
                           "expression": {
                             "argumentTypes": null,
-                            "id": 306,
+                            "id": 434,
                             "name": "msg",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 3270,
-                            "src": "392:3:1",
+                            "referencedDeclaration": 1408,
+                            "src": "532:3:2",
                             "typeDescriptions": {
                               "typeIdentifier": "t_magic_message",
                               "typeString": "msg"
                             }
                           },
-                          "id": 307,
+                          "id": 435,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -553,7 +718,7 @@
                           "memberName": "sender",
                           "nodeType": "MemberAccess",
                           "referencedDeclaration": null,
-                          "src": "392:10:1",
+                          "src": "532:10:2",
                           "typeDescriptions": {
                             "typeIdentifier": "t_address_payable",
                             "typeString": "address payable"
@@ -563,18 +728,18 @@
                         "operator": "==",
                         "rightExpression": {
                           "argumentTypes": null,
-                          "id": 308,
+                          "id": 436,
                           "name": "feeToSetter",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 272,
-                          "src": "406:11:1",
+                          "referencedDeclaration": 394,
+                          "src": "546:11:2",
                           "typeDescriptions": {
                             "typeIdentifier": "t_address",
                             "typeString": "address"
                           }
                         },
-                        "src": "392:25:1",
+                        "src": "532:25:2",
                         "typeDescriptions": {
                           "typeIdentifier": "t_bool",
                           "typeString": "bool"
@@ -583,14 +748,14 @@
                       {
                         "argumentTypes": null,
                         "hexValue": "506f6f663a20464f5242494444454e",
-                        "id": 310,
+                        "id": 438,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
                         "kind": "string",
                         "lValueRequested": false,
                         "nodeType": "Literal",
-                        "src": "419:17:1",
+                        "src": "559:17:2",
                         "subdenomination": null,
                         "typeDescriptions": {
                           "typeIdentifier": "t_stringliteral_b0ea5653e0e519b050ef336c67727a3a431509a369a785f89e8479e85ce40165",
@@ -610,21 +775,21 @@
                           "typeString": "literal_string \"Poof: FORBIDDEN\""
                         }
                       ],
-                      "id": 305,
+                      "id": 433,
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        3273,
-                        3274
+                        1411,
+                        1412
                       ],
-                      "referencedDeclaration": 3274,
-                      "src": "384:7:1",
+                      "referencedDeclaration": 1412,
+                      "src": "524:7:2",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
                         "typeString": "function (bool,string memory) pure"
                       }
                     },
-                    "id": 311,
+                    "id": 439,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -632,32 +797,32 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "384:53:1",
+                    "src": "524:53:2",
                     "typeDescriptions": {
                       "typeIdentifier": "t_tuple$__$",
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 312,
+                  "id": 440,
                   "nodeType": "ExpressionStatement",
-                  "src": "384:53:1"
+                  "src": "524:53:2"
                 },
                 {
                   "expression": {
                     "argumentTypes": null,
-                    "id": 315,
+                    "id": 443,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "argumentTypes": null,
-                      "id": 313,
+                      "id": 441,
                       "name": "feeToSetter",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 272,
-                      "src": "445:11:1",
+                      "referencedDeclaration": 394,
+                      "src": "585:11:2",
                       "typeDescriptions": {
                         "typeIdentifier": "t_address",
                         "typeString": "address"
@@ -667,47 +832,47 @@
                     "operator": "=",
                     "rightHandSide": {
                       "argumentTypes": null,
-                      "id": 314,
+                      "id": 442,
                       "name": "_feeToSetter",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 302,
-                      "src": "459:12:1",
+                      "referencedDeclaration": 430,
+                      "src": "599:12:2",
                       "typeDescriptions": {
                         "typeIdentifier": "t_address",
                         "typeString": "address"
                       }
                     },
-                    "src": "445:26:1",
+                    "src": "585:26:2",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
                       "typeString": "address"
                     }
                   },
-                  "id": 316,
+                  "id": 444,
                   "nodeType": "ExpressionStatement",
-                  "src": "445:26:1"
+                  "src": "585:26:2"
                 }
               ]
             },
             "documentation": null,
-            "id": 318,
+            "id": 446,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
             "name": "setFeeToSetter",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 303,
+              "id": 431,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 302,
+                  "id": 430,
                   "name": "_feeToSetter",
                   "nodeType": "VariableDeclaration",
-                  "scope": 318,
-                  "src": "345:20:1",
+                  "scope": 446,
+                  "src": "485:20:2",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -715,10 +880,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 301,
+                    "id": 429,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "345:7:1",
+                    "src": "485:7:2",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -729,33 +894,377 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "344:22:1"
+              "src": "484:22:2"
             },
             "returnParameters": {
-              "id": 304,
+              "id": 432,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "376:0:1"
+              "src": "516:0:2"
             },
-            "scope": 319,
-            "src": "321:155:1",
+            "scope": 472,
+            "src": "461:155:2",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "external"
+          },
+          {
+            "body": {
+              "id": 470,
+              "nodeType": "Block",
+              "src": "689:209:2",
+              "statements": [
+                {
+                  "expression": {
+                    "argumentTypes": null,
+                    "arguments": [
+                      {
+                        "argumentTypes": null,
+                        "commonType": {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        },
+                        "id": 455,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "lValueRequested": false,
+                        "leftExpression": {
+                          "argumentTypes": null,
+                          "expression": {
+                            "argumentTypes": null,
+                            "id": 452,
+                            "name": "msg",
+                            "nodeType": "Identifier",
+                            "overloadedDeclarations": [],
+                            "referencedDeclaration": 1408,
+                            "src": "705:3:2",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_magic_message",
+                              "typeString": "msg"
+                            }
+                          },
+                          "id": 453,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": false,
+                          "lValueRequested": false,
+                          "memberName": "sender",
+                          "nodeType": "MemberAccess",
+                          "referencedDeclaration": null,
+                          "src": "705:10:2",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_address_payable",
+                            "typeString": "address payable"
+                          }
+                        },
+                        "nodeType": "BinaryOperation",
+                        "operator": "==",
+                        "rightExpression": {
+                          "argumentTypes": null,
+                          "id": 454,
+                          "name": "feeToSetter",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 394,
+                          "src": "719:11:2",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_address",
+                            "typeString": "address"
+                          }
+                        },
+                        "src": "705:25:2",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        }
+                      },
+                      {
+                        "argumentTypes": null,
+                        "hexValue": "506f6f663a20464f5242494444454e",
+                        "id": 456,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": true,
+                        "kind": "string",
+                        "lValueRequested": false,
+                        "nodeType": "Literal",
+                        "src": "732:17:2",
+                        "subdenomination": null,
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_stringliteral_b0ea5653e0e519b050ef336c67727a3a431509a369a785f89e8479e85ce40165",
+                          "typeString": "literal_string \"Poof: FORBIDDEN\""
+                        },
+                        "value": "Poof: FORBIDDEN"
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        },
+                        {
+                          "typeIdentifier": "t_stringliteral_b0ea5653e0e519b050ef336c67727a3a431509a369a785f89e8479e85ce40165",
+                          "typeString": "literal_string \"Poof: FORBIDDEN\""
+                        }
+                      ],
+                      "id": 451,
+                      "name": "require",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [
+                        1411,
+                        1412
+                      ],
+                      "referencedDeclaration": 1412,
+                      "src": "697:7:2",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
+                        "typeString": "function (bool,string memory) pure"
+                      }
+                    },
+                    "id": 457,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "697:53:2",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 458,
+                  "nodeType": "ExpressionStatement",
+                  "src": "697:53:2"
+                },
+                {
+                  "expression": {
+                    "argumentTypes": null,
+                    "arguments": [
+                      {
+                        "argumentTypes": null,
+                        "commonType": {
+                          "typeIdentifier": "t_uint256",
+                          "typeString": "uint256"
+                        },
+                        "id": 462,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "lValueRequested": false,
+                        "leftExpression": {
+                          "argumentTypes": null,
+                          "id": 460,
+                          "name": "_protocolFeeDivisor",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 448,
+                          "src": "766:19:2",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_uint256",
+                            "typeString": "uint256"
+                          }
+                        },
+                        "nodeType": "BinaryOperation",
+                        "operator": ">=",
+                        "rightExpression": {
+                          "argumentTypes": null,
+                          "id": 461,
+                          "name": "MIN_PROTOCOL_FEE_DIVISOR",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 390,
+                          "src": "789:24:2",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_uint256",
+                            "typeString": "uint256"
+                          }
+                        },
+                        "src": "766:47:2",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        }
+                      },
+                      {
+                        "argumentTypes": null,
+                        "hexValue": "506f6f663a2050726f746f636f6c2066656520746f6f2068696768",
+                        "id": 463,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": true,
+                        "kind": "string",
+                        "lValueRequested": false,
+                        "nodeType": "Literal",
+                        "src": "815:29:2",
+                        "subdenomination": null,
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_stringliteral_5c096880b05c9468650c913ec6feafc9810ea461905d92390e74b130ffc27862",
+                          "typeString": "literal_string \"Poof: Protocol fee too high\""
+                        },
+                        "value": "Poof: Protocol fee too high"
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        },
+                        {
+                          "typeIdentifier": "t_stringliteral_5c096880b05c9468650c913ec6feafc9810ea461905d92390e74b130ffc27862",
+                          "typeString": "literal_string \"Poof: Protocol fee too high\""
+                        }
+                      ],
+                      "id": 459,
+                      "name": "require",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [
+                        1411,
+                        1412
+                      ],
+                      "referencedDeclaration": 1412,
+                      "src": "758:7:2",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
+                        "typeString": "function (bool,string memory) pure"
+                      }
+                    },
+                    "id": 464,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "758:87:2",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 465,
+                  "nodeType": "ExpressionStatement",
+                  "src": "758:87:2"
+                },
+                {
+                  "expression": {
+                    "argumentTypes": null,
+                    "id": 468,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "argumentTypes": null,
+                      "id": 466,
+                      "name": "protocolFeeDivisor",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 396,
+                      "src": "853:18:2",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "argumentTypes": null,
+                      "id": 467,
+                      "name": "_protocolFeeDivisor",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 448,
+                      "src": "874:19:2",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      }
+                    },
+                    "src": "853:40:2",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "id": 469,
+                  "nodeType": "ExpressionStatement",
+                  "src": "853:40:2"
+                }
+              ]
+            },
+            "documentation": null,
+            "id": 471,
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "setProtocolFeeDivisor",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 449,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 448,
+                  "name": "_protocolFeeDivisor",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 471,
+                  "src": "651:27:2",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 447,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "651:7:2",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "650:29:2"
+            },
+            "returnParameters": {
+              "id": 450,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "689:0:2"
+            },
+            "scope": 472,
+            "src": "620:278:2",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
           }
         ],
-        "scope": 320,
-        "src": "25:453:1"
+        "scope": 473,
+        "src": "25:875:2"
       }
     ],
-    "src": "0:479:1"
+    "src": "0:901:2"
   },
   "legacyAST": {
     "attributes": {
       "absolutePath": "/home/home/dotfiles/tornado-core/contracts/FeeManager.sol",
       "exportedSymbols": {
         "FeeManager": [
-          319
+          472
         ]
       }
     },
@@ -768,9 +1277,9 @@
             ".17"
           ]
         },
-        "id": 268,
+        "id": 387,
         "name": "PragmaDirective",
-        "src": "0:23:1"
+        "src": "0:23:2"
       },
       {
         "attributes": {
@@ -784,17 +1293,59 @@
           "documentation": null,
           "fullyImplemented": true,
           "linearizedBaseContracts": [
-            319
+            472
           ],
           "name": "FeeManager",
-          "scope": 320
+          "scope": 473
         },
         "children": [
           {
             "attributes": {
               "constant": false,
+              "name": "MIN_PROTOCOL_FEE_DIVISOR",
+              "scope": 472,
+              "stateVariable": true,
+              "storageLocation": "default",
+              "type": "uint256",
+              "visibility": "public"
+            },
+            "children": [
+              {
+                "attributes": {
+                  "name": "uint256",
+                  "type": "uint256"
+                },
+                "id": 388,
+                "name": "ElementaryTypeName",
+                "src": "74:7:2"
+              },
+              {
+                "attributes": {
+                  "argumentTypes": null,
+                  "hexvalue": "323030",
+                  "isConstant": false,
+                  "isLValue": false,
+                  "isPure": true,
+                  "lValueRequested": false,
+                  "subdenomination": null,
+                  "token": "number",
+                  "type": "int_const 200",
+                  "value": "200"
+                },
+                "id": 389,
+                "name": "Literal",
+                "src": "116:3:2"
+              }
+            ],
+            "id": 390,
+            "name": "VariableDeclaration",
+            "src": "74:45:2"
+          },
+          {
+            "attributes": {
+              "constant": false,
               "name": "feeTo",
-              "scope": 319,
+              "scope": 472,
               "stateVariable": true,
               "storageLocation": "default",
               "type": "address",
@@ -808,20 +1359,20 @@
                   "stateMutability": "nonpayable",
                   "type": "address"
                 },
-                "id": 269,
+                "id": 391,
                 "name": "ElementaryTypeName",
-                "src": "49:7:1"
+                "src": "124:7:2"
               }
             ],
-            "id": 270,
+            "id": 392,
             "name": "VariableDeclaration",
-            "src": "49:20:1"
+            "src": "124:20:2"
           },
           {
             "attributes": {
               "constant": false,
               "name": "feeToSetter",
-              "scope": 319,
+              "scope": 472,
               "stateVariable": true,
               "storageLocation": "default",
               "type": "address",
@@ -835,14 +1386,40 @@
                   "stateMutability": "nonpayable",
                   "type": "address"
                 },
-                "id": 271,
+                "id": 393,
                 "name": "ElementaryTypeName",
-                "src": "73:7:1"
+                "src": "148:7:2"
               }
             ],
-            "id": 272,
+            "id": 394,
             "name": "VariableDeclaration",
-            "src": "73:26:1"
+            "src": "148:26:2"
+          },
+          {
+            "attributes": {
+              "constant": false,
+              "name": "protocolFeeDivisor",
+              "scope": 472,
+              "stateVariable": true,
+              "storageLocation": "default",
+              "type": "uint256",
+              "value": null,
+              "visibility": "public"
+            },
+            "children": [
+              {
+                "attributes": {
+                  "name": "uint256",
+                  "type": "uint256"
+                },
+                "id": 395,
+                "name": "ElementaryTypeName",
+                "src": "178:7:2"
+              }
+            ],
+            "id": 396,
+            "name": "VariableDeclaration",
+            "src": "178:33:2"
           },
           {
             "attributes": {
@@ -854,7 +1431,7 @@
                 null
               ],
               "name": "",
-              "scope": 319,
+              "scope": 472,
               "stateMutability": "nonpayable",
               "superFunction": null,
               "visibility": "public"
@@ -866,7 +1443,7 @@
                     "attributes": {
                       "constant": false,
                       "name": "_feeToSetter",
-                      "scope": 282,
+                      "scope": 410,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "address",
@@ -880,19 +1457,19 @@
                           "stateMutability": "nonpayable",
                           "type": "address"
                         },
-                        "id": 273,
+                        "id": 397,
                         "name": "ElementaryTypeName",
-                        "src": "116:7:1"
+                        "src": "228:7:2"
                       }
                     ],
-                    "id": 274,
+                    "id": 398,
                     "name": "VariableDeclaration",
-                    "src": "116:20:1"
+                    "src": "228:20:2"
                   }
                 ],
-                "id": 275,
+                "id": 399,
                 "name": "ParameterList",
-                "src": "115:22:1"
+                "src": "227:22:2"
               },
               {
                 "attributes": {
@@ -901,9 +1478,9 @@
                   ]
                 },
                 "children": [],
-                "id": 276,
+                "id": 400,
                 "name": "ParameterList",
-                "src": "145:0:1"
+                "src": "257:0:2"
               },
               {
                 "children": [
@@ -926,13 +1503,13 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 272,
+                              "referencedDeclaration": 394,
                               "type": "address",
                               "value": "feeToSetter"
                             },
-                            "id": 277,
+                            "id": 401,
                             "name": "Identifier",
-                            "src": "151:11:1"
+                            "src": "263:11:2"
                           },
                           {
                             "attributes": {
@@ -940,33 +1517,87 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 274,
+                              "referencedDeclaration": 398,
                               "type": "address",
                               "value": "_feeToSetter"
                             },
-                            "id": 278,
+                            "id": 402,
                             "name": "Identifier",
-                            "src": "165:12:1"
+                            "src": "277:12:2"
                           }
                         ],
-                        "id": 279,
+                        "id": 403,
                         "name": "Assignment",
-                        "src": "151:26:1"
+                        "src": "263:26:2"
                       }
                     ],
-                    "id": 280,
+                    "id": 404,
                     "name": "ExpressionStatement",
-                    "src": "151:26:1"
+                    "src": "263:26:2"
+                  },
+                  {
+                    "children": [
+                      {
+                        "attributes": {
+                          "argumentTypes": null,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": false,
+                          "lValueRequested": false,
+                          "operator": "=",
+                          "type": "uint256"
+                        },
+                        "children": [
+                          {
+                            "attributes": {
+                              "argumentTypes": null,
+                              "overloadedDeclarations": [
+                                null
+                              ],
+                              "referencedDeclaration": 396,
+                              "type": "uint256",
+                              "value": "protocolFeeDivisor"
+                            },
+                            "id": 405,
+                            "name": "Identifier",
+                            "src": "295:18:2"
+                          },
+                          {
+                            "attributes": {
+                              "argumentTypes": null,
+                              "hexvalue": "30",
+                              "isConstant": false,
+                              "isLValue": false,
+                              "isPure": true,
+                              "lValueRequested": false,
+                              "subdenomination": null,
+                              "token": "number",
+                              "type": "int_const 0",
+                              "value": "0"
+                            },
+                            "id": 406,
+                            "name": "Literal",
+                            "src": "316:1:2"
+                          }
+                        ],
+                        "id": 407,
+                        "name": "Assignment",
+                        "src": "295:22:2"
+                      }
+                    ],
+                    "id": 408,
+                    "name": "ExpressionStatement",
+                    "src": "295:22:2"
                   }
                 ],
-                "id": 281,
+                "id": 409,
                 "name": "Block",
-                "src": "145:37:1"
+                "src": "257:65:2"
               }
             ],
-            "id": 282,
+            "id": 410,
             "name": "FunctionDefinition",
-            "src": "104:78:1"
+            "src": "216:106:2"
           },
           {
             "attributes": {
@@ -978,7 +1609,7 @@
                 null
               ],
               "name": "setFeeTo",
-              "scope": 319,
+              "scope": 472,
               "stateMutability": "nonpayable",
               "superFunction": null,
               "visibility": "external"
@@ -990,7 +1621,7 @@
                     "attributes": {
                       "constant": false,
                       "name": "_feeTo",
-                      "scope": 300,
+                      "scope": 428,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "address",
@@ -1004,19 +1635,19 @@
                           "stateMutability": "nonpayable",
                           "type": "address"
                         },
-                        "id": 283,
+                        "id": 411,
                         "name": "ElementaryTypeName",
-                        "src": "204:7:1"
+                        "src": "344:7:2"
                       }
                     ],
-                    "id": 284,
+                    "id": 412,
                     "name": "VariableDeclaration",
-                    "src": "204:14:1"
+                    "src": "344:14:2"
                   }
                 ],
-                "id": 285,
+                "id": 413,
                 "name": "ParameterList",
-                "src": "203:16:1"
+                "src": "343:16:2"
               },
               {
                 "attributes": {
@@ -1025,9 +1656,9 @@
                   ]
                 },
                 "children": [],
-                "id": 286,
+                "id": 414,
                 "name": "ParameterList",
-                "src": "229:0:1"
+                "src": "369:0:2"
               },
               {
                 "children": [
@@ -1061,16 +1692,16 @@
                                 }
                               ],
                               "overloadedDeclarations": [
-                                3273,
-                                3274
+                                1411,
+                                1412
                               ],
-                              "referencedDeclaration": 3274,
+                              "referencedDeclaration": 1412,
                               "type": "function (bool,string memory) pure",
                               "value": "require"
                             },
-                            "id": 287,
+                            "id": 415,
                             "name": "Identifier",
-                            "src": "237:7:1"
+                            "src": "377:7:2"
                           },
                           {
                             "attributes": {
@@ -1105,18 +1736,18 @@
                                       "overloadedDeclarations": [
                                         null
                                       ],
-                                      "referencedDeclaration": 3270,
+                                      "referencedDeclaration": 1408,
                                       "type": "msg",
                                       "value": "msg"
                                     },
-                                    "id": 288,
+                                    "id": 416,
                                     "name": "Identifier",
-                                    "src": "245:3:1"
+                                    "src": "385:3:2"
                                   }
                                 ],
-                                "id": 289,
+                                "id": 417,
                                 "name": "MemberAccess",
-                                "src": "245:10:1"
+                                "src": "385:10:2"
                               },
                               {
                                 "attributes": {
@@ -1124,18 +1755,18 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 272,
+                                  "referencedDeclaration": 394,
                                   "type": "address",
                                   "value": "feeToSetter"
                                 },
-                                "id": 290,
+                                "id": 418,
                                 "name": "Identifier",
-                                "src": "259:11:1"
+                                "src": "399:11:2"
                               }
                             ],
-                            "id": 291,
+                            "id": 419,
                             "name": "BinaryOperation",
-                            "src": "245:25:1"
+                            "src": "385:25:2"
                           },
                           {
                             "attributes": {
@@ -1150,19 +1781,19 @@
                               "type": "literal_string \"Poof: FORBIDDEN\"",
                               "value": "Poof: FORBIDDEN"
                             },
-                            "id": 292,
+                            "id": 420,
                             "name": "Literal",
-                            "src": "272:17:1"
+                            "src": "412:17:2"
                           }
                         ],
-                        "id": 293,
+                        "id": 421,
                         "name": "FunctionCall",
-                        "src": "237:53:1"
+                        "src": "377:53:2"
                       }
                     ],
-                    "id": 294,
+                    "id": 422,
                     "name": "ExpressionStatement",
-                    "src": "237:53:1"
+                    "src": "377:53:2"
                   },
                   {
                     "children": [
@@ -1183,13 +1814,13 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 270,
+                              "referencedDeclaration": 392,
                               "type": "address",
                               "value": "feeTo"
                             },
-                            "id": 295,
+                            "id": 423,
                             "name": "Identifier",
-                            "src": "298:5:1"
+                            "src": "438:5:2"
                           },
                           {
                             "attributes": {
@@ -1197,33 +1828,33 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 284,
+                              "referencedDeclaration": 412,
                               "type": "address",
                               "value": "_feeTo"
                             },
-                            "id": 296,
+                            "id": 424,
                             "name": "Identifier",
-                            "src": "306:6:1"
+                            "src": "446:6:2"
                           }
                         ],
-                        "id": 297,
+                        "id": 425,
                         "name": "Assignment",
-                        "src": "298:14:1"
+                        "src": "438:14:2"
                       }
                     ],
-                    "id": 298,
+                    "id": 426,
                     "name": "ExpressionStatement",
-                    "src": "298:14:1"
+                    "src": "438:14:2"
                   }
                 ],
-                "id": 299,
+                "id": 427,
                 "name": "Block",
-                "src": "229:88:1"
+                "src": "369:88:2"
               }
             ],
-            "id": 300,
+            "id": 428,
             "name": "FunctionDefinition",
-            "src": "186:131:1"
+            "src": "326:131:2"
           },
           {
             "attributes": {
@@ -1235,7 +1866,7 @@
                 null
               ],
               "name": "setFeeToSetter",
-              "scope": 319,
+              "scope": 472,
               "stateMutability": "nonpayable",
               "superFunction": null,
               "visibility": "external"
@@ -1247,7 +1878,7 @@
                     "attributes": {
                       "constant": false,
                       "name": "_feeToSetter",
-                      "scope": 318,
+                      "scope": 446,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "address",
@@ -1261,19 +1892,19 @@
                           "stateMutability": "nonpayable",
                           "type": "address"
                         },
-                        "id": 301,
+                        "id": 429,
                         "name": "ElementaryTypeName",
-                        "src": "345:7:1"
+                        "src": "485:7:2"
                       }
                     ],
-                    "id": 302,
+                    "id": 430,
                     "name": "VariableDeclaration",
-                    "src": "345:20:1"
+                    "src": "485:20:2"
                   }
                 ],
-                "id": 303,
+                "id": 431,
                 "name": "ParameterList",
-                "src": "344:22:1"
+                "src": "484:22:2"
               },
               {
                 "attributes": {
@@ -1282,9 +1913,9 @@
                   ]
                 },
                 "children": [],
-                "id": 304,
+                "id": 432,
                 "name": "ParameterList",
-                "src": "376:0:1"
+                "src": "516:0:2"
               },
               {
                 "children": [
@@ -1318,16 +1949,16 @@
                                 }
                               ],
                               "overloadedDeclarations": [
-                                3273,
-                                3274
+                                1411,
+                                1412
                               ],
-                              "referencedDeclaration": 3274,
+                              "referencedDeclaration": 1412,
                               "type": "function (bool,string memory) pure",
                               "value": "require"
                             },
-                            "id": 305,
+                            "id": 433,
                             "name": "Identifier",
-                            "src": "384:7:1"
+                            "src": "524:7:2"
                           },
                           {
                             "attributes": {
@@ -1362,18 +1993,18 @@
                                       "overloadedDeclarations": [
                                         null
                                       ],
-                                      "referencedDeclaration": 3270,
+                                      "referencedDeclaration": 1408,
                                       "type": "msg",
                                       "value": "msg"
                                     },
-                                    "id": 306,
+                                    "id": 434,
                                     "name": "Identifier",
-                                    "src": "392:3:1"
+                                    "src": "532:3:2"
                                   }
                                 ],
-                                "id": 307,
+                                "id": 435,
                                 "name": "MemberAccess",
-                                "src": "392:10:1"
+                                "src": "532:10:2"
                               },
                               {
                                 "attributes": {
@@ -1381,18 +2012,18 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 272,
+                                  "referencedDeclaration": 394,
                                   "type": "address",
                                   "value": "feeToSetter"
                                 },
-                                "id": 308,
+                                "id": 436,
                                 "name": "Identifier",
-                                "src": "406:11:1"
+                                "src": "546:11:2"
                               }
                             ],
-                            "id": 309,
+                            "id": 437,
                             "name": "BinaryOperation",
-                            "src": "392:25:1"
+                            "src": "532:25:2"
                           },
                           {
                             "attributes": {
@@ -1407,19 +2038,19 @@
                               "type": "literal_string \"Poof: FORBIDDEN\"",
                               "value": "Poof: FORBIDDEN"
                             },
-                            "id": 310,
+                            "id": 438,
                             "name": "Literal",
-                            "src": "419:17:1"
+                            "src": "559:17:2"
                           }
                         ],
-                        "id": 311,
+                        "id": 439,
                         "name": "FunctionCall",
-                        "src": "384:53:1"
+                        "src": "524:53:2"
                       }
                     ],
-                    "id": 312,
+                    "id": 440,
                     "name": "ExpressionStatement",
-                    "src": "384:53:1"
+                    "src": "524:53:2"
                   },
                   {
                     "children": [
@@ -1440,13 +2071,13 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 272,
+                              "referencedDeclaration": 394,
                               "type": "address",
                               "value": "feeToSetter"
                             },
-                            "id": 313,
+                            "id": 441,
                             "name": "Identifier",
-                            "src": "445:11:1"
+                            "src": "585:11:2"
                           },
                           {
                             "attributes": {
@@ -1454,43 +2085,415 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 302,
+                              "referencedDeclaration": 430,
                               "type": "address",
                               "value": "_feeToSetter"
                             },
-                            "id": 314,
+                            "id": 442,
                             "name": "Identifier",
-                            "src": "459:12:1"
+                            "src": "599:12:2"
                           }
                         ],
-                        "id": 315,
+                        "id": 443,
                         "name": "Assignment",
-                        "src": "445:26:1"
+                        "src": "585:26:2"
                       }
                     ],
-                    "id": 316,
+                    "id": 444,
                     "name": "ExpressionStatement",
-                    "src": "445:26:1"
+                    "src": "585:26:2"
                   }
                 ],
-                "id": 317,
+                "id": 445,
                 "name": "Block",
-                "src": "376:100:1"
+                "src": "516:100:2"
               }
             ],
-            "id": 318,
+            "id": 446,
             "name": "FunctionDefinition",
-            "src": "321:155:1"
+            "src": "461:155:2"
+          },
+          {
+            "attributes": {
+              "documentation": null,
+              "implemented": true,
+              "isConstructor": false,
+              "kind": "function",
+              "modifiers": [
+                null
+              ],
+              "name": "setProtocolFeeDivisor",
+              "scope": 472,
+              "stateMutability": "nonpayable",
+              "superFunction": null,
+              "visibility": "external"
+            },
+            "children": [
+              {
+                "children": [
+                  {
+                    "attributes": {
+                      "constant": false,
+                      "name": "_protocolFeeDivisor",
+                      "scope": 471,
+                      "stateVariable": false,
+                      "storageLocation": "default",
+                      "type": "uint256",
+                      "value": null,
+                      "visibility": "internal"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "name": "uint256",
+                          "type": "uint256"
+                        },
+                        "id": 447,
+                        "name": "ElementaryTypeName",
+                        "src": "651:7:2"
+                      }
+                    ],
+                    "id": 448,
+                    "name": "VariableDeclaration",
+                    "src": "651:27:2"
+                  }
+                ],
+                "id": 449,
+                "name": "ParameterList",
+                "src": "650:29:2"
+              },
+              {
+                "attributes": {
+                  "parameters": [
+                    null
+                  ]
+                },
+                "children": [],
+                "id": 450,
+                "name": "ParameterList",
+                "src": "689:0:2"
+              },
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "attributes": {
+                          "argumentTypes": null,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": false,
+                          "isStructConstructorCall": false,
+                          "lValueRequested": false,
+                          "names": [
+                            null
+                          ],
+                          "type": "tuple()",
+                          "type_conversion": false
+                        },
+                        "children": [
+                          {
+                            "attributes": {
+                              "argumentTypes": [
+                                {
+                                  "typeIdentifier": "t_bool",
+                                  "typeString": "bool"
+                                },
+                                {
+                                  "typeIdentifier": "t_stringliteral_b0ea5653e0e519b050ef336c67727a3a431509a369a785f89e8479e85ce40165",
+                                  "typeString": "literal_string \"Poof: FORBIDDEN\""
+                                }
+                              ],
+                              "overloadedDeclarations": [
+                                1411,
+                                1412
+                              ],
+                              "referencedDeclaration": 1412,
+                              "type": "function (bool,string memory) pure",
+                              "value": "require"
+                            },
+                            "id": 451,
+                            "name": "Identifier",
+                            "src": "697:7:2"
+                          },
+                          {
+                            "attributes": {
+                              "argumentTypes": null,
+                              "commonType": {
+                                "typeIdentifier": "t_address",
+                                "typeString": "address"
+                              },
+                              "isConstant": false,
+                              "isLValue": false,
+                              "isPure": false,
+                              "lValueRequested": false,
+                              "operator": "==",
+                              "type": "bool"
+                            },
+                            "children": [
+                              {
+                                "attributes": {
+                                  "argumentTypes": null,
+                                  "isConstant": false,
+                                  "isLValue": false,
+                                  "isPure": false,
+                                  "lValueRequested": false,
+                                  "member_name": "sender",
+                                  "referencedDeclaration": null,
+                                  "type": "address payable"
+                                },
+                                "children": [
+                                  {
+                                    "attributes": {
+                                      "argumentTypes": null,
+                                      "overloadedDeclarations": [
+                                        null
+                                      ],
+                                      "referencedDeclaration": 1408,
+                                      "type": "msg",
+                                      "value": "msg"
+                                    },
+                                    "id": 452,
+                                    "name": "Identifier",
+                                    "src": "705:3:2"
+                                  }
+                                ],
+                                "id": 453,
+                                "name": "MemberAccess",
+                                "src": "705:10:2"
+                              },
+                              {
+                                "attributes": {
+                                  "argumentTypes": null,
+                                  "overloadedDeclarations": [
+                                    null
+                                  ],
+                                  "referencedDeclaration": 394,
+                                  "type": "address",
+                                  "value": "feeToSetter"
+                                },
+                                "id": 454,
+                                "name": "Identifier",
+                                "src": "719:11:2"
+                              }
+                            ],
+                            "id": 455,
+                            "name": "BinaryOperation",
+                            "src": "705:25:2"
+                          },
+                          {
+                            "attributes": {
+                              "argumentTypes": null,
+                              "hexvalue": "506f6f663a20464f5242494444454e",
+                              "isConstant": false,
+                              "isLValue": false,
+                              "isPure": true,
+                              "lValueRequested": false,
+                              "subdenomination": null,
+                              "token": "string",
+                              "type": "literal_string \"Poof: FORBIDDEN\"",
+                              "value": "Poof: FORBIDDEN"
+                            },
+                            "id": 456,
+                            "name": "Literal",
+                            "src": "732:17:2"
+                          }
+                        ],
+                        "id": 457,
+                        "name": "FunctionCall",
+                        "src": "697:53:2"
+                      }
+                    ],
+                    "id": 458,
+                    "name": "ExpressionStatement",
+                    "src": "697:53:2"
+                  },
+                  {
+                    "children": [
+                      {
+                        "attributes": {
+                          "argumentTypes": null,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": false,
+                          "isStructConstructorCall": false,
+                          "lValueRequested": false,
+                          "names": [
+                            null
+                          ],
+                          "type": "tuple()",
+                          "type_conversion": false
+                        },
+                        "children": [
+                          {
+                            "attributes": {
+                              "argumentTypes": [
+                                {
+                                  "typeIdentifier": "t_bool",
+                                  "typeString": "bool"
+                                },
+                                {
+                                  "typeIdentifier": "t_stringliteral_5c096880b05c9468650c913ec6feafc9810ea461905d92390e74b130ffc27862",
+                                  "typeString": "literal_string \"Poof: Protocol fee too high\""
+                                }
+                              ],
+                              "overloadedDeclarations": [
+                                1411,
+                                1412
+                              ],
+                              "referencedDeclaration": 1412,
+                              "type": "function (bool,string memory) pure",
+                              "value": "require"
+                            },
+                            "id": 459,
+                            "name": "Identifier",
+                            "src": "758:7:2"
+                          },
+                          {
+                            "attributes": {
+                              "argumentTypes": null,
+                              "commonType": {
+                                "typeIdentifier": "t_uint256",
+                                "typeString": "uint256"
+                              },
+                              "isConstant": false,
+                              "isLValue": false,
+                              "isPure": false,
+                              "lValueRequested": false,
+                              "operator": ">=",
+                              "type": "bool"
+                            },
+                            "children": [
+                              {
+                                "attributes": {
+                                  "argumentTypes": null,
+                                  "overloadedDeclarations": [
+                                    null
+                                  ],
+                                  "referencedDeclaration": 448,
+                                  "type": "uint256",
+                                  "value": "_protocolFeeDivisor"
+                                },
+                                "id": 460,
+                                "name": "Identifier",
+                                "src": "766:19:2"
+                              },
+                              {
+                                "attributes": {
+                                  "argumentTypes": null,
+                                  "overloadedDeclarations": [
+                                    null
+                                  ],
+                                  "referencedDeclaration": 390,
+                                  "type": "uint256",
+                                  "value": "MIN_PROTOCOL_FEE_DIVISOR"
+                                },
+                                "id": 461,
+                                "name": "Identifier",
+                                "src": "789:24:2"
+                              }
+                            ],
+                            "id": 462,
+                            "name": "BinaryOperation",
+                            "src": "766:47:2"
+                          },
+                          {
+                            "attributes": {
+                              "argumentTypes": null,
+                              "hexvalue": "506f6f663a2050726f746f636f6c2066656520746f6f2068696768",
+                              "isConstant": false,
+                              "isLValue": false,
+                              "isPure": true,
+                              "lValueRequested": false,
+                              "subdenomination": null,
+                              "token": "string",
+                              "type": "literal_string \"Poof: Protocol fee too high\"",
+                              "value": "Poof: Protocol fee too high"
+                            },
+                            "id": 463,
+                            "name": "Literal",
+                            "src": "815:29:2"
+                          }
+                        ],
+                        "id": 464,
+                        "name": "FunctionCall",
+                        "src": "758:87:2"
+                      }
+                    ],
+                    "id": 465,
+                    "name": "ExpressionStatement",
+                    "src": "758:87:2"
+                  },
+                  {
+                    "children": [
+                      {
+                        "attributes": {
+                          "argumentTypes": null,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": false,
+                          "lValueRequested": false,
+                          "operator": "=",
+                          "type": "uint256"
+                        },
+                        "children": [
+                          {
+                            "attributes": {
+                              "argumentTypes": null,
+                              "overloadedDeclarations": [
+                                null
+                              ],
+                              "referencedDeclaration": 396,
+                              "type": "uint256",
+                              "value": "protocolFeeDivisor"
+                            },
+                            "id": 466,
+                            "name": "Identifier",
+                            "src": "853:18:2"
+                          },
+                          {
+                            "attributes": {
+                              "argumentTypes": null,
+                              "overloadedDeclarations": [
+                                null
+                              ],
+                              "referencedDeclaration": 448,
+                              "type": "uint256",
+                              "value": "_protocolFeeDivisor"
+                            },
+                            "id": 467,
+                            "name": "Identifier",
+                            "src": "874:19:2"
+                          }
+                        ],
+                        "id": 468,
+                        "name": "Assignment",
+                        "src": "853:40:2"
+                      }
+                    ],
+                    "id": 469,
+                    "name": "ExpressionStatement",
+                    "src": "853:40:2"
+                  }
+                ],
+                "id": 470,
+                "name": "Block",
+                "src": "689:209:2"
+              }
+            ],
+            "id": 471,
+            "name": "FunctionDefinition",
+            "src": "620:278:2"
           }
         ],
-        "id": 319,
+        "id": 472,
         "name": "ContractDefinition",
-        "src": "25:453:1"
+        "src": "25:875:2"
       }
     ],
-    "id": 320,
+    "id": 473,
     "name": "SourceUnit",
-    "src": "0:479:1"
+    "src": "0:901:2"
   },
   "compiler": {
     "name": "solc",
@@ -1511,8 +2514,7 @@
     }
   },
   "schemaVersion": "3.3.4",
-  "updatedAt": "2021-04-05T02:45:55.200Z",
-  "networkType": "ethereum",
+  "updatedAt": "2021-04-12T00:15:10.054Z",
   "devdoc": {
     "methods": {}
   },
