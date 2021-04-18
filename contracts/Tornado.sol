@@ -31,6 +31,7 @@ contract Tornado is MerkleTreeWithHistory, ReentrancyGuard {
   event Deposit(bytes32 indexed commitment, uint32 leafIndex, uint256 timestamp);
   event Withdrawal(address to, bytes32 nullifierHash, address indexed relayer, uint256 fee);
   event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+  event EncryptedNote(address indexed sender, bytes encryptedNote);
 
   /**
     @dev The constructor
@@ -57,7 +58,7 @@ contract Tornado is MerkleTreeWithHistory, ReentrancyGuard {
     @dev Deposit funds into the contract. The caller must send (for ETH) or approve (for ERC20) value equal to or `denomination` of this instance.
     @param _commitment the note commitment, which is PedersenHash(nullifier + secret)
   */
-  function deposit(bytes32 _commitment) external payable nonReentrant {
+  function deposit(bytes32 _commitment, bytes calldata _encryptedNote) external payable nonReentrant {
     require(!commitments[_commitment], "The commitment has been submitted");
 
     uint32 insertedIndex = _insert(_commitment);
@@ -65,6 +66,7 @@ contract Tornado is MerkleTreeWithHistory, ReentrancyGuard {
     _processDeposit();
 
     emit Deposit(_commitment, insertedIndex, block.timestamp);
+    emit EncryptedNote(msg.sender, _encryptedNote);
   }
 
   /** @dev this function is defined in a child contract */

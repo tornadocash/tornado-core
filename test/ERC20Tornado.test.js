@@ -94,7 +94,7 @@ contract('ERC20Tornado', accounts => {
       const commitment = toFixedHex(43)
       await token.approve(tornado.address, tokenDenomination)
 
-      let { logs } = await tornado.deposit(commitment, { from: sender })
+      let { logs } = await tornado.deposit(commitment, [], { from: sender })
 
       logs[0].event.should.be.equal('Deposit')
       logs[0].args.commitment.should.be.equal(commitment)
@@ -105,7 +105,7 @@ contract('ERC20Tornado', accounts => {
       const commitment = toFixedHex(43)
       await token.approve(tornado.address, tokenDenomination)
 
-      let error = await tornado.deposit(commitment, { from: sender, value: 1e6 }).should.be.rejected
+      let error = await tornado.deposit(commitment, [], { from: sender, value: 1e6 }).should.be.rejected
       error.reason.should.be.equal('ETH value is supposed to be 0 for ERC20 instance')
     })
   })
@@ -122,7 +122,7 @@ contract('ERC20Tornado', accounts => {
       // Uncomment to measure gas usage
       // let gas = await tornado.deposit.estimateGas(toBN(deposit.commitment.toString()), { from: user, gasPrice: '0' })
       // console.log('deposit gas:', gas)
-      await tornado.deposit(toFixedHex(deposit.commitment), { from: user, gasPrice: '0' })
+      await tornado.deposit(toFixedHex(deposit.commitment), [], { from: user, gasPrice: '0' })
 
       const balanceUserAfter = await token.balanceOf(user)
       balanceUserAfter.should.be.eq.BN(toBN(balanceUserBefore).sub(toBN(tokenDenomination)))
@@ -209,7 +209,7 @@ contract('ERC20Tornado', accounts => {
       // Uncomment to measure gas usage
       // let gas = await tornado.deposit.estimateGas(toBN(deposit.commitment.toString()), { from: user, gasPrice: '0' })
       // console.log('deposit gas:', gas)
-      await tornado.deposit(toFixedHex(deposit.commitment), {
+      await tornado.deposit(toFixedHex(deposit.commitment), [], {
         from: user,
         gasPrice: "0",
       });
@@ -329,7 +329,7 @@ contract('ERC20Tornado', accounts => {
 
       const balanceUserBefore = await token.balanceOf(user)
       await token.approve(tornado.address, tokenDenomination, { from: user })
-      await tornado.deposit(toFixedHex(deposit.commitment), { from: user, gasPrice: '0' })
+      await tornado.deposit(toFixedHex(deposit.commitment), [], { from: user, gasPrice: '0' })
 
       const balanceUserAfter = await token.balanceOf(user)
       balanceUserAfter.should.be.eq.BN(toBN(balanceUserBefore).sub(toBN(tokenDenomination)))
@@ -405,7 +405,7 @@ contract('ERC20Tornado', accounts => {
       await tree.insert(deposit.commitment)
       await token.mint(user, tokenDenomination)
       await token.approve(tornado.address, tokenDenomination, { from: user })
-      await tornado.deposit(toFixedHex(deposit.commitment), { from: user, gasPrice: '0' })
+      await tornado.deposit(toFixedHex(deposit.commitment), [], { from: user, gasPrice: '0' })
 
 
       const { root, path_elements, path_index } = await tree.path(0)
@@ -468,7 +468,7 @@ contract('ERC20Tornado', accounts => {
       console.log('approve done')
       const allowanceUser = await usdtToken.allowance(user, tornado.address)
       console.log('allowanceUser', allowanceUser.toString())
-      await tornado.deposit(toFixedHex(deposit.commitment), { from: user, gasPrice: '0' })
+      await tornado.deposit(toFixedHex(deposit.commitment), [], { from: user, gasPrice: '0' })
       console.log('deposit done')
 
       const balanceUserAfter = await usdtToken.balanceOf(user)
@@ -557,7 +557,7 @@ contract('ERC20Tornado', accounts => {
       console.log('balanceUserBefore', balanceUserBefore.toString())
       await token.approve(tornado.address, tokenDenomination, { from: user })
       console.log('approve done')
-      await tornado.deposit(toFixedHex(deposit.commitment), { from: user, gasPrice: '0' })
+      await tornado.deposit(toFixedHex(deposit.commitment), [], { from: user, gasPrice: '0' })
       console.log('deposit done')
 
       const balanceUserAfter = await token.balanceOf(user)
