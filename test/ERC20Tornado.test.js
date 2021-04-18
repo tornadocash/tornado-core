@@ -5,7 +5,13 @@ require('chai')
   .should()
 const fs = require('fs')
 
-const { toBN } = require('web3-utils')
+const { getEncryptionPublicKey } = require('eth-sig-util')
+const { hexToBytes, toBN } = require('web3-utils')
+const {
+  packEncryptedMessage,
+  unpackEncryptedMessage,
+} = require('../src/utils')
+const Account = require('../src/account')
 const { takeSnapshot, revertSnapshot } = require('../lib/ganacheHelper')
 
 const Tornado = artifacts.require('./ERC20Tornado.sol')
@@ -23,6 +29,7 @@ const bigInt = snarkjs.bigInt
 const crypto = require('crypto')
 const circomlib = require('circomlib')
 const MerkleTree = require('../lib/MerkleTree')
+const {randomBN} = require('../src/utils')
 
 const rbigint = (nbytes) => snarkjs.bigInt.leBuff2int(crypto.randomBytes(nbytes))
 const pedersenHash = (data) => circomlib.babyJub.unpackPoint(circomlib.pedersenHash.hash(data))[0]
@@ -31,10 +38,10 @@ const getRandomRecipient = () => rbigint(20)
 
 function generateDeposit() {
   let deposit = {
-    secret: rbigint(31),
-    nullifier: rbigint(31),
+    secret: randomBN(31),
+    nullifier: randomBN(31),
   }
-  const preimage = Buffer.concat([deposit.nullifier.leInt2Buff(31), deposit.secret.leInt2Buff(31)])
+  const preimage = Buffer.concat([deposit.nullifier.toBuffer('le', 31), deposit.secret.toBuffer('le', 31)])
   deposit.commitment = pedersenHash(preimage)
   return deposit
 }
@@ -59,6 +66,10 @@ contract('ERC20Tornado', accounts => {
   let groth16
   let circuit
   let proving_key
+
+  // Public / private key pair used for encrypting / decrypting the deposit note
+  const privateKey = web3.eth.accounts.create().privateKey.slice(2)
+  const publicKey = getEncryptionPublicKey(privateKey)
 
   before(async () => {
     tree = new MerkleTree(
@@ -113,6 +124,12 @@ contract('ERC20Tornado', accounts => {
   describe('#withdraw', () => {
     it('should work', async () => {
       const deposit = generateDeposit()
+      const account = new Account({
+        amount: tokenDenomination, 
+        secret: deposit.secret,
+        nullifier: deposit.nullifier,
+      })
+      const encryptedMessage = packEncryptedMessage(account.encrypt(publicKey))
       const user = accounts[4]
       await tree.insert(deposit.commitment)
       await token.mint(user, tokenDenomination)
@@ -122,7 +139,18 @@ contract('ERC20Tornado', accounts => {
       // Uncomment to measure gas usage
       // let gas = await tornado.deposit.estimateGas(toBN(deposit.commitment.toString()), { from: user, gasPrice: '0' })
       // console.log('deposit gas:', gas)
-      await tornado.deposit(toFixedHex(deposit.commitment), [], { from: user, gasPrice: '0' })
+      const {logs: depositLogs} = await tornado.deposit(
+        toFixedHex(deposit.commitment),
+        hexToBytes(encryptedMessage),
+        { from: user, gasPrice: '0' },
+      )
+
+      const encryptedNoteLog = depositLogs[depositLogs.length - 1]
+      encryptedNoteLog.event.should.be.equal("EncryptedNote")
+      encryptedNoteLog.args.sender.should.be.equal(accounts[4])
+      encryptedNoteLog.args.encryptedNote.should.be.equal(encryptedMessage)
+      const unpackedMessage = unpackEncryptedMessage(encryptedMessage)
+      const decryptedAccount = Account.decrypt(privateKey, unpackedMessage)
 
       const balanceUserAfter = await token.balanceOf(user)
       balanceUserAfter.should.be.eq.BN(toBN(balanceUserBefore).sub(toBN(tokenDenomination)))
@@ -132,15 +160,15 @@ contract('ERC20Tornado', accounts => {
       const input = stringifyBigInts({
         // public
         root,
-        nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
+        nullifierHash: pedersenHash(decryptedAccount.nullifier.toBuffer('le', 31)),
         relayer,
         recipient,
         fee,
         refund,
 
         // private
-        nullifier: deposit.nullifier,
-        secret: deposit.secret,
+        nullifier: decryptedAccount.nullifier,
+        secret: decryptedAccount.secret,
         pathElements: path_elements,
         pathIndices: path_index,
       })
@@ -224,7 +252,7 @@ contract('ERC20Tornado', accounts => {
       const input = stringifyBigInts({
         // public
         root,
-        nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
+        nullifierHash: pedersenHash(deposit.nullifier.toBuffer('le', 31)),
         relayer,
         recipient,
         fee,
@@ -339,7 +367,7 @@ contract('ERC20Tornado', accounts => {
       const input = stringifyBigInts({
         // public
         root,
-        nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
+        nullifierHash: pedersenHash(deposit.nullifier.toBuffer('le', 31)),
         relayer,
         recipient,
         fee,
@@ -413,7 +441,7 @@ contract('ERC20Tornado', accounts => {
       const input = stringifyBigInts({
         // public
         root,
-        nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
+        nullifierHash: pedersenHash(deposit.nullifier.toBuffer('le', 31)),
         relayer,
         recipient,
         fee,
@@ -480,7 +508,7 @@ contract('ERC20Tornado', accounts => {
       const input = stringifyBigInts({
         // public
         root,
-        nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
+        nullifierHash: pedersenHash(deposit.nullifier.toBuffer('le', 31)),
         relayer: operator,
         recipient,
         fee,
@@ -569,7 +597,7 @@ contract('ERC20Tornado', accounts => {
       const input = stringifyBigInts({
         // public
         root,
-        nullifierHash: pedersenHash(deposit.nullifier.leInt2Buff(31)),
+        nullifierHash: pedersenHash(deposit.nullifier.toBuffer('le', 31)),
         relayer: operator,
         recipient,
         fee,
