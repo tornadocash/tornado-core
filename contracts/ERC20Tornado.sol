@@ -42,10 +42,10 @@ contract ERC20Tornado is Tornado {
     bool feeOn = feeTo != address(0) && protocolFeeDivisor != 0;
     if (feeOn) {
       uint256 protocolFee = SafeMath.div(denomination, protocolFeeDivisor);
-      _safeErc20Transfer(_recipient, denomination - _relayer_fee - protocolFee);
+      _safeErc20Transfer(_recipient, SafeMath.sub(denomination, SafeMath.add(_relayer_fee, protocolFee)));
       _safeErc20Transfer(feeTo, protocolFee);
     } else {
-      _safeErc20Transfer(_recipient, denomination - _relayer_fee);
+      _safeErc20Transfer(_recipient, SafeMath.sub(denomination, _relayer_fee));
     }
 
     if (_relayer_fee > 0) {

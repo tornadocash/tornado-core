@@ -30,6 +30,7 @@ contract Tornado is MerkleTreeWithHistory, ReentrancyGuard {
 
   event Deposit(bytes32 indexed commitment, uint32 leafIndex, uint256 timestamp);
   event Withdrawal(address to, bytes32 nullifierHash, address indexed relayer, uint256 fee);
+  event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
   /**
     @dev The constructor
@@ -116,6 +117,7 @@ contract Tornado is MerkleTreeWithHistory, ReentrancyGuard {
 
   /** @dev operator can change his address */
   function changeOperator(address _newOperator) external onlyOperator {
+    emit OwnershipTransferred(operator, _newOperator);
     operator = _newOperator;
   }
 }
