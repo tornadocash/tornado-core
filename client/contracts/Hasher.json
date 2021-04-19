@@ -51,5 +51,6 @@
     }
   },
   "schemaVersion": "3.3.4",
-  "updatedAt": "2021-04-18T15:21:30.822Z"
+  "updatedAt": "2021-04-19T04:55:01.719Z",
+  "networkType": "ethereum"
 }
