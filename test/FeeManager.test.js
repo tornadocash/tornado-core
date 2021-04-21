@@ -17,7 +17,7 @@ contract('FeeManager', accounts => {
       try {
         await feeManager.setFeeTo(accounts[1], {from: accounts[1]})
       } catch (e) {
-        expectErrorMessage(e, "FeeManager: FORBIDDEN")
+        expectErrorMessage(e, "FeeManager: Sender not authorized to change feeTo")
       }
 
       const feeTo = await feeManager.feeTo()
@@ -34,7 +34,7 @@ contract('FeeManager', accounts => {
       try {
         await feeManager.setFeeTo(ZERO_ADDRESS, {from: accounts[0]})
       } catch (e) {
-        expectErrorMessage(e, "FeeManager: new feeTo is the zero address")
+        expectErrorMessage(e, "FeeManager: New feeTo is the zero address")
       }
 
       const feeTo = await feeManager.feeTo()
@@ -47,7 +47,7 @@ contract('FeeManager', accounts => {
       try {
         await feeManager.setFeeToSetter(accounts[1], {from: accounts[1]})
       } catch (e) {
-        expectErrorMessage(e, "FeeManager: FORBIDDEN")
+        expectErrorMessage(e, "FeeManager: Sender not authorized to change feeToSetter ")
       }
 
       const feeToSetter = await feeManager.feeToSetter()
@@ -68,7 +68,7 @@ contract('FeeManager', accounts => {
       try {
         await feeManager.setFeeToSetter(ZERO_ADDRESS, {from: accounts[0]})
       } catch (e) {
-        expectErrorMessage(e, "FeeManager: new feeToSetter is the zero address")
+        expectErrorMessage(e, "FeeManager: New feeToSetter is the zero address")
       }
 
       const feeToSetter = await feeManager.feeToSetter()
@@ -81,7 +81,7 @@ contract('FeeManager', accounts => {
       try {
         await feeManager.setProtocolFeeDivisor(200, {from: accounts[1]})
       } catch (e) {
-        expectErrorMessage(e, "FeeManager: FORBIDDEN")
+        expectErrorMessage(e, "FeeManager: Sender not authorized to change protocolFeeDivisor")
       }
 
       const protocolFeeDivisor = await feeManager.protocolFeeDivisor()
@@ -119,7 +119,7 @@ contract('FeeManager', accounts => {
       try {
         await feeManager.clearFee({from: accounts[1]})
       } catch (e) {
-        expectErrorMessage(e, "FeeManager: FORBIDDEN")
+        expectErrorMessage(e, "FeeManager: Sender not authorized to clear protocolFeeDivisor")
       }
 
       const protocolFeeDivisor = await feeManager.protocolFeeDivisor()

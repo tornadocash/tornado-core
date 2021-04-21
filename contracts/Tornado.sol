@@ -1,7 +1,7 @@
 pragma solidity 0.5.17;
 
-import "./MerkleTreeWithHistory.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "./MerkleTreeWithHistory.sol";
 
 contract IVerifier {
   function verifyProof(bytes memory _proof, uint256[6] memory _input) public returns(bool);
@@ -20,17 +20,18 @@ contract Tornado is MerkleTreeWithHistory, ReentrancyGuard {
   IVerifier public verifier;
   IFeeManager public feeManager;
 
-  // operator can update snark verification key
-  // after the final trusted setup ceremony operator rights are supposed to be transferred to zero address
-  address public operator;
-  modifier onlyOperator {
-    require(msg.sender == operator, "Only operator can call this function.");
+  // owner can update snark verification key
+  // after the final trusted setup ceremony owner rights are supposed to be transferred to zero address
+  address public owner;
+  modifier onlyOwner {
+    require(msg.sender == owner, "Only owner can call this function.");
     _;
   }
 
   event Deposit(bytes32 indexed commitment, uint32 leafIndex, uint256 timestamp);
   event Withdrawal(address to, bytes32 nullifierHash, address indexed relayer, uint256 fee);
   event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+  event VerifierChanged(address indexed previousVerifier, address indexed newVerifier);
   event EncryptedNote(address indexed sender, bytes encryptedNote);
 
   /**
@@ -38,19 +39,19 @@ contract Tornado is MerkleTreeWithHistory, ReentrancyGuard {
     @param _verifier the address of SNARK verifier for this contract
     @param _denomination transfer amount for each deposit
     @param _merkleTreeHeight the height of deposits' Merkle Tree
-    @param _operator operator address (see operator comment above)
+    @param _owner owner address (see owner comment above)
   */
   constructor(
     IVerifier _verifier,
     IFeeManager _feeManager,
     uint256 _denomination,
     uint32 _merkleTreeHeight,
-    address _operator
+    address _owner
   ) MerkleTreeWithHistory(_merkleTreeHeight) public {
     require(_denomination > 0, "denomination should be greater than 0");
     verifier = _verifier;
     feeManager = _feeManager;
-    operator = _operator;
+    owner = _owner;
     denomination = _denomination;
   }
 
@@ -110,16 +111,17 @@ contract Tornado is MerkleTreeWithHistory, ReentrancyGuard {
   }
 
   /**
-    @dev allow operator to update SNARK verification keys. This is needed to update keys after the final trusted setup ceremony is held.
-    After that operator rights are supposed to be transferred to zero address
+    @dev allow owner to update SNARK verification keys. This is needed to update keys after the final trusted setup ceremony is held.
+    After that owner rights are supposed to be transferred to zero address
   */
-  function updateVerifier(address _newVerifier) external onlyOperator {
+  function updateVerifier(address _newVerifier) external onlyOwner {
+    emit VerifierChanged(address(verifier), _newVerifier);
     verifier = IVerifier(_newVerifier);
   }
 
-  /** @dev operator can change his address */
-  function changeOperator(address _newOperator) external onlyOperator {
-    emit OwnershipTransferred(operator, _newOperator);
-    operator = _newOperator;
+  /** @dev owner can change his address */
+  function changeOwner(address _newOwner) external onlyOwner {
+    emit OwnershipTransferred(owner, _newOwner);
+    owner = _newOwner;
   }
 }

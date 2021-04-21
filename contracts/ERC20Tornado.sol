@@ -11,8 +11,8 @@
 
 pragma solidity 0.5.17;
 
+import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./Tornado.sol";
-import "./SafeMath.sol";
 
 contract ERC20Tornado is Tornado {
   address public token;
@@ -22,9 +22,9 @@ contract ERC20Tornado is Tornado {
     IFeeManager _feeManager,
     uint256 _denomination,
     uint32 _merkleTreeHeight,
-    address _operator,
+    address _owner,
     address _token
-  ) Tornado(_verifier, _feeManager, _denomination, _merkleTreeHeight, _operator) public {
+  ) Tornado(_verifier, _feeManager, _denomination, _merkleTreeHeight, _owner) public {
     token = _token;
   }
 

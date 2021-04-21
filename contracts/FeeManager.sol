@@ -13,25 +13,25 @@ contract FeeManager {
   }
 
   function setFeeTo(address _feeTo) external {
-      require(msg.sender == feeToSetter, 'FeeManager: FORBIDDEN');
-      require(_feeTo != address(0), 'FeeManager: new feeTo is the zero address');
+      require(msg.sender == feeToSetter, 'FeeManager: Sender not authorized to change feeTo');
+      require(_feeTo != address(0), 'FeeManager: New feeTo is the zero address');
       feeTo = _feeTo;
   }
 
   function setFeeToSetter(address _feeToSetter) external {
-      require(msg.sender == feeToSetter, 'FeeManager: FORBIDDEN');
-      require(_feeToSetter != address(0), 'FeeManager: new feeToSetter is the zero address');
+      require(msg.sender == feeToSetter, 'FeeManager: Sender not authorized to change feeToSetter ');
+      require(_feeToSetter != address(0), 'FeeManager: New feeToSetter is the zero address');
       feeToSetter = _feeToSetter;
   }
 
   function setProtocolFeeDivisor(uint256 _protocolFeeDivisor) external {
-      require(msg.sender == feeToSetter, 'FeeManager: FORBIDDEN');
+      require(msg.sender == feeToSetter, 'FeeManager: Sender not authorized to change protocolFeeDivisor');
       require(_protocolFeeDivisor >= MIN_PROTOCOL_FEE_DIVISOR, 'FeeManager: Protocol fee too high');
       protocolFeeDivisor = _protocolFeeDivisor;
   }
 
   function clearFee() external {
-      require(msg.sender == feeToSetter, 'FeeManager: FORBIDDEN');
+      require(msg.sender == feeToSetter, 'FeeManager: Sender not authorized to clear protocolFeeDivisor');
       protocolFeeDivisor = 0;
   }
 }
