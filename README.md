@@ -95,14 +95,17 @@ Example:
 > Transaction mined in block 17036120
 > Done
 
-## Deploy ERC20 Tornado Cash
+## Deploy ERC20 Poof Cash
 
+1. `npm i`
+1. `npm run download`
+1. `npm run build:contract`
 1. `cp .env.example .env`
 1. Tune all necessary params
-1. `npx truffle migrate --network kovan --reset --f 2 --to 3`
-1. `npx truffle migrate --network kovan --reset --f 4`
+1. `npx truffle migrate --network alfajores --reset --f 2 --to 4`
+1. `npx truffle migrate --network alfajores --reset --f 5`
 
-**Note**. If you want to reuse the same verifier for all the instances, then after you deployed one of the instances you should only run the 5th migration (`--f 5`).
+**Note**. If you want to reuse the same verifier for all the instances, then after you deployed one of the instances you should only run the 5th migration (`--f 5`). Likely, you will want to tune your .env parameters for each run of the 5th migration.
 
 ## How to resolve ENS name to DNS name for a relayer
 NOTE: Not yet relevant for CELO

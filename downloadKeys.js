@@ -23,7 +23,7 @@ async function downloadFile({ url, path }) {
 }
 
 async function main() {
-  const release = await axios.get('https://api.github.com/repos/tornadocash/tornado-core/releases/latest')
+  const release = await axios.get('https://api.github.com/repos/poofcash/poof-core/releases/latest')
   const { assets } = release.data
   if (!fs.existsSync(circuitsPath)){
     fs.mkdirSync(circuitsPath, { recursive: true })

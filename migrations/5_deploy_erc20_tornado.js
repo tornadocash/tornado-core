@@ -6,6 +6,7 @@ const FeeManager = artifacts.require('FeeManager')
 const hasherContract = artifacts.require('Hasher')
 const ERC20Mock = artifacts.require('ERC20Mock')
 
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 
 module.exports = function (deployer, network, accounts) {
   return deployer.then(async () => {
@@ -19,6 +20,7 @@ module.exports = function (deployer, network, accounts) {
       const tokenInstance = await deployer.deploy(ERC20Mock)
       token = tokenInstance.address
     }
+    console.log(`Deploying ERC20Tornado with token ${ERC20_TOKEN} and denomination ${TOKEN_AMOUNT}`)
     const tornado = await deployer.deploy(
       ERC20Tornado,
       verifier.address,
@@ -29,5 +31,7 @@ module.exports = function (deployer, network, accounts) {
       token,
     )
     console.log('ERC20Tornado\'s address ', tornado.address)
+    tornado.changeOwner(ZERO_ADDRESS)
+    console.log('Changed ERC20Tornado contract owner to zero address')
   })
 }
