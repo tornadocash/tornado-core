@@ -16,7 +16,7 @@ module.exports = function (deployer, network, accounts) {
     const hasherInstance = await hasherContract.deployed()
     await ERC20Tornado.link(hasherContract, hasherInstance.address)
     let token = ERC20_TOKEN
-    if (token === '') {
+    if (token === '' || network === 'development') {
       const tokenInstance = await deployer.deploy(ERC20Mock)
       token = tokenInstance.address
     }

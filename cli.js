@@ -51,7 +51,7 @@ async function printERC20Balance({address, name, tokenAddress}, currency) {
     await printCELOBalance({address, name})
     return
   }
-  const erc20ContractJson = require('./build/contracts/ERC20Mock.json')
+  const erc20ContractJson = require('./client/contracts/ERC20Mock.json')
   console.log(`${name} Token Balance is`, await erc20.methods.balanceOf(address).call())
 }
 
@@ -97,7 +97,7 @@ async function deposit({currency, amount}) {
   }
 
   console.log('Submitting deposit transaction')
-  const depositTx = await tornado.methods.deposit(toHex(deposit.commitment))
+  const depositTx = await tornado.methods.deposit(toHex(deposit.commitment), [])
   const depositTxRes = await kit.sendTransactionObject(depositTx, {from: senderAccount, gas: 2e6})
   console.log("Deposit txn:", await depositTxRes.getHash())
   await printERC20Balance({address: tornado._address, name: 'Tornado'}, currency)
@@ -479,7 +479,7 @@ async function init({rpc, noteNetId, currency = 'dai', amount = '100'}) {
     // Initialize using injected web3 (Metamask)
     // To assemble web version run `npm run browserify`
     web3 = new Web3(window.web3.currentProvider, null, {transactionConfirmationBlocks: 1})
-    contractJson = await (await fetch('build/contracts/ETHTornado.json')).json()
+    contractJson = await (await fetch('client/contracts/ERC20Tornado.json')).json()
     circuit = await (await fetch('build/circuits/withdraw.json')).json()
     proving_key = await (await fetch('build/circuits/withdraw_proving_key.bin')).arrayBuffer()
     MERKLE_TREE_HEIGHT = 20
@@ -490,7 +490,7 @@ async function init({rpc, noteNetId, currency = 'dai', amount = '100'}) {
     // Initialize from local node
     web3 = new Web3(rpc)
     kit = ContractKit.newKitFromWeb3(web3)
-    contractJson = require('./build/contracts/ETHTornado.json')
+    contractJson = require('./client/contracts/ERC20Tornado.json')
     circuit = require('./build/circuits/withdraw.json')
     proving_key = fs.readFileSync('build/circuits/withdraw_proving_key.bin').buffer
     MERKLE_TREE_HEIGHT = process.env.MERKLE_TREE_HEIGHT || 20
@@ -505,8 +505,8 @@ async function init({rpc, noteNetId, currency = 'dai', amount = '100'}) {
     } else {
       console.log('Warning! PRIVATE_KEY not found. Please provide PRIVATE_KEY in .env file if you deposit')
     }
-    erc20ContractJson = require('./build/contracts/ERC20Mock.json')
-    erc20tornadoJson = require('./build/contracts/ERC20Tornado.json')
+    erc20ContractJson = require('./client/contracts/ERC20Mock.json')
+    erc20tornadoJson = require('./client/contracts/ERC20Tornado.json')
   }
   // groth16 initialises a lot of Promises that will never be resolved, that's why we need to use process.exit to terminate the CLI
   groth16 = await buildGroth16()
@@ -614,7 +614,7 @@ async function main() {
       .description('Perform an automated test. It deposits and withdraws one ETH and one ERC20 note. Uses ganache.')
       .action(async () => {
         console.log('Start performing ETH deposit-withdraw test')
-        let currency = 'celo'
+        let currency = 'erc20mock'
         let amount = '0.1'
         await init({rpc: program.rpc, currency, amount})
         let noteString = await deposit({currency, amount})
