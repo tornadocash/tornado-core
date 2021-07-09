@@ -1,12 +1,33 @@
-# Tornado Cash Privacy Solution [![Build Status](https://travis-ci.org/tornadocash/tornado-core.svg?branch=master)](https://travis-ci.org/tornadocash/tornado-core)
+# Poof Cash 
 
-Tornado Cash is a non-custodial Ethereum and ERC20 privacy solution based on zkSNARKs. It improves transaction privacy by breaking the on-chain link between the recipient and destination addresses. It uses a smart contract that accepts ETH deposits that can be withdrawn by a different address. Whenever ETH is withdrawn by the new address, there is no way to link the withdrawal to the deposit, ensuring complete privacy.
+Poof Cash is a non-custodial Celo and ERC20 privacy solution based on zkSNARKs. It improves transaction privacy by breaking the on-chain link between the recipient and destination addresses. It uses a smart contract that accepts ERC20 deposits that can be withdrawn by a different address. Whenever ERC20 is withdrawn by the new address, there is no way to link the withdrawal to the deposit, ensuring complete privacy.
 
-To make a deposit user generates a secret and sends its hash (called a commitment) along with the deposit amount to the Tornado smart contract. The contract accepts the deposit and adds the commitment to its list of deposits.
+To make a deposit user generates a secret and sends its hash (called a commitment) along with the deposit amount to the Poof smart contract. The contract accepts the deposit and adds the commitment to its list of deposits.
 
 Later, the user decides to make a withdrawal. To do that, the user should provide a proof that he or she possesses a secret to an unspent commitment from the smart contract’s list of deposits. zkSnark technology allows that to happen without revealing which exact deposit corresponds to this secret. The smart contract will check the proof, and transfer deposited funds to the address specified for withdrawal. An external observer will be unable to determine which deposit this withdrawal came from.
 
 You can read more about it in [this medium article](https://medium.com/@tornado.cash/introducing-private-transactions-on-ethereum-now-42ee915babe0)
+
+## Requirements
+
+1. `node v11.15.0`
+2. `npm install -g npx`
+
+## Deploy ERC20 Poof Cash
+
+NOTE:
+
+1. `npm i`
+2. `npm run download`
+3. `npm run build:contract`
+4. `cp .env.example .env`. Edit your .env:
+  - For `TOKEN_AMOUNT`, specify the size of the pool you want to support
+  - For `PRIVATE_KEY` specify the private key you want to deploy with
+  - For `ERC20_TOKEN` specify the token address you want to support
+5. `npx truffle migrate --network mainnet`
+6. OPTIONAL: `npx truffle migrate --network mainnet --reset --f 5` for each additional pool
+
+**Note**. If you want to reuse the same verifier for all the instances, then after you deployed one of the instances you should only run the 5th migration (`--f 5`). Likely, you will want to tune your .env parameters for each run of the 5th migration.
 
 ## Specs
 
@@ -24,20 +45,7 @@ You can read more about it in [this medium article](https://medium.com/@tornado.
 
 ## Was it audited?
 
-Tornado.cash protocols, circuits, and smart contracts were audited by a group of experts from [ABDK Consulting](https://www.abdk.consulting), specializing in zero-knowledge, cryptography, and smart contracts.
-
-During the audit, no critical issues were found and all outstanding issues were fixed. The results can be found here:
-
-- Cryptographic review https://tornado.cash/audits/TornadoCash_cryptographic_review_ABDK.pdf
-- Smart contract audit https://tornado.cash/audits/TornadoCash_contract_audit_ABDK.pdf
-- Zk-SNARK circuits audit https://tornado.cash/audits/TornadoCash_circuit_audit_ABDK.pdf
-
-Underlying circomlib dependency is currently being audited, and the team already published most of the fixes for found issues
-
-## Requirements
-
-1. `node v11.15.0`
-2. `npm install -g npx`
+Poof.cash has not yet been audited. Please use Poof.cash at your own risk.
 
 ## Usage
 
@@ -49,14 +57,14 @@ You can see example usage in cli.js, it works both in the console and in the bro
 1. `npx ganache-cli`
 1. `npm run test` - optionally runs tests. It may fail on the first try, just run it again.
 
-Use browser version on Kovan:
+Use browser version on Alfajores:
 
-1. `vi .env` - add your Kovan private key to deploy contracts
+1. `vi .env` - add your Alfajores private key to deploy contracts
 1. `npm run migrate`
 1. `npx http-server` - serve current dir, you can use any other static http server
 1. Open `localhost:8080`
 
-Use the command-line version. Works for Ganache, Kovan, and Mainnet:
+Use the command-line version. Works for Alfajores and Mainnet:
 
 ### Initialization
 
@@ -72,7 +80,7 @@ Use the command-line version. Works for Ganache, Kovan, and Mainnet:
 1. `./cli.js test`
 1. `./cli.js --help`
 
-### Kovan, Mainnet
+### Alfajores, Mainnet
 
 1. Please use https://github.com/tornadocash/tornado-cli
    Reason: because tornado-core uses websnark `2041cfa5fa0b71cd5cca9022a4eeea4afe28c9f7` commit hash in order to work with local trusted setup. Tornado-cli uses `4c0af6a8b65aabea3c09f377f63c44e7a58afa6d` commit with production trusted setup of tornadoCash
@@ -80,18 +88,18 @@ Use the command-line version. Works for Ganache, Kovan, and Mainnet:
 Example:
 
 ```bash
-./cli.js deposit ETH 0.1 --rpc https://kovan.infura.io/v3/27a9649f826b4e31a83e07ae09a87448
+./cli.js deposit CELO 0.1 --rpc https://kovan.infura.io/v3/27a9649f826b4e31a83e07ae09a87448
 ```
 
-> Your note: tornado-eth-0.1-42-0xf73dd6833ccbcc046c44228c8e2aa312bf49e08389dadc7c65e6a73239867b7ef49c705c4db227e2fadd8489a494b6880bdcb6016047e019d1abec1c7652
-> Tornado ETH balance is 8.9
-> Sender account ETH balance is 1004873.470619891361352542
+> Your note: tornado-celo-0.1-42-0xf73dd6833ccbcc046c44228c8e2aa312bf49e08389dadc7c65e6a73239867b7ef49c705c4db227e2fadd8489a494b6880bdcb6016047e019d1abec1c7652
+> Tornado CELO balance is 8.9
+> Sender account CELO balance is 1004873.470619891361352542
 > Submitting deposit transaction
-> Tornado ETH balance is 9
-> Sender account ETH balance is 1004873.361652048361352542
+> Tornado CELO balance is 9
+> Sender account CELO balance is 1004873.361652048361352542
 
 ```bash
-./cli.js withdraw tornado-eth-0.1-42-0xf73dd6833ccbcc046c44228c8e2aa312bf49e08389dadc7c65e6a73239867b7ef49c705c4db227e2fadd8489a494b6880bdcb6016047e019d1abec1c7652 0x8589427373D6D84E98730D7795D8f6f8731FDA16 --rpc https://kovan.infura.io/v3/27a9649f826b4e31a83e07ae09a87448 --relayer https://kovan-frelay.duckdns.org
+./cli.js withdraw tornado-celo-0.1-42-0xf73dd6833ccbcc046c44228c8e2aa312bf49e08389dadc7c65e6a73239867b7ef49c705c4db227e2fadd8489a494b6880bdcb6016047e019d1abec1c7652 0x8589427373D6D84E98730D7795D8f6f8731FDA16 --rpc https://kovan.infura.io/v3/27a9649f826b4e31a83e07ae09a87448 --relayer https://kovan-frelay.duckdns.org
 ```
 
 > Relay address: 0x6A31736e7490AbE5D5676be059DFf064AB4aC754
@@ -103,23 +111,8 @@ Example:
 > Transaction mined in block 17036120
 > Done
 
-## Deploy ETH Tornado Cash
-
-1. `cp .env.example .env`
-1. Tune all necessary params
-1. `npx truffle migrate --network kovan --reset --f 2 --to 4`
-
-## Deploy ERC20 Tornado Cash
-
-1. `cp .env.example .env`
-1. Tune all necessary params
-1. `npx truffle migrate --network kovan --reset --f 2 --to 3`
-1. `npx truffle migrate --network kovan --reset --f 5`
-
-**Note**. If you want to reuse the same verifier for all the instances, then after you deployed one of the instances you should only run the 4th or 5th migration for ETH or ERC20 contracts respectively (`--f 4 --to 4` or `--f 5`).
-
 ## How to resolve ENS name to DNS name for a relayer
-
+NOTE: Not yet relevant for CELO
 1. Visit https://etherscan.io/enslookup and put relayer ENS name to the form.
 2. Copy the namehash (1) and click on the `Resolver` link (2)
    ![enslookup](docs/enslookup.png)
@@ -127,11 +120,6 @@ Example:
 4. Put the values:
    ![resolver](docs/resolver.png)
 5. Click `Query` and you will get the DNS name. Just add `https://` to it and use it as `relayer url`
-
-## Credits
-
-Special thanks to @barryWhiteHat and @kobigurk for valuable input,
-and @jbaylina for awesome [Circom](https://github.com/iden3/circom) & [Websnark](https://github.com/iden3/websnark) framework
 
 ## Minimal demo example
 

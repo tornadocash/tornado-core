@@ -1,21 +1,15 @@
-// https://tornado.cash
-/*
-* d888888P                                           dP              a88888b.                   dP
-*    88                                              88             d8'   `88                   88
-*    88    .d8888b. 88d888b. 88d888b. .d8888b. .d888b88 .d8888b.    88        .d8888b. .d8888b. 88d888b.
-*    88    88'  `88 88'  `88 88'  `88 88'  `88 88'  `88 88'  `88    88        88'  `88 Y8ooooo. 88'  `88
-*    88    88.  .88 88       88    88 88.  .88 88.  .88 88.  .88 dP Y8.   .88 88.  .88       88 88    88
-*    dP    `88888P' dP       dP    dP `88888P8 `88888P8 `88888P' 88  Y88888P' `88888P8 `88888P' dP    dP
-* ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
-*/
-
 pragma solidity 0.5.17;
 
-import "./MerkleTreeWithHistory.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "./MerkleTreeWithHistory.sol";
 
 contract IVerifier {
   function verifyProof(bytes memory _proof, uint256[6] memory _input) public returns(bool);
+}
+
+contract IFeeManager {
+  function feeTo() external view returns (address);
+  function protocolFeeDivisor() external view returns (uint256);
 }
 
 contract Tornado is MerkleTreeWithHistory, ReentrancyGuard {
@@ -24,34 +18,40 @@ contract Tornado is MerkleTreeWithHistory, ReentrancyGuard {
   // we store all commitments just to prevent accidental deposits with the same commitment
   mapping(bytes32 => bool) public commitments;
   IVerifier public verifier;
+  IFeeManager public feeManager;
 
-  // operator can update snark verification key
-  // after the final trusted setup ceremony operator rights are supposed to be transferred to zero address
-  address public operator;
-  modifier onlyOperator {
-    require(msg.sender == operator, "Only operator can call this function.");
+  // owner can update snark verification key
+  // after the final trusted setup ceremony owner rights are supposed to be transferred to zero address
+  address public owner;
+  modifier onlyOwner {
+    require(msg.sender == owner, "Only owner can call this function.");
     _;
   }
 
   event Deposit(bytes32 indexed commitment, uint32 leafIndex, uint256 timestamp);
   event Withdrawal(address to, bytes32 nullifierHash, address indexed relayer, uint256 fee);
+  event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+  event VerifierChanged(address indexed previousVerifier, address indexed newVerifier);
+  event EncryptedNote(address indexed sender, bytes encryptedNote);
 
   /**
     @dev The constructor
     @param _verifier the address of SNARK verifier for this contract
     @param _denomination transfer amount for each deposit
     @param _merkleTreeHeight the height of deposits' Merkle Tree
-    @param _operator operator address (see operator comment above)
+    @param _owner owner address (see owner comment above)
   */
   constructor(
     IVerifier _verifier,
+    IFeeManager _feeManager,
     uint256 _denomination,
     uint32 _merkleTreeHeight,
-    address _operator
+    address _owner
   ) MerkleTreeWithHistory(_merkleTreeHeight) public {
     require(_denomination > 0, "denomination should be greater than 0");
     verifier = _verifier;
-    operator = _operator;
+    feeManager = _feeManager;
+    owner = _owner;
     denomination = _denomination;
   }
 
@@ -59,7 +59,7 @@ contract Tornado is MerkleTreeWithHistory, ReentrancyGuard {
     @dev Deposit funds into the contract. The caller must send (for ETH) or approve (for ERC20) value equal to or `denomination` of this instance.
     @param _commitment the note commitment, which is PedersenHash(nullifier + secret)
   */
-  function deposit(bytes32 _commitment) external payable nonReentrant {
+  function deposit(bytes32 _commitment, bytes calldata _encryptedNote) external payable nonReentrant {
     require(!commitments[_commitment], "The commitment has been submitted");
 
     uint32 insertedIndex = _insert(_commitment);
@@ -67,6 +67,7 @@ contract Tornado is MerkleTreeWithHistory, ReentrancyGuard {
     _processDeposit();
 
     emit Deposit(_commitment, insertedIndex, block.timestamp);
+    emit EncryptedNote(msg.sender, _encryptedNote);
   }
 
   /** @dev this function is defined in a child contract */
@@ -92,7 +93,7 @@ contract Tornado is MerkleTreeWithHistory, ReentrancyGuard {
   }
 
   /** @dev this function is defined in a child contract */
-  function _processWithdraw(address payable _recipient, address payable _relayer, uint256 _fee, uint256 _refund) internal;
+  function _processWithdraw(address payable _recipient, address payable _relayer, uint256 _relayer_fee, uint256 _refund) internal;
 
   /** @dev whether a note is already spent */
   function isSpent(bytes32 _nullifierHash) public view returns(bool) {
@@ -110,15 +111,17 @@ contract Tornado is MerkleTreeWithHistory, ReentrancyGuard {
   }
 
   /**
-    @dev allow operator to update SNARK verification keys. This is needed to update keys after the final trusted setup ceremony is held.
-    After that operator rights are supposed to be transferred to zero address
+    @dev allow owner to update SNARK verification keys. This is needed to update keys after the final trusted setup ceremony is held.
+    After that owner rights are supposed to be transferred to zero address
   */
-  function updateVerifier(address _newVerifier) external onlyOperator {
+  function updateVerifier(address _newVerifier) external onlyOwner {
+    emit VerifierChanged(address(verifier), _newVerifier);
     verifier = IVerifier(_newVerifier);
   }
 
-  /** @dev operator can change his address */
-  function changeOperator(address _newOperator) external onlyOperator {
-    operator = _newOperator;
+  /** @dev owner can change his address */
+  function changeOwner(address _newOwner) external onlyOwner {
+    emit OwnershipTransferred(owner, _newOwner);
+    owner = _newOwner;
   }
 }

@@ -11,6 +11,7 @@
 
 pragma solidity 0.5.17;
 
+import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./Tornado.sol";
 
 contract ERC20Tornado is Tornado {
@@ -18,11 +19,12 @@ contract ERC20Tornado is Tornado {
 
   constructor(
     IVerifier _verifier,
+    IFeeManager _feeManager,
     uint256 _denomination,
     uint32 _merkleTreeHeight,
-    address _operator,
+    address _owner,
     address _token
-  ) Tornado(_verifier, _denomination, _merkleTreeHeight, _operator) public {
+  ) Tornado(_verifier, _feeManager, _denomination, _merkleTreeHeight, _owner) public {
     token = _token;
   }
 
@@ -31,12 +33,23 @@ contract ERC20Tornado is Tornado {
     _safeErc20TransferFrom(msg.sender, address(this), denomination);
   }
 
-  function _processWithdraw(address payable _recipient, address payable _relayer, uint256 _fee, uint256 _refund) internal {
+  function _processWithdraw(address payable _recipient, address payable _relayer, uint256 _relayer_fee, uint256 _refund) internal {
     require(msg.value == _refund, "Incorrect refund amount received by the contract");
 
-    _safeErc20Transfer(_recipient, denomination - _fee);
-    if (_fee > 0) {
-      _safeErc20Transfer(_relayer, _fee);
+    address feeTo = feeManager.feeTo();
+    uint256 protocolFeeDivisor = feeManager.protocolFeeDivisor();
+
+    bool feeOn = feeTo != address(0) && protocolFeeDivisor != 0;
+    if (feeOn) {
+      uint256 protocolFee = SafeMath.div(denomination, protocolFeeDivisor);
+      _safeErc20Transfer(_recipient, SafeMath.sub(denomination, SafeMath.add(_relayer_fee, protocolFee)));
+      _safeErc20Transfer(feeTo, protocolFee);
+    } else {
+      _safeErc20Transfer(_recipient, SafeMath.sub(denomination, _relayer_fee));
+    }
+
+    if (_relayer_fee > 0) {
+      _safeErc20Transfer(_relayer, _relayer_fee);
     }
 
     if (_refund > 0) {

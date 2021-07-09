@@ -1,12 +1,18 @@
 require('dotenv').config()
 const HDWalletProvider = require('@truffle/hdwallet-provider')
 const utils = require('web3-utils')
-// const infuraKey = "fj4jll3k.....";
-//
-// const fs = require('fs');
-// const mnemonic = fs.readFileSync(".secret").toString().trim();
+
+const ContractKit = require('@celo/contractkit')
+const Web3 = require('web3')
+const path = require('path')
+
+// Connect to the desired network
+const web3 = new Web3(process.env.RPC_URL)
+const kit = ContractKit.newKitFromWeb3(web3)
+kit.addAccount(process.env.PRIVATE_KEY)
 
 module.exports = {
+  contracts_build_directory: path.join(__dirname, "client/contracts"),
   /**
    * Networks define how you connect to your ethereum client and let you set the
    * defaults web3 uses to send transactions. If you don't specify one truffle
@@ -43,7 +49,7 @@ module.exports = {
     // Useful for deploying to a public network.
     // NB: It's important to wrap the provider as a function.
     kovan: {
-      provider: () => new HDWalletProvider(process.env.PRIVATE_KEY, 'https://kovan.infura.io/v3/97c8bf358b9942a9853fab1ba93dc5b3'),
+      provider: () => new HDWalletProvider(process.env.PRIVATE_KEY, 'https://kovan.infura.io/v3/'),
       network_id: 42,
       gas: 6000000,
       gasPrice: utils.toWei('1', 'gwei'),
@@ -69,6 +75,20 @@ module.exports = {
       // timeoutBlocks: 200,
       skipDryRun: true
     },
+
+    // CELO networks
+    alfajores: {
+      provider: kit.web3.currentProvider,
+      network_id: 44787,
+      gas: 6000000,
+      gasPrice: utils.toWei('0.1', 'gwei'),
+    },
+    mainnet: {
+      provider: kit.web3.currentProvider,
+      network_id: 42220,
+      gas: 6000000,
+      gasPrice: utils.toWei('0.1', 'gwei'),
+    }
 
     // Useful for private networks
     // private: {
