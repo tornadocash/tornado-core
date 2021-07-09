@@ -24,7 +24,8 @@ NOTE:
   - For `TOKEN_AMOUNT`, specify the size of the pool you want to support
   - For `PRIVATE_KEY` specify the private key you want to deploy with
   - For `ERC20_TOKEN` specify the token address you want to support
-5. `npx truffle migrate --network alfajores --reset --f 5`
+5. `npx truffle migrate --network mainnet`
+6. OPTIONAL: `npx truffle migrate --network mainnet --reset --f 5` for each additional pool
 
 **Note**. If you want to reuse the same verifier for all the instances, then after you deployed one of the instances you should only run the 5th migration (`--f 5`). Likely, you will want to tune your .env parameters for each run of the 5th migration.
 
