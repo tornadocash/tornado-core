@@ -8,6 +8,26 @@ Later, the user decides to make a withdrawal. To do that, the user should provid
 
 You can read more about it in [this medium article](https://medium.com/@tornado.cash/introducing-private-transactions-on-ethereum-now-42ee915babe0)
 
+## Requirements
+
+1. `node v11.15.0`
+2. `npm install -g npx`
+
+## Deploy ERC20 Poof Cash
+
+NOTE:
+
+1. `npm i`
+2. `npm run download`
+3. `npm run build:contract`
+4. `cp .env.example .env`. Edit your .env:
+  - For `TOKEN_AMOUNT`, specify the size of the pool you want to support
+  - For `PRIVATE_KEY` specify the private key you want to deploy with
+  - For `ERC20_TOKEN` specify the token address you want to support
+5. `npx truffle migrate --network alfajores --reset --f 5`
+
+**Note**. If you want to reuse the same verifier for all the instances, then after you deployed one of the instances you should only run the 5th migration (`--f 5`). Likely, you will want to tune your .env parameters for each run of the 5th migration.
+
 ## Specs
 
 - Deposit gas cost: 1088354 (43381 + 50859 \* tree_depth)
@@ -25,11 +45,6 @@ You can read more about it in [this medium article](https://medium.com/@tornado.
 ## Was it audited?
 
 Poof.cash has not yet been audited. Please use Poof.cash at your own risk.
-
-## Requirements
-
-1. `node v11.15.0`
-2. `npm install -g npx`
 
 ## Usage
 
@@ -94,18 +109,6 @@ Example:
 > Transaction submitted through the relay. View transaction on etherscan https://kovan.etherscan.io/tx/0xcb21ae8cad723818c6bc7273e83e00c8393fcdbe74802ce5d562acad691a2a7b
 > Transaction mined in block 17036120
 > Done
-
-## Deploy ERC20 Poof Cash
-
-1. `npm i`
-1. `npm run download`
-1. `npm run build:contract`
-1. `cp .env.example .env`
-1. Tune all necessary params
-1. `npx truffle migrate --network alfajores --reset --f 2 --to 4`
-1. `npx truffle migrate --network alfajores --reset --f 5`
-
-**Note**. If you want to reuse the same verifier for all the instances, then after you deployed one of the instances you should only run the 5th migration (`--f 5`). Likely, you will want to tune your .env parameters for each run of the 5th migration.
 
 ## How to resolve ENS name to DNS name for a relayer
 NOTE: Not yet relevant for CELO
