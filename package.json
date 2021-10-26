@@ -27,7 +27,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@openzeppelin/contracts": "^2.4.0",
+    "@openzeppelin/contracts": "3.4.2-solc-0.7",
     "@truffle/contract": "^4.0.39",
     "@truffle/hdwallet-provider": "^1.0.24",
     "axios": "^0.19.0",

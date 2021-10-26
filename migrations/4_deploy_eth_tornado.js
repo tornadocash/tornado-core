@@ -11,7 +11,7 @@ module.exports = function(deployer, network, accounts) {
     const verifier = await Verifier.deployed()
     const hasherInstance = await hasherContract.deployed()
     await ETHTornado.link(hasherContract, hasherInstance.address)
-    const tornado = await deployer.deploy(ETHTornado, verifier.address, ETH_AMOUNT, MERKLE_TREE_HEIGHT, accounts[0])
+    const tornado = await deployer.deploy(ETHTornado, verifier.address, hasherInstance.address, ETH_AMOUNT, MERKLE_TREE_HEIGHT, accounts[0])
     console.log('ETHTornado\'s address ', tornado.address)
   })
 }

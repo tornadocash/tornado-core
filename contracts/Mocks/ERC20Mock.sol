@@ -1,10 +1,12 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.7.6;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20Mintable.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol";
 
-contract ERC20Mock is ERC20Detailed, ERC20Mintable {
-  constructor() ERC20Detailed("DAIMock", "DAIM", 18) public {
+contract ERC20Mock is ERC20 {
+  constructor() ERC20("DAIMock", "DAIM") {
+  }
+
+  function mint(address receiver, uint256 amount) external {
+    _mint(receiver, amount);
   }
 }

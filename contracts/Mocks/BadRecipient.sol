@@ -1,7 +1,7 @@
-pragma solidity ^0.5.0;
+pragma solidity >=0.5.0 <0.8.0;
 
 contract BadRecipient {
-  function() external {
+  fallback() external {
     require(false, "this contract does not accept ETH");
   }
 }

@@ -20,6 +20,7 @@ module.exports = function(deployer, network, accounts) {
     const tornado = await deployer.deploy(
       ERC20Tornado,
       verifier.address,
+      hasherInstance.address,
       TOKEN_AMOUNT,
       MERKLE_TREE_HEIGHT,
       accounts[0],
