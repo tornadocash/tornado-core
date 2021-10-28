@@ -18,7 +18,7 @@ import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 contract ERC20Tornado is Tornado {
   using SafeERC20 for IERC20;
-  IERC20 public immutable token;
+  IERC20 public token;
 
   constructor(
     IVerifier _verifier,
