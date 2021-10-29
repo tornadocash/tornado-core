@@ -21,7 +21,7 @@ jobs:
       - run: npx ganache-cli > /dev/null &
       - run: npm run migrate:dev
       - run: yarn test
-      - run: node cli.js test
+      - run: node src/cli.js test
       - run: yarn lint
       - name: Telegram Failure Notification
         uses: appleboy/telegram-action@0.0.7
