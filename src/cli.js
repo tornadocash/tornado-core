@@ -44,7 +44,7 @@ async function printETHBalance({ address, name }) {
 
 /** Display ERC20 account balance */
 async function printERC20Balance({ address, name, tokenAddress }) {
-  const erc20ContractJson = require('./build/contracts/ERC20Mock.json')
+  const erc20ContractJson = require(__dirname + '../build/contracts/ERC20Mock.json')
   erc20 = tokenAddress ? new web3.eth.Contract(erc20ContractJson.abi, tokenAddress) : erc20
   console.log(`${name} Token Balance is`, web3.utils.fromWei(await erc20.methods.balanceOf(address).call()))
 }
