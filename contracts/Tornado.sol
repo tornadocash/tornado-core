@@ -21,7 +21,7 @@ interface IVerifier {
 
 abstract contract Tornado is MerkleTreeWithHistory, ReentrancyGuard {
   IVerifier public immutable verifier;
-  uint256 public immutable denomination;
+  uint256 public denomination;
 
   mapping(bytes32 => bool) public nullifierHashes;
   // we store all commitments just to prevent accidental deposits with the same commitment
