@@ -2,6 +2,6 @@
 build
 circuits
 contracts/Verifier.sol
-lib/ganacheHelper.js
+scripts/ganacheHelper.js
 cli.js
 index.js
