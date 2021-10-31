@@ -144,10 +144,10 @@ contract('ERC20Tornado', (accounts) => {
 
       const balanceTornadoBefore = await token.balanceOf(tornado.address)
       const balanceRelayerBefore = await token.balanceOf(relayer)
-      const balanceRecieverBefore = await token.balanceOf(toFixedHex(recipient, 20))
+      const balanceReceiverBefore = await token.balanceOf(toFixedHex(recipient, 20))
 
       const ethBalanceOperatorBefore = await web3.eth.getBalance(operator)
-      const ethBalanceRecieverBefore = await web3.eth.getBalance(toFixedHex(recipient, 20))
+      const ethBalanceReceiverBefore = await web3.eth.getBalance(toFixedHex(recipient, 20))
       const ethBalanceRelayerBefore = await web3.eth.getBalance(relayer)
       let isSpent = await tornado.isSpent(toFixedHex(input.nullifierHash))
       isSpent.should.be.equal(false)
@@ -167,18 +167,18 @@ contract('ERC20Tornado', (accounts) => {
       const balanceTornadoAfter = await token.balanceOf(tornado.address)
       const balanceRelayerAfter = await token.balanceOf(relayer)
       const ethBalanceOperatorAfter = await web3.eth.getBalance(operator)
-      const balanceRecieverAfter = await token.balanceOf(toFixedHex(recipient, 20))
-      const ethBalanceRecieverAfter = await web3.eth.getBalance(toFixedHex(recipient, 20))
+      const balanceReceiverAfter = await token.balanceOf(toFixedHex(recipient, 20))
+      const ethBalanceReceiverAfter = await web3.eth.getBalance(toFixedHex(recipient, 20))
       const ethBalanceRelayerAfter = await web3.eth.getBalance(relayer)
       const feeBN = toBN(fee.toString())
       balanceTornadoAfter.should.be.eq.BN(toBN(balanceTornadoBefore).sub(toBN(tokenDenomination)))
       balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore).add(feeBN))
-      balanceRecieverAfter.should.be.eq.BN(
-        toBN(balanceRecieverBefore).add(toBN(tokenDenomination).sub(feeBN)),
+      balanceReceiverAfter.should.be.eq.BN(
+        toBN(balanceReceiverBefore).add(toBN(tokenDenomination).sub(feeBN)),
       )
 
       ethBalanceOperatorAfter.should.be.eq.BN(toBN(ethBalanceOperatorBefore))
-      ethBalanceRecieverAfter.should.be.eq.BN(toBN(ethBalanceRecieverBefore).add(toBN(refund)))
+      ethBalanceReceiverAfter.should.be.eq.BN(toBN(ethBalanceReceiverBefore).add(toBN(refund)))
       ethBalanceRelayerAfter.should.be.eq.BN(toBN(ethBalanceRelayerBefore).sub(toBN(refund)))
 
       logs[0].event.should.be.equal('Withdrawal')
@@ -226,10 +226,10 @@ contract('ERC20Tornado', (accounts) => {
 
       const balanceTornadoBefore = await token.balanceOf(tornado.address)
       const balanceRelayerBefore = await token.balanceOf(relayer)
-      const balanceRecieverBefore = await token.balanceOf(toFixedHex(recipient, 20))
+      const balanceReceiverBefore = await token.balanceOf(toFixedHex(recipient, 20))
 
       const ethBalanceOperatorBefore = await web3.eth.getBalance(operator)
-      const ethBalanceRecieverBefore = await web3.eth.getBalance(toFixedHex(recipient, 20))
+      const ethBalanceReceiverBefore = await web3.eth.getBalance(toFixedHex(recipient, 20))
       const ethBalanceRelayerBefore = await web3.eth.getBalance(relayer)
       let isSpent = await tornado.isSpent(toFixedHex(input.nullifierHash))
       isSpent.should.be.equal(false)
@@ -247,18 +247,18 @@ contract('ERC20Tornado', (accounts) => {
       const balanceTornadoAfter = await token.balanceOf(tornado.address)
       const balanceRelayerAfter = await token.balanceOf(relayer)
       const ethBalanceOperatorAfter = await web3.eth.getBalance(operator)
-      const balanceRecieverAfter = await token.balanceOf(toFixedHex(recipient, 20))
-      const ethBalanceRecieverAfter = await web3.eth.getBalance(toFixedHex(recipient, 20))
+      const balanceReceiverAfter = await token.balanceOf(toFixedHex(recipient, 20))
+      const ethBalanceReceiverAfter = await web3.eth.getBalance(toFixedHex(recipient, 20))
       const ethBalanceRelayerAfter = await web3.eth.getBalance(relayer)
       const feeBN = toBN(fee.toString())
       balanceTornadoAfter.should.be.eq.BN(toBN(balanceTornadoBefore).sub(toBN(tokenDenomination)))
       balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore).add(feeBN))
-      balanceRecieverAfter.should.be.eq.BN(
-        toBN(balanceRecieverBefore).add(toBN(tokenDenomination).sub(feeBN)),
+      balanceReceiverAfter.should.be.eq.BN(
+        toBN(balanceReceiverBefore).add(toBN(tokenDenomination).sub(feeBN)),
       )
 
       ethBalanceOperatorAfter.should.be.eq.BN(toBN(ethBalanceOperatorBefore))
-      ethBalanceRecieverAfter.should.be.eq.BN(toBN(ethBalanceRecieverBefore))
+      ethBalanceReceiverAfter.should.be.eq.BN(toBN(ethBalanceReceiverBefore))
       ethBalanceRelayerAfter.should.be.eq.BN(toBN(ethBalanceRelayerBefore))
 
       logs[0].event.should.be.equal('Withdrawal')
@@ -370,8 +370,8 @@ contract('ERC20Tornado', (accounts) => {
       const balanceTornadoBefore = await usdtToken.balanceOf(tornado.address)
       const balanceRelayerBefore = await usdtToken.balanceOf(relayer)
       const ethBalanceOperatorBefore = await web3.eth.getBalance(operator)
-      const balanceRecieverBefore = await usdtToken.balanceOf(toFixedHex(recipient, 20))
-      const ethBalanceRecieverBefore = await web3.eth.getBalance(toFixedHex(recipient, 20))
+      const balanceReceiverBefore = await usdtToken.balanceOf(toFixedHex(recipient, 20))
+      const ethBalanceReceiverBefore = await web3.eth.getBalance(toFixedHex(recipient, 20))
       let isSpent = await tornado.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
       isSpent.should.be.equal(false)
 
@@ -391,14 +391,14 @@ contract('ERC20Tornado', (accounts) => {
       const balanceTornadoAfter = await usdtToken.balanceOf(tornado.address)
       const balanceRelayerAfter = await usdtToken.balanceOf(relayer)
       const ethBalanceOperatorAfter = await web3.eth.getBalance(operator)
-      const balanceRecieverAfter = await usdtToken.balanceOf(toFixedHex(recipient, 20))
-      const ethBalanceRecieverAfter = await web3.eth.getBalance(toFixedHex(recipient, 20))
+      const balanceReceiverAfter = await usdtToken.balanceOf(toFixedHex(recipient, 20))
+      const ethBalanceReceiverAfter = await web3.eth.getBalance(toFixedHex(recipient, 20))
       const feeBN = toBN(fee.toString())
       balanceTornadoAfter.should.be.eq.BN(toBN(balanceTornadoBefore).sub(toBN(tokenDenomination)))
       balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore))
       ethBalanceOperatorAfter.should.be.eq.BN(toBN(ethBalanceOperatorBefore).add(feeBN))
-      balanceRecieverAfter.should.be.eq.BN(toBN(balanceRecieverBefore).add(toBN(tokenDenomination)))
-      ethBalanceRecieverAfter.should.be.eq.BN(toBN(ethBalanceRecieverBefore).add(toBN(refund)).sub(feeBN))
+      balanceReceiverAfter.should.be.eq.BN(toBN(balanceReceiverBefore).add(toBN(tokenDenomination)))
+      ethBalanceReceiverAfter.should.be.eq.BN(toBN(ethBalanceReceiverBefore).add(toBN(refund)).sub(feeBN))
 
       logs[0].event.should.be.equal('Withdrawal')
       logs[0].args.nullifierHash.should.be.eq.BN(toBN(input.nullifierHash.toString()))
@@ -457,8 +457,8 @@ contract('ERC20Tornado', (accounts) => {
       const balanceTornadoBefore = await token.balanceOf(tornado.address)
       const balanceRelayerBefore = await token.balanceOf(relayer)
       const ethBalanceOperatorBefore = await web3.eth.getBalance(operator)
-      const balanceRecieverBefore = await token.balanceOf(toFixedHex(recipient, 20))
-      const ethBalanceRecieverBefore = await web3.eth.getBalance(toFixedHex(recipient, 20))
+      const balanceReceiverBefore = await token.balanceOf(toFixedHex(recipient, 20))
+      const ethBalanceReceiverBefore = await web3.eth.getBalance(toFixedHex(recipient, 20))
       let isSpent = await tornado.isSpent(input.nullifierHash.toString(16).padStart(66, '0x00000'))
       isSpent.should.be.equal(false)
 
@@ -479,14 +479,14 @@ contract('ERC20Tornado', (accounts) => {
       const balanceTornadoAfter = await token.balanceOf(tornado.address)
       const balanceRelayerAfter = await token.balanceOf(relayer)
       const ethBalanceOperatorAfter = await web3.eth.getBalance(operator)
-      const balanceRecieverAfter = await token.balanceOf(toFixedHex(recipient, 20))
-      const ethBalanceRecieverAfter = await web3.eth.getBalance(toFixedHex(recipient, 20))
+      const balanceReceiverAfter = await token.balanceOf(toFixedHex(recipient, 20))
+      const ethBalanceReceiverAfter = await web3.eth.getBalance(toFixedHex(recipient, 20))
       const feeBN = toBN(fee.toString())
       balanceTornadoAfter.should.be.eq.BN(toBN(balanceTornadoBefore).sub(toBN(tokenDenomination)))
       balanceRelayerAfter.should.be.eq.BN(toBN(balanceRelayerBefore))
       ethBalanceOperatorAfter.should.be.eq.BN(toBN(ethBalanceOperatorBefore).add(feeBN))
-      balanceRecieverAfter.should.be.eq.BN(toBN(balanceRecieverBefore).add(toBN(tokenDenomination)))
-      ethBalanceRecieverAfter.should.be.eq.BN(toBN(ethBalanceRecieverBefore).add(toBN(refund)).sub(feeBN))
+      balanceReceiverAfter.should.be.eq.BN(toBN(balanceReceiverBefore).add(toBN(tokenDenomination)))
+      ethBalanceReceiverAfter.should.be.eq.BN(toBN(ethBalanceReceiverBefore).add(toBN(refund)).sub(feeBN))
 
       logs[0].event.should.be.equal('Withdrawal')
       logs[0].args.nullifierHash.should.be.eq.BN(toBN(input.nullifierHash.toString()))
