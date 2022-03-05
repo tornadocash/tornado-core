@@ -143,6 +143,30 @@ and @jbaylina for awesome [Circom](https://github.com/iden3/circom) & [Websnark]
 1. `npm run migrate:dev`
 1. `node minimal-demo.js`
 
+## Run tests/coverage
+
+Prepare test environment:
+
+```
+   yarn install
+   yarn download
+   cp .env.example .env
+   npx ganache-cli > /dev/null &
+   npm run migrate:dev
+```
+
+Run tests:
+
+```
+   yarn test
+```
+
+Run coverage:
+
+```
+   yarn coverage
+```
+
 ## Emulate MPC trusted setup ceremony
 
 ```bash
