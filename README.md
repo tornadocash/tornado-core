@@ -1,4 +1,4 @@
-# Tornado Cash Privacy Solution [![build status](https://github.com/tornadocash/tornado-core/actions/workflows/build.yml/badge.svg)](https://github.com/tornadocash/tornado-core/actions/workflows/build.yml)
+# Tornado Cash Privacy Solution [![build status](https://github.com/tornadocash/tornado-core/actions/workflows/build.yml/badge.svg)](https://github.com/tornadocash/tornado-core/actions/workflows/build.yml) [![Coverage Status](https://coveralls.io/repos/github/tornadocash/tornado-core/badge.svg?branch=master)](https://coveralls.io/github/tornadocash/tornado-core?branch=master)
 
 Tornado Cash is a non-custodial Ethereum and ERC20 privacy solution based on zkSNARKs. It improves transaction privacy by breaking the on-chain link between the recipient and destination addresses. It uses a smart contract that accepts ETH deposits that can be withdrawn by a different address. Whenever ETH is withdrawn by the new address, there is no way to link the withdrawal to the deposit, ensuring complete privacy.
 
