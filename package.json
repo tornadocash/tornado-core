@@ -24,7 +24,8 @@
     "prettier:fix": "prettier --write . --config .prettierrc",
     "lint": "yarn eslint && yarn prettier:check",
     "flat": "npx truffle-flattener contracts/ETHTornado.sol > ETHTornado_flat.sol && npx truffle-flattener contracts/ERC20Tornado.sol > ERC20Tornado_flat.sol",
-    "download": "node scripts/downloadKeys.js"
+    "download": "node scripts/downloadKeys.js",
+    "coverage": "yarn truffle run coverage"
   },
   "keywords": [],
   "author": "",
@@ -57,6 +58,7 @@
     "truffle-flattener": "^1.4.2",
     "web3": "^1.3.4",
     "web3-utils": "^1.3.4",
-    "websnark": "git+https://github.com/tornadocash/websnark.git#4c0af6a8b65aabea3c09f377f63c44e7a58afa6d"
+    "websnark": "git+https://github.com/tornadocash/websnark.git#4c0af6a8b65aabea3c09f377f63c44e7a58afa6d",
+    "solidity-coverage": "^0.7.20"
   }
 }

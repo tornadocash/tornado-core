@@ -1,4 +1,4 @@
-# Tornado Cash Privacy Solution [![build status](https://github.com/tornadocash/tornado-core/actions/workflows/build.yml/badge.svg)](https://github.com/tornadocash/tornado-core/actions/workflows/build.yml)
+# Tornado Cash Privacy Solution [![build status](https://github.com/tornadocash/tornado-core/actions/workflows/build.yml/badge.svg)](https://github.com/tornadocash/tornado-core/actions/workflows/build.yml) [![Coverage Status](https://coveralls.io/repos/github/tornadocash/tornado-core/badge.svg?branch=master)](https://coveralls.io/github/tornadocash/tornado-core?branch=master)
 
 Tornado Cash is a non-custodial Ethereum and ERC20 privacy solution based on zkSNARKs. It improves transaction privacy by breaking the on-chain link between the recipient and destination addresses. It uses a smart contract that accepts ETH deposits that can be withdrawn by a different address. Whenever ETH is withdrawn by the new address, there is no way to link the withdrawal to the deposit, ensuring complete privacy.
 
@@ -142,6 +142,30 @@ and @jbaylina for awesome [Circom](https://github.com/iden3/circom) & [Websnark]
 1. `cp .env.example .env`
 1. `npm run migrate:dev`
 1. `node minimal-demo.js`
+
+## Run tests/coverage
+
+Prepare test environment:
+
+```
+   yarn install
+   yarn download
+   cp .env.example .env
+   npx ganache-cli > /dev/null &
+   npm run migrate:dev
+```
+
+Run tests:
+
+```
+   yarn test
+```
+
+Run coverage:
+
+```
+   yarn coverage
+```
 
 ## Emulate MPC trusted setup ceremony
 
