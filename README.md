@@ -38,6 +38,7 @@ Underlying circomlib dependency is currently being audited, and the team already
 
 1. `node v11.15.0`
 2. `npm install -g npx`
+3. `npm install -g snarkjs`
 
 ## Usage
 
